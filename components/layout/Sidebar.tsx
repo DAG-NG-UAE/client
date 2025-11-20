@@ -10,6 +10,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import Link from 'next/link';
+import SettingsIcon from '@mui/icons-material/Settings'; // Import SettingsIcon
 
 const drawerWidth = 240;
 
@@ -57,6 +58,20 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
               <DashboardIcon />
             </ListItemIcon>
             <ListItemText primary="Dashboard" />
+          </ListItemButton>
+        </ListItem>
+        {/* Data Management Section */}
+        <ListItem disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Data Management" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding sx={{ pl: 4 }}>
+          <ListItemButton component={Link} href="/data-management/import-tracker-data">
+            <ListItemText primary="Import tracker data" />
           </ListItemButton>
         </ListItem>
       </List>
