@@ -10,7 +10,7 @@ export const DATABASE_FIELDS = [
   'Current Place Worked',
   'Current Role',
   'Current Gross Salary',
-  'Curernt Net Salary',
+  'Current Net Salary',
   'Other Benefits',
   'Notice Period',
   'Qualification & Professional Certification',

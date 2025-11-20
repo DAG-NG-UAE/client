@@ -10,8 +10,13 @@ interface Requisition {
 
 export const getRequisitions = async (status?: string): Promise<Requisition[]> => {
   try {
-    const params = status ? { status } : {};
-    const response = await axiosInstance.get('/requistion')
+    console.log(`the params being passed ${status}`)
+    const config = {
+      params: status ? { status } : {},
+    };
+
+    // 2. Pass the config object as the second argument to axiosInstance.get()
+    const response = await axiosInstance.get('/requistion', config);
     console.log('The response we get is', JSON.stringify(response))
     return response.data.data;
   } catch (error) {

@@ -85,7 +85,8 @@ const ColumnMappingDialog: React.FC<ColumnMappingDialogProps> = ({
     });
 
     try {
-      const result = await uploadCandidates({ mapping, data: dataToImport, requisitionId }); // Pass requisitionId
+      console.log(`the data they are saving to the database is ${JSON.stringify(dataToImport)} for req ${requisitionId}`)
+      const result = await uploadCandidates({ data: dataToImport, requisitionId }); // Pass requisitionId
       console.log('API Response:', result);
 
       setSnackbarSeverity('success');
