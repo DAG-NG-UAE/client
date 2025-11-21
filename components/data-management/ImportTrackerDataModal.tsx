@@ -1,8 +1,12 @@
 "use client"
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stepper, Step, StepLabel, Box, Typography, Input, FormControlLabel, Checkbox, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stepper, Step, StepLabel, Box, Typography, Input, FormControlLabel, Checkbox, Pagination, PaginationItem, Chip, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { readHistoricalExcelFile, SheetData } from '../../utils/historicalExcelParser';
-import { DATABASE_FIELDS } from '../../utils/constants';
+import { DOCUMENT_TYPES, DATABASE_FIELDS_BY_DOCUMENT_TYPE } from '../../utils/constants';
+import SheetMappingPreview from './SheetMappingPreview'; // Import the new component
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 interface ImportTrackerDataModalProps {
   open: boolean;
@@ -16,11 +20,17 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sheetData, setSheetData] = useState<SheetData[]>([]);
   const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
-  const [columnMappings, setColumnMappings] = useState<{[sheetName: string]: {[excelColumn: string]: string}}>({});
+  const [columnMappings, setColumnMappings] = useState<{[sheetName: string]: {[dbField: string]: string | null}}>({});
+  const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>(DOCUMENT_TYPES.RECRUITMENT_TRACKER); // Default to Recruitment Tracker
 
   const handleNext = () => {
     if (activeStep === 0 && !selectedFile) {
       alert('Please upload an Excel file first.');
+      return;
+    }
+    if (activeStep === 0 && !selectedDocumentType) {
+      alert('Please select a document type.');
       return;
     }
     if (activeStep === 1 && selectedSheets.length === 0) {
@@ -40,6 +50,7 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
     setSheetData([]);
     setSelectedSheets([]);
     setColumnMappings({});
+    setCurrentSheetIndex(0);
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,18 +63,18 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
         setSelectedSheets(data.map(sheet => sheet.name)); // Select all sheets by default
 
         // Initialize column mappings
-        const initialMappings: {[sheetName: string]: {[excelColumn: string]: string}} = {};
+        const initialMappings: {[sheetName: string]: {[dbField: string]: string | null}} = {};
         data.forEach(sheet => {
           if (sheet.data.length > 0) {
             const headers = sheet.data[0];
             initialMappings[sheet.name] = {};
-            headers.forEach((header: any) => {
-              const headerStr = String(header);
-              // Attempt to auto-map based on exact match with DATABASE_FIELDS
-              if (DATABASE_FIELDS.includes(headerStr)) {
-                initialMappings[sheet.name][headerStr] = headerStr;
+            const currentDocumentFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];
+            currentDocumentFields.forEach(dbField => {
+              const matchingHeader = headers.find((header: any) => String(header) === dbField.name);
+              if (matchingHeader) {
+                initialMappings[sheet.name][dbField.name] = String(matchingHeader);
               } else {
-                initialMappings[sheet.name][headerStr] = ''; // No mapping by default
+                initialMappings[sheet.name][dbField.name] = null; // No mapping by default
               }
             });
           }
@@ -79,11 +90,17 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
   };
 
   const handleSheetCheckboxChange = (sheetName: string) => {
-    setSelectedSheets(prevSelectedSheets =>
-      prevSelectedSheets.includes(sheetName)
+    setSelectedSheets(prevSelectedSheets => {
+      const newSelectedSheets = prevSelectedSheets.includes(sheetName)
         ? prevSelectedSheets.filter(name => name !== sheetName)
-        : [...prevSelectedSheets, sheetName]
-    );
+        : [...prevSelectedSheets, sheetName];
+      
+      // Reset currentSheetIndex if the currently viewed sheet is deselected
+      if (!newSelectedSheets.includes(selectedSheets[currentSheetIndex])) {
+        setCurrentSheetIndex(0);
+      }
+      return newSelectedSheets;
+    });
   };
 
   const handleColumnMappingChange = (sheetName: string, excelColumn: string, dbField: string) => {
@@ -91,65 +108,27 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
       ...prevMappings,
       [sheetName]: {
         ...prevMappings[sheetName],
-        [excelColumn]: dbField,
+        [dbField]: excelColumn, // Map dbField to excelColumn
       },
     }));
   };
 
-  const getSheetPreview = (sheetName: string) => {
-    const sheet = sheetData.find(s => s.name === sheetName);
-    if (!sheet || sheet.data.length === 0) return <Typography>No data to preview.</Typography>;
-
-    const headers = sheet.data[0];
-    const rows = sheet.data.slice(1, 6); // Display first 5 rows of data
-
-    return (
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table size="small" aria-label={`${sheetName} preview table`}>
-          <TableHead>
-            <TableRow>
-              {headers.map((header: any, index: number) => (
-                <TableCell key={index}>{String(header)}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row: any[], rowIndex: number) => (
-              <TableRow key={rowIndex}>
-                {row.map((cell: any, cellIndex: number) => (
-                  <TableCell key={cellIndex}>{String(cell)}</TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="subtitle1">Map Columns to Database Fields:</Typography>
-          {headers.map((header: any, index: number) => {
-            const excelColumnName = String(header);
-            const currentMapping = columnMappings[sheetName]?.[excelColumnName] || '';
-            return (
-              <FormControl fullWidth sx={{ mt: 1 }} key={index}>
-                <InputLabel>{excelColumnName}</InputLabel>
-                <Select
-                  value={currentMapping}
-                  label={excelColumnName}
-                  onChange={(e) => handleColumnMappingChange(sheetName, excelColumnName, e.target.value as string)}
-                >
-                  <MenuItem value=""><em>None</em></MenuItem>
-                  {DATABASE_FIELDS.map((field) => (
-                    <MenuItem key={field} value={field}>
-                      {field}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            );
-          })}
-        </Box>
-      </TableContainer>
-    );
+  const isSheetFullyMapped = (sheetName: string): boolean => {
+    const sheetMappings = columnMappings[sheetName];
+    if (!sheetMappings) return false;
+    const currentDocumentFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];
+    // Check if every REQUIRED DATABASE_FIELD has a corresponding mapping from an Excel column
+    return currentDocumentFields.every(dbField => {
+      if (dbField.required) {
+        return Object.values(sheetMappings).includes(dbField.name);
+      }
+      return true; // Non-required fields don't prevent full mapping
+    });
   };
+
+  const currentSheetName = selectedSheets[currentSheetIndex];
+  const currentSheetData = sheetData.find(s => s.name === currentSheetName);
+  const currentDatabaseFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -172,6 +151,19 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
                   Selected file: {selectedFile.name}
                 </Typography>
               )}
+              <FormControl fullWidth sx={{ mt: 3 }}>
+                <InputLabel id="document-type-select-label">Document Type</InputLabel>
+                <Select
+                  labelId="document-type-select-label"
+                  value={selectedDocumentType}
+                  label="Document Type"
+                  onChange={(e) => setSelectedDocumentType(e.target.value as string)}
+                >
+                  {Object.entries(DOCUMENT_TYPES).map(([key, value]) => (
+                    <MenuItem key={key} value={value}>{value}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
           )}
           {activeStep === 1 && (
@@ -198,15 +190,48 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
           {activeStep === 2 && (
             <Box>
               <Typography variant="h6" gutterBottom>Preview Data and Map Fields</Typography>
-              {selectedSheets.length > 0 ? (
-                selectedSheets.map((sheetName) => (
-                  <Box key={sheetName} sx={{ mb: 4 }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>Sheet: {sheetName}</Typography>
-                    {getSheetPreview(sheetName)}
+              <Box sx={{ mb: 2 }}>
+                {selectedSheets.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                    {selectedSheets.map((sheetName) => (
+                      <Chip
+                        key={sheetName}
+                        label={sheetName}
+                        color={isSheetFullyMapped(sheetName) ? "success" : "default"}
+                        icon={isSheetFullyMapped(sheetName) ? <CheckCircleOutlineIcon /> : undefined}
+                        variant={currentSheetName === sheetName ? "filled" : "outlined"}
+                        onClick={() => setCurrentSheetIndex(selectedSheets.indexOf(sheetName))}
+                      />
+                    ))}
                   </Box>
-                ))
-              ) : (
-                <Typography>No sheets selected for preview.</Typography>
+                ) : (
+                  <Typography>No sheets selected for preview.</Typography>
+                )}
+              </Box>
+
+              {currentSheetData && (
+                <SheetMappingPreview
+                  sheet={currentSheetData}
+                  columnMappings={columnMappings[currentSheetName] || {}}
+                  onMappingChange={(excelCol, dbField) => handleColumnMappingChange(currentSheetName, excelCol, dbField)}
+                  databaseFields={currentDatabaseFields}
+                />
+              )}
+              
+              {selectedSheets.length > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                  <Pagination
+                    count={selectedSheets.length}
+                    page={currentSheetIndex + 1}
+                    onChange={(event, value) => setCurrentSheetIndex(value - 1)}
+                    renderItem={(item) => (
+                      <PaginationItem
+                        slots={{ previous: ArrowBackIcon, next: ArrowForwardIcon }}
+                        {...item}
+                      />
+                    )}
+                  />
+                </Box>
               )}
             </Box>
           )}
