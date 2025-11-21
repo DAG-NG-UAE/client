@@ -17,7 +17,7 @@ export const readHistoricalExcelFile = (file: File): Promise<SheetData[]> => {
 
         workbook.SheetNames.forEach(sheetName => {
           const worksheet = workbook.Sheets[sheetName];
-          const jsonSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+          const jsonSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, dateNF: 'yyyy-mm-dd' }) as any[][];
           sheetData.push({ name: sheetName, data: jsonSheet });
         });
 
