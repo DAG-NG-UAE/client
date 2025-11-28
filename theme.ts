@@ -1,12 +1,14 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 import { PaletteMode } from '@mui/material';
 
+// manage custom themes across codebase
 declare module '@mui/material/styles' {
   interface Palette {
     icons?: {
       container: string;
       main: string;
     };
+    loginBackground?: string;
   }
 
   interface PaletteOptions {
@@ -14,6 +16,7 @@ declare module '@mui/material/styles' {
       container: string;
       main: string;
     };
+    loginBackground?: string;
   }
 }
 
@@ -100,6 +103,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
             container: '#dbeafe', // Icon container background
             main: '#5f92fd', // Icon color
           },
+          loginBackground: '#1557f5', // New login page background color
         }
       : {
           // Dark mode palette (adjusting for new sidebar color)
@@ -140,6 +144,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
             container: '#dbeafe', // Icon container background for dark mode
             main: '#5f92fd', // Icon color for dark mode
           },
+          loginBackground: '#1557f5', // Login page background color for dark mode
         }),
   },
   typography,
