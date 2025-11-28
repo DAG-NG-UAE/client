@@ -1,6 +1,22 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 import { PaletteMode } from '@mui/material';
 
+declare module '@mui/material/styles' {
+  interface Palette {
+    icons?: {
+      container: string;
+      main: string;
+    };
+  }
+
+  interface PaletteOptions {
+    icons?: {
+      container: string;
+      main: string;
+    };
+  }
+}
+
 // Define common design tokens from tailwindstyle.css
 const typography = {
   fontFamily: '"Geist Sans", sans-serif',
@@ -26,7 +42,7 @@ const typography = {
   },
   body1: {
     fontSize: '1rem',
-    fontWeight: 400,
+    fontWeight: 'normal',
     lineHeight: 1.5,
   },
   button: {
@@ -80,6 +96,10 @@ const getDesignTokens = (mode: PaletteMode) => ({
           success: {
             main: '#459569', // Open color: similar to pending as per image.
           },
+          icons: {
+            container: '#dbeafe', // Icon container background
+            main: '#5f92fd', // Icon color
+          },
         }
       : {
           // Dark mode palette (adjusting for new sidebar color)
@@ -115,6 +135,10 @@ const getDesignTokens = (mode: PaletteMode) => ({
           },
           success: {
             main: '#459569',
+          },
+          icons: {
+            container: '#dbeafe', // Icon container background for dark mode
+            main: '#5f92fd', // Icon color for dark mode
           },
         }),
   },
@@ -216,6 +240,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
       },
     },
   },
+ 
 });
 
 export const getAppTheme = (mode: PaletteMode) => responsiveFontSizes(createTheme(getDesignTokens(mode)));

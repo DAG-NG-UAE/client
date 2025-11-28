@@ -152,6 +152,7 @@ const RequisitionPage = () => {
             <Card
               sx={{
                 height: '100%',
+                minHeight: 220, // Set a minimum height for uniform cards
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -162,12 +163,22 @@ const RequisitionPage = () => {
               }}
               onClick={() => handleRequisitionClick(req.requisition_id)}
             >
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <WorkIcon color="primary" sx={{ fontSize: 40 }} />
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Box sx={{
+                      backgroundColor: theme.palette.icons?.container, 
+                      borderRadius: (theme.shape.borderRadius as number) / 2, 
+                      height: '40px',
+                      width: '40px',
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center'
+                  }}>
+                    <WorkIcon sx={{ fontSize: 24, color: theme.palette.icons?.main }} />
+                  </Box>
                   <Chip {...getStatusChipProps(req.status)} size="small" />
                 </Box>
-                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                <Typography variant="body1" component="div" sx={{ mb: 0.5 }}>
                   {req.position}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
