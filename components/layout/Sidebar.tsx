@@ -8,6 +8,7 @@ import AnalyticsIcon from '@mui/icons-material/Analytics';
 import BusinessIcon from '@mui/icons-material/Business';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { styled, useTheme } from '@mui/material/styles';
+import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
 
 const drawerWidth = 240;
 
@@ -18,9 +19,11 @@ interface SidebarProps {
 
 const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
   const theme = useTheme();
+  const router = useRouter();
+  const pathname = usePathname(); // Get current pathname
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' }, // Changed path to /dashboard
     { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition' },
     { text: 'Candidates', icon: <PeopleIcon />, path: '/candidates' },
     { text: 'Interviews', icon: <EventNoteIcon />, path: '/interviews' },
@@ -46,14 +49,21 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
       </Box>
       <List sx={{ flexGrow: 1, paddingTop: theme.spacing(1) }}>
         {menuItems.map((item) => (
-          <ListItemButton key={item.text} href={item.path} sx={{
+          <ListItemButton 
+            key={item.text} 
+            selected={pathname === item.path} // Set selected based on current path
+            onClick={() => {
+              router.push(item.path); 
+              handleDrawerToggle(); // Close drawer on mobile after navigation
+            }}
+            sx={{
             margin: theme.spacing(0.5, 1),
             borderRadius: theme.shape.borderRadius,
             '&.Mui-selected': {
               backgroundColor: theme.palette.primary.main,
               color: theme.palette.primary.contrastText,
               '&:hover': {
-                backgroundColor: theme.palette.primary.dark,
+                backgroundColor: theme.palette.primary.main,
               },
             },
             '&:hover': {
