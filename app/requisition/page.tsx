@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, AppBar, Toolbar, Typography, IconButton, Drawer, List, ListItemText, CssBaseline, Button, Alert, CircularProgress, ListItemButton, Pagination } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
+import { Box, Typography, Alert, CircularProgress, Pagination, Grid, Card, CardContent, Chip } from '@mui/material';
 import { getRequisitions } from '../../api/requisitionApi';
 import { useRouter } from 'next/navigation';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
@@ -9,9 +8,9 @@ import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
-// import { updateRequisition } from '../../api/requisitionApi';
-
-const drawerWidth = 240;
+import WorkIcon from '@mui/icons-material/Work';
+import GroupIcon from '@mui/icons-material/Group';
+import { useTheme } from '@mui/material/styles';
 
 interface Requisition {
   requisition_id: string;
@@ -19,33 +18,41 @@ interface Requisition {
   status: string;
   department: string;
   date_created: string;
-  expected_date_of_resumption: string;
-  // Add other requisition fields as they exist in your backend
+  expected_start_date: string; // Changed from expected_date_of_resumption
+  applicants: number; // Added for the new UI
 }
 
 const RequisitionPage = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [requisitions, setRequisitions] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [requisitionsPerPage] = useState(5); // You can adjust this value
+  const [requisitionsPerPage] = useState(8); // Adjusted for card display
   const router = useRouter();
+  const theme = useTheme();
 
   useEffect(() => {
     const fetchRequisitions = async () => {
-      console.log(`inside here the filter status is ${filterStatus}`)
+      console.log(`inside here the filter status is ${filterStatus}`);
       try {
         setLoading(true);
         setError(null);
-        let data 
-        if(filterStatus == 'all'){ 
-          data = await getRequisitions()
-        }else{ 
+        let data: any[];
+        if (filterStatus === 'all') {
+          data = await getRequisitions();
+        } else {
           data = await getRequisitions(filterStatus);
         }
-        setRequisitions(data);
+
+        // Adding dummy applicant data and ensuring expected_start_date for UI consistency
+        const requisitionsWithApplicants = data.map(req => ({
+          ...req,
+          applicants: Math.floor(Math.random() * 50) + 10, // Dummy data
+          expected_start_date: req.expected_start_date || new Date().toISOString().split('T')[0], // Ensure date exists
+        }));
+
+        setRequisitions(requisitionsWithApplicants);
       } catch (err) {
         setError('Failed to fetch requisitions.');
         console.error(err);
@@ -54,11 +61,7 @@ const RequisitionPage = () => {
       }
     };
     fetchRequisitions();
-  }, [filterStatus]); // Re-run effect when filterStatus changes
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  }, [filterStatus]);
 
   const handleFilterChange = (event: SelectChangeEvent) => {
     setFilterStatus(event.target.value as string);
@@ -69,176 +72,124 @@ const RequisitionPage = () => {
     router.push(`/candidate-upload?requisitionId=${requisitionId}`);
   };
 
-  // const handleStatusChange = async (requisitionId: string, newStatus: string) => {
-  //   try {
-  //     setLoading(true);
-  //     setError(null);
-  //     await updateRequisition(requisitionId, { status: newStatus });
-  //     // Re-fetch requisitions to update the list after status change
-  //     const data = await getRequisitions();
-  //     setRequisitions(data);
-  //   } catch (err) {
-  //     setError('Failed to update requisition status.');
-  //     console.error(err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleStatusChange = async (requisitionId: string, newStatus: string) => {
-    console.log(`they want to update th ${requisitionId} to status ${newStatus}`) 
-
-  }
+    console.log(`they want to update the ${requisitionId} to status ${newStatus}`);
+    // TODO: Implement actual API call to update requisition status
+  };
 
   // Get current requisitions for pagination
   const indexOfLastRequisition = currentPage * requisitionsPerPage;
   const indexOfFirstRequisition = indexOfLastRequisition - requisitionsPerPage;
   const currentRequisitions = requisitions.slice(indexOfFirstRequisition, indexOfLastRequisition);
 
-  // Change page
   const paginate = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
   };
 
-  const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-      <Typography variant="h6" sx={{ my: 2 }}>
-        HR Portal
-      </Typography>
-      <List>
-        <ListItemButton>
-          <ListItemText primary="Dashboard" />
-        </ListItemButton>
-        <ListItemButton>
-          <ListItemText primary="Requisitions" />
-        </ListItemButton>
-        <ListItemButton>
-          <ListItemText primary="Candidates" />
-        </ListItemButton>
-      </List>
-    </Box>
-  );
+  const getStatusChipProps = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return { label: 'Open', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
+      case 'in review':
+        return { label: 'In Review', color: 'warning' as 'warning', variant: 'outlined' as 'outlined' };
+      case 'closed':
+        return { label: 'Closed', color: 'error' as 'error', variant: 'outlined' as 'outlined' };
+      case 'approved':
+        return { label: 'Approved', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
+      case 'pending':
+        return { label: 'Pending', color: 'info' as 'info', variant: 'outlined' as 'outlined' };
+      case 'hold':
+        return { label: 'On Hold', color: 'warning' as 'warning', variant: 'outlined' as 'outlined' };
+      case 'progress':
+        return { label: 'In Progress', color: 'primary' as 'primary', variant: 'outlined' as 'outlined' };
+      default:
+        return { label: status, color: 'default' as 'default', variant: 'outlined' as 'outlined' };
+    }
+  };
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            HR Requisition Portal
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
-      >
-        {/* The implementation can be swapped with js to avoid SEO duplication of the drawer. */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
-      >
-        {/* <Toolbar /> Placeholder for the AppBar */}
-        <Typography variant="h4" gutterBottom>
-          Active Requisitions
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="status-filter-label">Status</InputLabel>
-            <Select
-              labelId="status-filter-label"
-              id="status-filter"
-              value={filterStatus}
-              label="Status"
-              onChange={handleFilterChange}
-            >
-              <MenuItem value="all">All</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-              <MenuItem value="approved">Approved</MenuItem>
-              <MenuItem value="hold">On Hold</MenuItem>
-              <MenuItem value="progress">In Progress</MenuItem>
-              <MenuItem value="closed">Closed</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField label="Filter by Department" variant="outlined" />
-          <TextField label="Filter by Date" variant="outlined" placeholder="YYYY-MM-DD" />
-        </Box>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Open Requisitions
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
+        Manage and track all your hiring requisitions
+      </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <Alert severity="error">{error}</Alert>}
-        {!loading && !error && requisitions.length === 0 && (
-          <Typography>No requisitions</Typography>
-        )}
-        <List>
-          {currentRequisitions?.map((req) => (
-            <ListItemButton key={req.requisition_id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-              <Box onClick={() => handleRequisitionClick(req.requisition_id)} sx={{ flexGrow: 1, p: 2 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{req.position}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Status: {req.status} | Expected Resumption: {new Date(req.expected_start_date).toLocaleDateString()}
+      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="status-filter-label">Status</InputLabel>
+          <Select
+            labelId="status-filter-label"
+            id="status-filter"
+            value={filterStatus}
+            label="Status"
+            onChange={handleFilterChange}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="approved">Approved</MenuItem>
+            <MenuItem value="hold">On Hold</MenuItem>
+            <MenuItem value="progress">In Progress</MenuItem>
+            <MenuItem value="closed">Closed</MenuItem>
+            <MenuItem value="open">Open</MenuItem> {/* Added 'Open' status */}
+            <MenuItem value="in review">In Review</MenuItem> {/* Added 'In Review' status */}
+          </Select>
+        </FormControl>
+        <TextField label="Filter by Department" variant="outlined" />
+        <TextField label="Filter by Date" variant="outlined" placeholder="YYYY-MM-DD" />
+      </Box>
+
+      {loading && <CircularProgress sx={{ display: 'block', my: 4 }} />}
+      {error && <Alert severity="error" sx={{ my: 4 }}>{error}</Alert>}
+      {!loading && !error && requisitions.length === 0 && (
+        <Typography sx={{ my: 4 }}>No requisitions found.</Typography>
+      )}
+
+      <Grid container spacing={3}>
+        {currentRequisitions?.map((req) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={req.requisition_id}>
+            <Card
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                border: `1px solid ${theme.palette.divider}`,
+                boxShadow: 'none',
+                '&:hover': { boxShadow: theme.shadows[3] },
+              }}
+              onClick={() => handleRequisitionClick(req.requisition_id)}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <WorkIcon color="primary" sx={{ fontSize: 40 }} />
+                  <Chip {...getStatusChipProps(req.status)} size="small" />
+                </Box>
+                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                  {req.position}
                 </Typography>
-                {/* <Typography variant="body2" color="text.secondary">Department: {req.department}</Typography> */}
-              </Box>
-              <FormControl variant="outlined" size="small" sx={{ minWidth: 120, mr: 2 }} onClick={(e) => e.stopPropagation()}> {/* Stop propagation here */}
-                <InputLabel id={`status-label-${req.requisition_id}`}>Status</InputLabel>
-                <Select
-                  labelId={`status-label-${req.requisition_id}`}
-                  value={req.status}
-                  onChange={(e: SelectChangeEvent) => handleStatusChange(req.requisition_id, e.target.value as string)}
-                  label="Status"
-                >
-                  <MenuItem value="Pending">Pending</MenuItem>
-                  <MenuItem value="Approved">Approved</MenuItem>
-                  <MenuItem value="On Hold">On Hold</MenuItem>
-                  <MenuItem value="In Progress">In Progress</MenuItem>
-                  <MenuItem value="Closed">Closed</MenuItem>
-                </Select>
-              </FormControl>
-            </ListItemButton>
-          ))}
-        </List>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <Pagination
-            count={Math.ceil(requisitions.length / requisitionsPerPage)}
-            page={currentPage}
-            onChange={paginate}
-            color="primary"
-          />
-        </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {req.department}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mt: 2 }}>
+                  <GroupIcon sx={{ mr: 0.5, fontSize: 18 }} />
+                  <Typography variant="body2">{req.applicants} applicants</Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Pagination
+          count={Math.ceil(requisitions.length / requisitionsPerPage)}
+          page={currentPage}
+          onChange={paginate}
+          color="primary"
+        />
       </Box>
     </Box>
   );

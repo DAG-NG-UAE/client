@@ -1,30 +1,42 @@
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
 import React from 'react';
+import { AppBar, Toolbar, IconButton, Typography } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import { useTheme } from '@mui/material/styles';
+
+const drawerWidth = 240;
 
 interface HeaderProps {
-  onMenuClick: () => void;
+  handleDrawerToggle: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+const Header = ({ handleDrawerToggle }: HeaderProps) => {
+  const theme = useTheme();
   return (
-    <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+    <AppBar
+      position="fixed"
+      sx={{
+        width: { sm: `calc(100% - ${drawerWidth}px)` },
+        ml: { sm: `${drawerWidth}px` },
+        // boxShadow: 'none',
+        // borderBottom: `1px solid ${theme.palette.divider}`,
+        // backgroundColor: theme.palette.background.default,
+        // color: theme.palette.text.primary,
+      }}
+    >
       <Toolbar>
         <IconButton
           color="inherit"
           aria-label="open drawer"
           edge="start"
-          onClick={onMenuClick}
-          sx={{ mr: 2 }}
+          onClick={handleDrawerToggle}
+          sx={{ mr: 2, display: { sm: 'none' } }}
         >
           <MenuIcon />
         </IconButton>
-        <Typography variant="h6" noWrap component="div">
-          HR Portal
-        </Typography>
+        {/* The title will be handled by the specific pages or context */}
+        {/* <Typography variant="h6" noWrap component="div">
+          Page Title
+        </Typography> */}
       </Toolbar>
     </AppBar>
   );
