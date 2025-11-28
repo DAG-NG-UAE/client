@@ -34,11 +34,11 @@ const SheetMappingPreview: React.FC<SheetMappingPreviewProps> = ({ sheet, column
   });
 
   const requisitionFields = databaseFields.filter(field =>
-    ['Date of Request Received', 'Job Title', 'Department', 'Location', 'Hiring Manager', 'Status'].includes(field.name)
+    ['Date of Request Received', 'Role', 'Department', 'Region', 'Hiring Manager', 'Expected Start Date', 'Status'].includes(field.name)
   );
 
   const candidateProfileFields = databaseFields.filter(field =>
-    !['Date of Request Received', 'Job Title', 'Department', 'Location', 'Hiring Manager', 'Status'].includes(field.name)
+    !['Date of Request Received', 'Role', 'Department', 'Region', 'Hiring Manager', 'Status'].includes(field.name)
   );
 
   return (

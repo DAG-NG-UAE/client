@@ -7,6 +7,7 @@ import SheetMappingPreview from './SheetMappingPreview'; // Import the new compo
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { uploadTrackerData } from '@/api/trackerUpload';
 
 interface ImportTrackerDataModalProps {
   open: boolean;
@@ -23,8 +24,10 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
   const [columnMappings, setColumnMappings] = useState<{[sheetName: string]: {[dbField: string]: string | null}}>({});
   const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>(DOCUMENT_TYPES.RECRUITMENT_TRACKER); // Default to Recruitment Tracker
+  const [importResults, setImportResults] = useState<any>(null); // To store results from backend
+  const [importError, setImportError] = useState<string | null>(null); // To store any import errors
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (activeStep === 0 && !selectedFile) {
       alert('Please upload an Excel file first.');
       return;
@@ -37,7 +40,31 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
       alert('Please select at least one sheet.');
       return;
     }
+    if (activeStep === 2) {
+      const payload = getPayload();
+      // console.log("Payload to send:", JSON.stringify(payload)); // For debugging, will be replaced with API call
+      // TODO: Send payload to backend
+    }
+    if (activeStep === 3) {
+      console.log('you got to phase 3 which is finish');
+      const payload = getPayload();
+      console.log("Sending payload to backend:", JSON.stringify(payload));
+      try {
+        setImportError(null); // Clear previous errors
+        const results = await uploadTrackerData(payload);
+        console.log("API response received:", results);
+        setImportResults(results);
+        setActiveStep((prevActiveStep) => prevActiveStep + 1); // Advance to results step
+      } catch (error: any) {
+        console.error("API error during upload:", error);
+        setImportError(error.message || 'An unexpected error occurred during import.');
+        setImportResults(null); // Clear previous results on error
+        setActiveStep((prevActiveStep) => prevActiveStep + 1); // Still advance to results step to show error
+      }
+      return; // Prevent immediate next step, as we wait for API response
+    }
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    console.log(`active step is ${activeStep}`);
   };
 
   const handleBack = () => {
@@ -129,6 +156,42 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
   const currentSheetName = selectedSheets[currentSheetIndex];
   const currentSheetData = sheetData.find(s => s.name === currentSheetName);
   const currentDatabaseFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];
+
+  const getPayload = () => {
+    const payload: any = {
+      tracking_filename: selectedFile?.name || "unknown_file.xlsx",
+      sheets_to_process: [],
+    };
+
+    selectedSheets.forEach(sheetName => {
+      const sheet = sheetData.find(s => s.name === sheetName);
+      if (sheet && sheet.data.length > 1) { // Ensure there's header and at least one data row
+        const headers = sheet.data[0].map(header => String(header)); // Get actual headers from Excel
+        const rows = sheet.data.slice(1); // Get data rows, excluding header
+
+        const processedRows = rows.map(row => {
+          const newRow: { [key: string]: any } = {};
+          currentDatabaseFields.forEach(dbField => {
+            const mappedExcelColumn = columnMappings[sheetName]?.[dbField.name];
+            if (mappedExcelColumn) {
+              const headerIndex = headers.indexOf(mappedExcelColumn);
+              if (headerIndex !== -1 && row[headerIndex] !== undefined) {
+                newRow[dbField.name === "Location" ? "location" : dbField.name] = row[headerIndex]; // Apply 'location' mapping if needed
+              }
+            }
+          });
+          return newRow;
+        });
+
+        payload.sheets_to_process.push({
+          sheet_name: sheetName,
+          status_in_sheet: "closed", // Placeholder for now, will need to determine how to get this
+          raw_data_rows: processedRows,
+        });
+      }
+    });
+    return payload;
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -235,7 +298,31 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
               )}
             </Box>
           )}
-          {activeStep === 3 && <Typography>Step 4: Confirm import.</Typography>}
+          {activeStep === 3 && ( // Confirm Import step
+            <Box>
+              <Typography variant="h6" gutterBottom>Confirm Import</Typography>
+              <Typography variant="body1">Click 'Finish' to finalize the import process.</Typography>
+            </Box>
+          )}
+          {activeStep === 4 && ( // This is the new final step after API call
+            <Box>
+              <Typography variant="h6" gutterBottom>Import Results</Typography>
+              {importError && (
+                <Typography color="error" sx={{ mt: 2 }}>Error: {importError}</Typography>
+              )}
+              {importResults && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body1">Import completed successfully!</Typography>
+                  <Typography variant="body1">Requisitions created: {importResults.requisitionsCreated || 0}</Typography>
+                  <Typography variant="body1">Candidate profiles generated: {importResults.candidateProfilesGenerated || 0}</Typography>
+                  {/* Add more details from importResults as needed */}
+                </Box>
+              )}
+              {!importError && !importResults && (
+                <Typography variant="body1">Importing data...</Typography>
+              )}
+            </Box>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>
