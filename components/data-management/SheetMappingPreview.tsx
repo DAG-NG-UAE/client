@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Select, MenuItem, FormControl, InputLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import MapIcon from '@mui/icons-material/Map';
+import { useTheme } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -21,6 +21,7 @@ interface SheetMappingPreviewProps {
 }
 
 const SheetMappingPreview: React.FC<SheetMappingPreviewProps> = ({ sheet, columnMappings, onMappingChange, databaseFields }) => {
+  const theme = useTheme();
   if (!sheet || sheet.data.length === 0) return <Typography>No data to preview.</Typography>;
 
   const headers = sheet.data[0];
@@ -45,9 +46,9 @@ const SheetMappingPreview: React.FC<SheetMappingPreviewProps> = ({ sheet, column
     <Box sx={{ mb: 4 }}>
       <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
         {isSheetFullyMapped ? (
-          <><CheckCircleOutlineIcon color="success" /><Typography color="success.main">Sheet fully mapped ✓</Typography></>
+          <><CheckCircleOutlineIcon sx={{color: theme.palette.success.main}} /><Typography sx={{color: theme.palette.success.main}}>Sheet fully mapped ✓</Typography></>
         ) : (
-          <><WarningAmberIcon color="warning" /><Typography color="warning.main">Sheet not fully mapped (Required fields missing)</Typography></>
+          <><WarningAmberIcon sx={{color: theme.palette.error.main}} /><Typography sx={{color: theme.palette.error.main}}>Sheet not fully mapped (Required fields missing)</Typography></>
         )}
       </Box>
       

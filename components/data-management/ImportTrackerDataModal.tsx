@@ -92,7 +92,7 @@ const ImportTrackerDataModal: React.FC<ImportTrackerDataModalProps> = ({ open, o
         // Initialize column mappings
         const initialMappings: {[sheetName: string]: {[dbField: string]: string | null}} = {};
         data.forEach(sheet => {
-          if (sheet.data.length > 0) {
+          if (sheet!.data.length > 0) {
             const headers = sheet!.data[0];
             initialMappings[sheet.name] = {};
             const currentDocumentFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];

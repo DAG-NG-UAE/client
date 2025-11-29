@@ -3,14 +3,22 @@ import React, { useState } from 'react';
 import { 
   Box, Dialog, DialogTitle, DialogContent, DialogActions, 
   Typography, Button, IconButton, FormControl, InputLabel, Select, MenuItem,
-  LinearProgress, Checkbox, FormControlLabel, Paper, Tooltip
+  LinearProgress, Checkbox, FormControlLabel, Paper, Tooltip,
+  PaginationItem,
+  Pagination,
+  Chip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { useTheme } from '@mui/material/styles';
 import FileIcon from '@mui/icons-material/FileCopyRounded';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { readHistoricalExcelFile, SheetData } from '@/utils/historicalExcelParser';
+import { DATABASE_FIELDS_BY_DOCUMENT_TYPE, DOCUMENT_TYPES } from '@/utils/constants';
+import SheetMappingPreview from '../data-management/SheetMappingPreview';
 
 interface UploadHistoricalDataModalProps {
   open: boolean;
@@ -25,16 +33,38 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
   const [dataType, setDataType] = useState('Recruitment Tracker');
   const [detectedSheets, setDetectedSheets] = useState<SheetData[]>([]);
   const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
+  const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>(DOCUMENT_TYPES.RECRUITMENT_TRACKER)
+  const [columnMappings, setColumnMappings] = useState<{[sheetName: string]: {[dbField: string]: string | null}}>({});
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFile(event.target.files[0]);
       try{ 
 
-        console.log(`we uploaded file => ${selectedFile}`)
+            console.log(`we uploaded file => ${selectedFile}`)
             const data = await readHistoricalExcelFile(event.target.files?.[0])
             setDetectedSheets(data)
             console.log(`the data is => ${JSON.stringify(data)}`)
+
+            // Initialize column mappings
+            const initialMappings: {[sheetName: string]: {[dbField: string]: string | null}} = {};
+            data.forEach(sheet => {
+            if (sheet!.data.length > 0) {
+                const headers = sheet!.data[0];
+                initialMappings[sheet.name] = {};
+                const currentDocumentFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];
+                currentDocumentFields.forEach(dbField => {
+                const matchingHeader = headers.find((header: any) => String(header) === dbField.name);
+                if (matchingHeader) {
+                    initialMappings[sheet.name][dbField.name] = String(matchingHeader);
+                } else {
+                    initialMappings[sheet.name][dbField.name] = null; // No mapping by default
+                }
+                });
+            }
+            });
+            setColumnMappings(initialMappings);
       }catch(error){ 
         console.error("Error reading excel file:", error);
         // TODO: show the user that there was an error when reading the excel sheet
@@ -66,10 +96,18 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
   };
 
   const handleSheetToggle = (sheetName: string) => {
-    setSelectedSheets((prev) => 
-      prev.includes(sheetName)
+    setSelectedSheets(prev => {
+        const newSelectedSheets = prev.includes(sheetName)
         ? prev.filter((name) => name !== sheetName)
         : [...prev, sheetName]
+
+        // Reset currentSheetIndex if the currently viewed sheet is deselected
+      if (!newSelectedSheets.includes(selectedSheets[currentSheetIndex])) {
+        setCurrentSheetIndex(0);
+      }
+        return newSelectedSheets
+    }
+     
     );
   };
 
@@ -81,8 +119,71 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
     setSelectedSheets([]);
   };
 
-  const steps = ['Upload', 'Select Sheets', 'Map Columns', 'Confirm'];
+  const handleColumnMappingChange = (sheetName: string, excelColumn: string, dbField: string) => {
+    setColumnMappings(prevMappings => ({
+      ...prevMappings,
+      [sheetName]: {
+        ...prevMappings[sheetName],
+        [dbField]: excelColumn, // Map dbField to excelColumn
+      },
+    }));
+  };
 
+  const isSheetFullyMapped = (sheetName: string): boolean => {
+    const sheetMappings = columnMappings[sheetName];
+    if (!sheetMappings) return false;
+    const currentDocumentFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];
+    // Check if every REQUIRED DATABASE_FIELD has a corresponding mapping from an Excel column
+    return currentDocumentFields.every(dbField => {
+      if (dbField.required) {
+        return Object.values(sheetMappings).includes(dbField.name);
+      }
+      return true; // Non-required fields don't prevent full mapping
+    });
+  };
+
+  const steps = ['Upload', 'Select Sheets', 'Map Columns'];
+
+  const currentSheetName = selectedSheets[currentSheetIndex];
+  const currentSheetData = detectedSheets.find(s => s.name === currentSheetName);
+  const currentDatabaseFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];
+
+  const getPayload = () => {
+    const payload: any = {
+      tracking_filename: selectedFile?.name || "unknown_file.xlsx",
+      sheets_to_process: [],
+    };
+
+    selectedSheets.forEach(sheetName => {
+      const sheet = detectedSheets.find(s => s.name === sheetName);
+      if (sheet && sheet.data.length > 1) { // Ensure there's header and at least one data row
+        const headers = sheet.data[0].map(header => String(header)); // Get actual headers from Excel
+        const rows = sheet.data.slice(1); // Get data rows, excluding header
+
+        const processedRows = rows.map(row => {
+          const newRow: { [key: string]: any } = {};
+          currentDatabaseFields.forEach(dbField => {
+            const mappedExcelColumn = columnMappings[sheetName]?.[dbField.name];
+            if (mappedExcelColumn) {
+              const headerIndex = headers.indexOf(mappedExcelColumn);
+              if (headerIndex !== -1 && row[headerIndex] !== undefined) {
+                newRow[dbField.name === "Location" ? "location" : dbField.name] = row[headerIndex]; // Apply 'location' mapping if needed
+              }
+            }
+          });
+          return newRow;
+        });
+
+        payload.sheets_to_process.push({
+          sheet_name: sheetName,
+          status_in_sheet: "closed", //TODO determine how to get the actual status in the sheet
+          raw_data_rows: processedRows,
+        });
+      }
+    });
+    return payload;
+  };
+  
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0: // Upload Excel File
@@ -182,7 +283,7 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
                 >
                   <Checkbox 
                     checked={selectedSheets.includes(sheet.name)}
-                    onChange={() => handleSheetToggle(sheet.name)}
+                    // onChange={() => handleSheetToggle(sheet.name)}
                     name={sheet.name}
                     color="primary"
                   />
@@ -198,11 +299,61 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
         );
       case 2: // Map Columns (placeholder)
         return (
-          <Box>
-            <Typography variant="h6">Map Columns</Typography>
-            <Typography>This is where you would map columns.</Typography>
-          </Box>
-        );
+            <>
+            <Typography variant="h6" gutterBottom>Preview Data and Map Fields</Typography>
+              <Box sx={{ mb: 2 }}>
+                {selectedSheets.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                    {selectedSheets.map((sheetName) => (
+                      <Chip
+                        key={sheetName}
+                        label={sheetName}
+                        color={isSheetFullyMapped(sheetName) ? "success" : "default"}
+                        icon={isSheetFullyMapped(sheetName) ? <CheckCircleOutlineIcon /> : undefined}
+                        variant={currentSheetName === sheetName ? "filled" : "outlined"}
+                        onClick={() => setCurrentSheetIndex(selectedSheets.indexOf(sheetName))}
+                      />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography>No sheets selected for preview.</Typography>
+                )}
+              </Box>
+
+            {currentSheetData && (
+                <SheetMappingPreview
+                sheet={currentSheetData}
+                columnMappings={columnMappings[currentSheetName]}
+                onMappingChange={(excelCol, dbField) => handleColumnMappingChange(currentSheetName, excelCol, dbField)}
+                databaseFields={currentDatabaseFields}
+    
+                >
+    
+                </SheetMappingPreview>
+            )}
+
+            {/* Pagination */}
+            {selectedSheets.length > 1 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                  <Pagination
+                    count={selectedSheets.length}
+                    page={currentSheetIndex + 1}
+                    onChange={(event, value) => setCurrentSheetIndex(value - 1)}
+                    renderItem={(item) => (
+                      <PaginationItem
+                        slots={{ previous: ArrowBackIcon, next: ArrowForwardIcon }}
+                        {...item}
+                      />
+                    )}
+                  />
+                </Box>
+              )}
+            </>
+            
+            
+        )
+        
+        
       case 3: // Confirm (placeholder)
         return (
           <Box>
