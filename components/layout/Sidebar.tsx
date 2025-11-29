@@ -7,6 +7,7 @@ import EventNoteIcon from '@mui/icons-material/EventNote';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import BusinessIcon from '@mui/icons-material/Business';
 import SettingsIcon from '@mui/icons-material/Settings';
+import HistoricalIcon from '@mui/icons-material/History';
 import { styled, useTheme } from '@mui/material/styles';
 import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
 
@@ -28,6 +29,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
     { text: 'Candidates', icon: <PeopleIcon />, path: '/candidates' },
     { text: 'Interviews', icon: <EventNoteIcon />, path: '/interviews' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
+    { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history'},
     { text: 'Departments', icon: <BusinessIcon />, path: '/departments' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];

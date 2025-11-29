@@ -67,3 +67,67 @@ export const DATABASE_FIELDS_BY_DOCUMENT_TYPE = {
 export const ALL_DATABASE_FIELDS = [
   ...DATABASE_FIELDS_BY_DOCUMENT_TYPE[DOCUMENT_TYPES.RECRUITMENT_TRACKER].map(field => field.name),
 ];
+
+export interface HistoricalRecord {
+  uploadDate: string;
+  fileName: string;
+  type: 'Closed Positions' | 'Open Positions' | 'On Hold';
+  year: number;
+  quarter: string;
+  requisitions: number;
+  candidates: number;
+  status: 'Complete' | 'Failed';
+}
+
+export const SAMPLE_HISTORICAL_DATA: HistoricalRecord[] = [
+  {
+    uploadDate: 'Nov 29, 2025',
+    fileName: 'dummy_candidate.xlsx',
+    type: 'Closed Positions',
+    year: 2024,
+    quarter: 'Q4',
+    requisitions: 45,
+    candidates: 234,
+    status: 'Complete',
+  },
+  {
+    uploadDate: 'Nov 28, 2025',
+    fileName: 'Q4_2024_Recruitment_Data.xlsx',
+    type: 'Closed Positions',
+    year: 2024,
+    quarter: 'Q4',
+    requisitions: 45,
+    candidates: 234,
+    status: 'Complete',
+  },
+  {
+    uploadDate: 'Nov 25, 2025',
+    fileName: 'Q3_2024_Open_Positions.xlsx',
+    type: 'Open Positions',
+    year: 2024,
+    quarter: 'Q3',
+    requisitions: 28,
+    candidates: 156,
+    status: 'Complete',
+  },
+  {
+    uploadDate: 'Nov 22, 2025',
+    fileName: 'Q2_2024_Recruitment_Tracker.xlsx',
+    type: 'Closed Positions',
+    year: 2024,
+    quarter: 'Q2',
+    requisitions: 38,
+    candidates: 189,
+    status: 'Complete',
+  },
+  {
+    uploadDate: 'Nov 20, 2025',
+    fileName: 'Q1_2024_Historical_Data.xlsx',
+    type: 'On Hold',
+    year: 2024,
+    quarter: 'Q1',
+    requisitions: 12,
+    candidates: 45,
+    status: 'Failed',
+  },
+];
