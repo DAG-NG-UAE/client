@@ -6,7 +6,8 @@ import {
   LinearProgress, Checkbox, FormControlLabel, Paper, Tooltip,
   PaginationItem,
   Pagination,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -16,6 +17,8 @@ import FileIcon from '@mui/icons-material/FileCopyRounded';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import PeopleIcon from '@mui/icons-material/People';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { readHistoricalExcelFile, SheetData } from '@/utils/historicalExcelParser';
 import { DATABASE_FIELDS_BY_DOCUMENT_TYPE, DOCUMENT_TYPES } from '@/utils/constants';
 import SheetMappingPreview from '../data-management/SheetMappingPreview';
@@ -36,6 +39,9 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
   const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>(DOCUMENT_TYPES.RECRUITMENT_TRACKER)
   const [columnMappings, setColumnMappings] = useState<{[sheetName: string]: {[dbField: string]: string | null}}>({});
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [importSuccess, setImportSuccess] = useState<{requisitions: number, candidates: number} | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -88,7 +94,12 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
       alert('Please upload an Excel file.');
       return;
     }
-    setActiveStep((prev) => prev + 1);
+
+    if (activeStep === steps.length - 1) {
+        handleProcessImport();
+    } else {
+        setActiveStep((prev) => prev + 1);
+    }
   };
 
   const handleBack = () => {
@@ -101,14 +112,12 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
         ? prev.filter((name) => name !== sheetName)
         : [...prev, sheetName]
 
-        // Reset currentSheetIndex if the currently viewed sheet is deselected
-      if (!newSelectedSheets.includes(selectedSheets[currentSheetIndex])) {
-        setCurrentSheetIndex(0);
-      }
-        return newSelectedSheets
-    }
-     
-    );
+         // Reset currentSheetIndex if the currently viewed sheet is deselected
+       if (!newSelectedSheets.includes(selectedSheets[currentSheetIndex])) {
+         setCurrentSheetIndex(0);
+       }
+         return newSelectedSheets
+    });
   };
 
   const handleSelectAllSheets = () => {
@@ -124,7 +133,7 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
       ...prevMappings,
       [sheetName]: {
         ...prevMappings[sheetName],
-        [dbField]: excelColumn, // Map dbField to excelColumn
+        [dbField]: excelColumn,
       },
     }));
   };
@@ -142,7 +151,7 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
     });
   };
 
-  const steps = ['Upload', 'Select Sheets', 'Map Columns'];
+  const steps = ['Upload', 'Select Sheets', 'Map Columns', 'Result'];
 
   const currentSheetName = selectedSheets[currentSheetIndex];
   const currentSheetData = detectedSheets.find(s => s.name === currentSheetName);
@@ -183,7 +192,46 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
     });
     return payload;
   };
-  
+
+  const handleProcessImport = async () => {
+    setIsProcessing(true);
+    setImportError(null);
+    setImportSuccess(null);
+
+    const payload = getPayload();
+    console.log("Payload for backend:", JSON.stringify(payload, null, 2));
+
+    // Simulate API call
+    try {
+      // Replace with actual API call to your backend
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+
+      // Simulate a successful response
+      setImportSuccess({ requisitions: 45, candidates: 234 });
+      setActiveStep(steps.length - 1); // Move to the result step
+    } catch (error) {
+      console.error("Error during import:", error);
+      setImportError(`Failed to import data: ${error instanceof Error ? error.message : String(error)}`);
+      setActiveStep(steps.length - 1); // Move to the result step even on error
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUploadAnotherFile = () => {
+    setActiveStep(0);
+    setSelectedFile(null);
+    setDataType('Recruitment Tracker');
+    setDetectedSheets([]);
+    setSelectedSheets([]);
+    setCurrentSheetIndex(0);
+    setSelectedDocumentType(DOCUMENT_TYPES.RECRUITMENT_TRACKER);
+    setColumnMappings({});
+    setIsProcessing(false);
+    setImportSuccess(null);
+    setImportError(null);
+  };
+
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0: // Upload Excel File
@@ -354,11 +402,68 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
         )
         
         
-      case 3: // Confirm (placeholder)
+      case 3: // Result Step
         return (
-          <Box>
-            <Typography variant="h6">Confirm</Typography>
-            <Typography>This is the confirmation step.</Typography>
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            {isProcessing && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <CircularProgress />
+                <Typography variant="h6">Processing Import...</Typography>
+                <Typography variant="body2" color="text.secondary">This may take a few moments.</Typography>
+              </Box>
+            )}
+
+            {!isProcessing && importSuccess && (
+              <>
+                <CheckCircleOutlineIcon sx={{ fontSize: 80, color: theme.palette.success.main, mb: 2 }} />
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+                  Import Successful!
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                  Your historical data has been successfully imported and is now available in the system
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 4 }}>
+                  <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', width: 200, bgcolor:'#DBEAFE', color: '#2D5BFF'}}>
+                    <DescriptionIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mb: 1 }} />
+                    <Typography variant="body2" color="primary">Requisitions Imported</Typography>
+                    <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>{importSuccess.requisitions}</Typography>
+                  </Paper>
+                  <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', width: 200, bgcolor: '#F3E8FF', color: '#7E22CE', borderColor: theme.palette.secondary.main }}>
+                    <PeopleIcon sx={{ fontSize: 40,  mb: 1 }} />
+                    <Typography variant="body2" >Candidates Imported</Typography>
+                    <Typography variant="h5"  sx={{ fontWeight: 'bold' }}>{importSuccess.candidates}</Typography>
+                  </Paper>
+                  
+                </Box>
+                
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, mb: 4 }}>
+                    <Button variant="contained"  fullWidth color="primary" sx={{ mb: 2 }} onClick={onClose}>
+                    View Imported Data <ArrowForwardIcon sx={{ ml: 1 }} />
+                    </Button>
+                    <Button variant="outlined" onClick={handleUploadAnotherFile}>
+                    Upload Another File
+                    </Button>
+                </Box>
+              </>
+            )}
+
+            {!isProcessing && importError && (
+              <>
+                <ErrorOutlineIcon sx={{ fontSize: 80, color: theme.palette.error.main, mb: 2 }} />
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+                  Import Failed
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                  {importError}
+                </Typography>
+                <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={handleUploadAnotherFile}>
+                  Try Again
+                </Button>
+                <Button variant="outlined" onClick={onClose}>
+                  Close
+                </Button>
+              </>
+            )}
           </Box>
         );
       default:
@@ -374,9 +479,14 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <LinearProgress variant="determinate" value={(activeStep / (steps.length - 1)) * 100} sx={{ height: 8, backgroundColor: theme.palette.grey[200], '& .MuiLinearProgress-bar': { backgroundColor: theme.palette.primary.main } }} />
+      
+      {importSuccess && (
+        <LinearProgress variant="determinate" value={(activeStep / (steps.length - 1)) * 100} sx={{ height: 8, backgroundColor: theme.palette.grey[200], '& .MuiLinearProgress-bar': { backgroundColor: theme.palette.primary.main } }} />
+      )}
+      
       <DialogContent dividers sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-around', mb: 3 }}>
+        {isProcessing && importSuccess && (
+            <Box sx={{ display: 'flex', justifyContent: 'space-around', mb: 3 }}>
           {steps.map((label, index) => (
             <Typography 
               key={label} 
@@ -388,18 +498,32 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
             </Typography>
           ))}
         </Box>
+        )}
+        
         {renderStepContent(activeStep)}
         
       </DialogContent>
       <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
         <Button onClick={onClose} variant="outlined">Cancel</Button>
         <Box>
-          {activeStep > 0 && (
+          {activeStep > 0 && activeStep < steps.length - 1 && (
             <Button onClick={handleBack} sx={{ mr: 1 }} variant="outlined">Back</Button>
           )}
-          <Button onClick={handleNext} variant="contained" >
-            {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-          </Button>
+          {activeStep < steps.length - 1 && (
+            <Button onClick={handleNext} variant="contained" disabled={isProcessing} >
+              Next
+            </Button>
+          )}
+          {activeStep === steps.length - 1 && !importSuccess && !importError && (
+            <Button onClick={handleNext} variant="contained" disabled={isProcessing}>
+              {isProcessing ? <CircularProgress size={24} color="inherit" /> : 'Process Import'}
+            </Button>
+          )}
+           {activeStep === steps.length - 1 && (importSuccess || importError) && (
+            <Button onClick={onClose} variant="contained">
+             Close
+            </Button>
+          )}
         </Box>
       </DialogActions>
     </Dialog>
