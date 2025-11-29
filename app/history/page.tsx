@@ -6,6 +6,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useTheme } from '@mui/material/styles';
 import { SAMPLE_HISTORICAL_DATA, HistoricalRecord } from '../../utils/constants';
+import UploadHistoricalDataModal from '../../components/history/UploadHistoricalDataModal';
 
 const HistoricalData = () => {
   const theme = useTheme();
@@ -13,6 +14,7 @@ const HistoricalData = () => {
   const [quarterFilter, setQuarterFilter] = useState('All Quarters');
   const [typeFilter, setTypeFilter] = useState('All Types');
   const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
   const rowsPerPage = 5; // As per the image
 
   const handleYearChange = (event: any) => {
@@ -29,6 +31,14 @@ const HistoricalData = () => {
 
   const handleChangePage = (event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+  };
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
 
   const getChipPropsForType = (type: HistoricalRecord['type']) => {
@@ -74,6 +84,7 @@ const HistoricalData = () => {
           variant="contained" 
           startIcon={<UploadFileIcon />} 
           sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }} // Use theme colors
+          onClick={handleOpenModal} // Add onClick to open modal
         >
           Upload Excel Files
         </Button>
@@ -113,15 +124,15 @@ const HistoricalData = () => {
         <Table sx={{ minWidth: 650 }} aria-label="historical data table">
           <TableHead>
             <TableRow sx={{backgroundColor:'#f9fafb'}}>
-              <TableCell sx={{}}>UPLOAD DATE</TableCell>
-              <TableCell>FILE NAME</TableCell>
+              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>UPLOAD DATE</TableCell>
+              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>FILE NAME</TableCell>
               {/* <TableCell>TYPE</TableCell> */}
-              <TableCell>YEAR</TableCell>
-              <TableCell>QUARTER</TableCell>
-              <TableCell>REQUISITIONS</TableCell>
-              <TableCell>CANDIDATES</TableCell>
-              <TableCell>STATUS</TableCell>
-              <TableCell>ACTIONS</TableCell>
+              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>YEAR</TableCell>
+              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>QUARTER</TableCell>
+              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>REQUISITIONS</TableCell>
+              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>CANDIDATES</TableCell>
+              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>STATUS</TableCell>
+              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>ACTIONS</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -181,6 +192,7 @@ const HistoricalData = () => {
           boundaryCount={1}
         />
       </Box>
+      {isModalOpen && <UploadHistoricalDataModal open={isModalOpen} onClose={handleCloseModal} />}
     </Box>
   );
 };
