@@ -1,43 +1,43 @@
 export const DATABASE_FIELDS = [
-  'Name',
-  'Role Applied For',
-  'Location',
-  'CV Source',
-  'Mobile No',
-  'Email ID',
-  'Total Years Experience',
-  'Employment Status',
-  'Current/Last Placed Worked',
-  'Current Role',
-  'Current Gross Salary',
-  'Current Net Salary',
-  'Other Benefits',
-  'Notice Period',
-  'Qualification & Professional Certification',
-  'Age',
-  'State of Origin',
-  'Spouse Occupation (If Married)',
-  'Children',
-  'Minimum expected Salary',
-  'Open to Relocation'
+  "Name",
+  "Role Applied For",
+  "Location",
+  "CV Source",
+  "Mobile No",
+  "Email ID",
+  "Total Years Experience",
+  "Employment Status",
+  "Current/Last Placed Worked",
+  "Current Role",
+  "Current Gross Salary",
+  "Current Net Salary",
+  "Other Benefits",
+  "Notice Period",
+  "Qualification & Professional Certification",
+  "Age",
+  "State of Origin",
+  "Spouse Occupation (If Married)",
+  "Children",
+  "Minimum expected Salary",
+  "Open to Relocation",
   // Add more database fields as needed
 ];
 export const DOCUMENT_TYPES = {
-  RECRUITMENT_TRACKER: 'Recruitment Tracker',
+  RECRUITMENT_TRACKER: "Recruitment Tracker",
   // Add other document types as needed
 };
 
 export const DATABASE_FIELDS_BY_DOCUMENT_TYPE = {
   [DOCUMENT_TYPES.RECRUITMENT_TRACKER]: [
-    { name: 'Date of Request Received', required: true},
-    { name: 'Role', required: true },
-    { name: 'Department', required: true },
-    { name: 'Region', required: true },
+    { name: "Date of Request Received", required: true },
+    { name: "Role", required: true },
+    { name: "Department", required: true },
+    { name: "Region", required: true },
     // { name: 'Hiring Manager', required: false },
     // { name: 'Expected Start Date', required: false},
-    { name: 'Status', required: false },
-    { name: 'Candidate Name', required: true },
-    { name: 'Candidate Role', required: true },
+    { name: "Status", required: false },
+    { name: "Candidate Name", required: true },
+    { name: "Candidate Role", required: true },
     // { name: 'CV Source', required: false },
     // { name: 'Mobile Number', required: false },
     // { name: 'Email', required: false },
@@ -45,7 +45,7 @@ export const DATABASE_FIELDS_BY_DOCUMENT_TYPE = {
     // { name: 'Employment Status', required: false },
     // { name: 'Current Place Worked', required: false },
     // { name: 'Current Role', required: false },
-    { name: 'Existing / Previous Salary', required: false },
+    { name: "Existing / Previous Salary", required: false },
     // { name: 'Current Net Salary', required: false },
     // { name: 'Other Benefits', required: false },
     // { name: 'Notice Period', required: false },
@@ -56,8 +56,8 @@ export const DATABASE_FIELDS_BY_DOCUMENT_TYPE = {
     // { name: 'Children', required: false },
     // { name: 'Minimum expected Salary', required: false },
     // { name: 'Open to Relocation', required: false },
-    { name: 'Gross Salary Offered', required: false},
-    { name: 'Offered Date', required: false}
+    { name: "Gross Salary Offered", required: false },
+    { name: "Offered Date", required: false },
   ],
   // Add more mappings for other document types
 };
@@ -65,10 +65,13 @@ export const DATABASE_FIELDS_BY_DOCUMENT_TYPE = {
 // You might still keep a combined list if needed for some generic validation or display,
 // but the primary mapping logic would use DATABASE_FIELDS_BY_DOCUMENT_TYPE.
 export const ALL_DATABASE_FIELDS = [
-  ...DATABASE_FIELDS_BY_DOCUMENT_TYPE[DOCUMENT_TYPES.RECRUITMENT_TRACKER].map(field => field.name),
+  ...DATABASE_FIELDS_BY_DOCUMENT_TYPE[DOCUMENT_TYPES.RECRUITMENT_TRACKER].map(
+    (field) => field.name
+  ),
 ];
 
 export interface HistoricalRecord {
+  historical_id: string;
   upload_date: string;
   file_name: string;
   requisition_count: number;

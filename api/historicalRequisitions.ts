@@ -10,9 +10,9 @@ export const getHistoricalRequisitions = async () => {
     }
 }
 
-export const getHistoricalRequisitionsById = async (id: string) => {
+export const getHistoricalRequisitionsById = async (id: any) => {
     try {
-        const response = await axiosInstance.get(`/requisitions/historical/${id}`);
+        const response = await axiosInstance.get(`requistion/historical/single?historicalId=${id}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching historical requisitions:', error);

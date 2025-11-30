@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Box, Typography, Button, Select, MenuItem, InputLabel, FormControl, 
          Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Pagination } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -11,6 +12,7 @@ import { getHistoricalRequisitions } from '@/api/historicalRequisitions';
 
 const HistoricalData = () => {
   const theme = useTheme();
+  const router = useRouter();
   const [yearFilter, setYearFilter] = useState('All Years');
   const [quarterFilter, setQuarterFilter] = useState('All Quarters');
   const [typeFilter, setTypeFilter] = useState('All Types');
@@ -162,6 +164,15 @@ const HistoricalData = () => {
                     size="small" 
                     startIcon={<VisibilityIcon />} 
                     sx={{ color: theme.palette.primary.main, textTransform: 'none' }}
+                    onClick={() => {
+                      const queryParams = new URLSearchParams({
+                        fileName: row.file_name,
+                        reqCount: row.requisition_count.toString(),
+                        candCount: row.candidate_count.toString(),
+                        dataSpan: 'Q4 2024', 
+                      }).toString();
+                      router.push(`/history/${row.historical_id}?${queryParams}`);
+                    }}
                   >
                     View Details
                   </Button>
