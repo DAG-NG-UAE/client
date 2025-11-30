@@ -22,6 +22,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { readHistoricalExcelFile, SheetData } from '@/utils/historicalExcelParser';
 import { DATABASE_FIELDS_BY_DOCUMENT_TYPE, DOCUMENT_TYPES } from '@/utils/constants';
 import SheetMappingPreview from '../data-management/SheetMappingPreview';
+import { uploadTrackerData } from '@/api/trackerUpload';
 
 interface UploadHistoricalDataModalProps {
   open: boolean;
@@ -157,6 +158,19 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
   const currentSheetData = detectedSheets.find(s => s.name === currentSheetName);
   const currentDatabaseFields = DATABASE_FIELDS_BY_DOCUMENT_TYPE[selectedDocumentType] || [];
 
+  const sheetStatusMapping = (status: string) => { 
+    switch (status) {
+      case "Completed":
+        return "closed";
+      case "Open":
+        return "pending";
+      case "On Hold": 
+        return "on_hold"
+      default:
+        return "closed";
+    }
+  }
+
   const getPayload = () => {
     const payload: any = {
       tracking_filename: selectedFile?.name || "unknown_file.xlsx",
@@ -185,7 +199,7 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
 
         payload.sheets_to_process.push({
           sheet_name: sheetName,
-          status_in_sheet: "closed", //TODO determine how to get the actual status in the sheet
+          status_in_sheet: sheetStatusMapping(processedRows[0].Status), //TODO determine how to get the actual status in the sheet
           raw_data_rows: processedRows,
         });
       }
@@ -193,6 +207,7 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
     return payload;
   };
 
+  
   const handleProcessImport = async () => {
     setIsProcessing(true);
     setImportError(null);
@@ -203,11 +218,9 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
 
     // Simulate API call
     try {
-      // Replace with actual API call to your backend
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
-
-      // Simulate a successful response
-      setImportSuccess({ requisitions: 45, candidates: 234 });
+      const data = await uploadTrackerData(payload);
+      console.log(`Data from backend => ${JSON.stringify(data)}`)
+      setImportSuccess({ requisitions: data.requisition_count, candidates: data.candidate_count });
       setActiveStep(steps.length - 1); // Move to the result step
     } catch (error) {
       console.error("Error during import:", error);
@@ -456,12 +469,15 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
                   {importError}
                 </Typography>
-                <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={handleUploadAnotherFile}>
-                  Try Again
-                </Button>
-                <Button variant="outlined" onClick={onClose}>
-                  Close
-                </Button>
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3, mb: 4 }}>
+                  <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={handleUploadAnotherFile}>
+                      Try Again
+                    </Button>
+                    <Button variant="outlined" onClick={onClose}>
+                      Close
+                    </Button>
+                </Box>
+                
               </>
             )}
           </Box>

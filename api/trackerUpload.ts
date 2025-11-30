@@ -10,7 +10,7 @@ export const uploadTrackerData = async (payload: any) => {
         throw new Error(response.data.message || 'Failed to upload tracker data');
         }
 
-        return response.data; // Axios response data is directly available
+        return response.data.data; // Axios response data is directly available
     } catch (error: any) {
         console.error('Error in uploadTrackerData:', error.response?.data || error.message);
         throw error;

@@ -1,12 +1,13 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button, Select, MenuItem, InputLabel, FormControl, 
          Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Pagination } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useTheme } from '@mui/material/styles';
-import { SAMPLE_HISTORICAL_DATA, HistoricalRecord } from '../../utils/constants';
+import { HistoricalRecord } from '../../utils/constants';
 import UploadHistoricalDataModal from '../../components/history/UploadHistoricalDataModal';
+import { getHistoricalRequisitions } from '@/api/historicalRequisitions';
 
 const HistoricalData = () => {
   const theme = useTheme();
@@ -17,6 +18,29 @@ const HistoricalData = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
   const rowsPerPage = 5; // As per the image
 
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [historicalRequisitions, setHistoricalRequisitions] = useState<HistoricalRecord[]>([]);
+
+    useEffect(() => {
+      const fetchHistoricalRequisitions = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          let data: any[];
+          data = await getHistoricalRequisitions();
+  
+          setHistoricalRequisitions(data);
+        } catch (err) {
+          setError('Failed to fetch historical requisitions.');
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchHistoricalRequisitions();
+    }, []);
+    
   const handleYearChange = (event: any) => {
     setYearFilter(event.target.value);
   };
@@ -41,18 +65,6 @@ const HistoricalData = () => {
     setIsModalOpen(false);
   };
 
-  const getChipPropsForType = (type: HistoricalRecord['type']) => {
-    switch (type) {
-      case 'Closed Positions':
-        return { label: type, sx: { backgroundColor: theme.palette.grey[300], color: theme.palette.text.primary, fontWeight: 'normal' } };
-      case 'Open Positions':
-        return { label: type, sx: { backgroundColor: '#D6FFE0', color: '#157D3E', fontWeight: 'normal' } }; // Light green background, dark green text
-      case 'On Hold':
-        return { label: type, sx: { backgroundColor: '#FFF6D7', color: '#8D6C00', fontWeight: 'normal' } }; // Light yellow background, dark yellow text
-      default:
-        return { label: type, sx: { backgroundColor: theme.palette.grey[200], color: theme.palette.text.primary } };
-    }
-  };
 
   const getChipPropsForStatus = (status: HistoricalRecord['status']) => {
     switch (status) {
@@ -66,7 +78,7 @@ const HistoricalData = () => {
   };
 
   // Filtered data (for now, just use sample data)
-  const filteredData = SAMPLE_HISTORICAL_DATA;
+  const filteredData = historicalRequisitions;
   const paginatedData = filteredData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
 
   return (
@@ -99,25 +111,6 @@ const HistoricalData = () => {
             <MenuItem value={2024}>2024</MenuItem>
           </Select>
         </FormControl>
-        <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel>All Quarters</InputLabel>
-          <Select value={quarterFilter} label="All Quarters" onChange={handleQuarterChange}>
-            <MenuItem value="All Quarters">All Quarters</MenuItem>
-            <MenuItem value="Q1">Q1</MenuItem>
-            <MenuItem value="Q2">Q2</MenuItem>
-            <MenuItem value="Q3">Q3</MenuItem>
-            <MenuItem value="Q4">Q4</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel>All Types</InputLabel>
-          <Select value={typeFilter} label="All Types" onChange={handleTypeChange}>
-            <MenuItem value="All Types">All Types</MenuItem>
-            <MenuItem value="Closed Positions">Closed Positions</MenuItem>
-            <MenuItem value="Open Positions">Open Positions</MenuItem>
-            <MenuItem value="On Hold">On Hold</MenuItem>
-          </Select>
-        </FormControl>
       </Box>
 
       <TableContainer component={Paper} sx={{ boxShadow: theme.shadows[1] }}>
@@ -127,11 +120,11 @@ const HistoricalData = () => {
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>UPLOAD DATE</TableCell>
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>FILE NAME</TableCell>
               {/* <TableCell>TYPE</TableCell> */}
-              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>YEAR</TableCell>
-              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>QUARTER</TableCell>
+              {/* <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>YEAR</TableCell> */}
+              {/* <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>QUARTER</TableCell> */}
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>REQUISITIONS</TableCell>
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>CANDIDATES</TableCell>
-              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>STATUS</TableCell>
+              {/* <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>STATUS</TableCell> */}
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>ACTIONS</TableCell>
             </TableRow>
           </TableHead>
@@ -142,27 +135,27 @@ const HistoricalData = () => {
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
                 <TableCell component="th" scope="row">
-                  {row.uploadDate}
+                  {row.upload_date}
                 </TableCell>
-                <TableCell>{row.fileName}</TableCell>
+                <TableCell>{row.file_name}</TableCell>
                 {/* <TableCell><Chip {...getChipPropsForType(row.type)} size="small" /></TableCell> */}
-                <TableCell>{row.year}</TableCell>
-                <TableCell>{row.quarter}</TableCell>
+                {/* <TableCell>{row.year}</TableCell> */}
+                {/* <TableCell>{row.quarter}</TableCell> */}
                 <TableCell>
                   <Chip 
-                    label={row.requisitions} 
+                    label={row.requisition_count} 
                     size="small" 
                     sx={{ backgroundColor: '#DBEAFE', color: '#2D5BFF', borderRadius: '16px', fontWeight: 'bold' }}
                   />
                 </TableCell>
                 <TableCell>
                   <Chip 
-                    label={row.candidates} 
+                    label={row.candidate_count} 
                     size="small" 
                     sx={{ backgroundColor: '#F3E8FF', color: '#7E22CE', borderRadius: '16px', fontWeight: 'bold' }}
                   />
                 </TableCell>
-                <TableCell><Chip {...getChipPropsForStatus(row.status)} size="small" /></TableCell>
+                {/* <TableCell><Chip {...getChipPropsForStatus(row.status)} size="small" /></TableCell> */}
                 <TableCell>
                   <Button 
                     variant="text" 
