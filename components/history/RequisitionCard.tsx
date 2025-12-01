@@ -3,17 +3,42 @@ import { Box, Typography, Button, Card, CardContent, Divider, Chip, useTheme } f
 import GroupIcon from '@mui/icons-material/Group';
 import WorkIcon from '@mui/icons-material/Work';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 interface RequisitionCardProps {
   id: string;
   role: string;
   department: string;
   candidateCount: number;
-  status: 'Open' | 'Closed' | 'Pending';
+  status: string;
+  showUploadButton?: boolean, 
+  handleRoute?: (id: string) => void;
 }
 
-const RequisitionCard: React.FC<RequisitionCardProps> = ({ id, role, department, candidateCount, status }) => {
+const RequisitionCard: React.FC<RequisitionCardProps> = ({ id, role, department, candidateCount, status, showUploadButton, handleRoute }) => {
   const theme = useTheme();
+  const router = useRouter();
+
+  const getStatusChipProps = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return { label: 'Open', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
+      case 'in review':
+        return { label: 'In Review', color: 'warning' as 'warning', variant: 'outlined' as 'outlined' };
+      case 'closed':
+        return { label: 'Closed', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
+      case 'approved':
+        return { label: 'Approved', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
+      case 'pending':
+        return { label: 'Pending', color: 'error' as 'error', variant: 'outlined' as 'outlined' };
+      case 'hold':
+        return { label: 'On Hold', color: 'warning' as 'warning', variant: 'outlined' as 'outlined' };
+      case 'progress':
+        return { label: 'In Progress', color: 'primary' as 'primary', variant: 'outlined' as 'outlined' };
+      default:
+        return { label: status, color: 'default' as 'default', variant: 'outlined' as 'outlined' };
+    }
+  };
 
   return (
     <Card 
@@ -26,7 +51,8 @@ const RequisitionCard: React.FC<RequisitionCardProps> = ({ id, role, department,
         transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: theme.shadows[4]
+          boxShadow: theme.shadows[4], 
+          cursor: showUploadButton ? 'default' : 'pointer',
         },
         display: 'flex', 
         flexDirection: 'column',
@@ -37,15 +63,7 @@ const RequisitionCard: React.FC<RequisitionCardProps> = ({ id, role, department,
           <Box sx={{ p: 1, backgroundColor: '#DBEAFE', borderRadius: 2, color: '#155dfc' }}>
             <WorkIcon />
           </Box>
-          <Chip 
-            label={status} 
-            size="small" 
-            sx={{ 
-              backgroundColor: '#F3F4F6', 
-              color: '#4B5563',
-              borderRadius: '16px'
-            }} 
-          />
+          <Chip {...getStatusChipProps(status)} size="small" />
         </Box>
         
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
@@ -60,22 +78,25 @@ const RequisitionCard: React.FC<RequisitionCardProps> = ({ id, role, department,
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <GroupIcon fontSize="small" color="action" />
           <Typography variant="body2" color="text.secondary">
-            {candidateCount} candidates(s) linked
+            {candidateCount} {showUploadButton ? 'candidate(s) linked' : 'candidate(s) applied'}
           </Typography>
         </Box>
 
-        <Button 
-          fullWidth 
-          variant="contained" 
-          startIcon={<UploadFileIcon />}
-          sx={{ 
-            mt: 'auto',
-            backgroundColor: theme.palette.primary.main,
-            '&:hover': { backgroundColor: theme.palette.primary.dark }
-          }}
-        >
-          Upload Candidates
-        </Button>
+        {showUploadButton && (
+          <Button 
+            fullWidth 
+            variant="contained" 
+            startIcon={<UploadFileIcon />}
+            sx={{ 
+              mt: 'auto',
+              backgroundColor: theme.palette.primary.main,
+              '&:hover': { backgroundColor: theme.palette.primary.dark }
+            }}
+            onClick={() => {router.push(`/candidate-upload`)}}
+          >
+            Upload Candidates
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

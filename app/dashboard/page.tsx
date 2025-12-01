@@ -11,6 +11,7 @@ import TextField from '@mui/material/TextField';
 import WorkIcon from '@mui/icons-material/Work';
 import GroupIcon from '@mui/icons-material/Group';
 import { useTheme } from '@mui/material/styles';
+import RequisitionCard from '@/components/history/RequisitionCard';
 
 interface Requisition {
   requisition_id: string;
@@ -147,80 +148,28 @@ const DashboardPage = () => {
       )}
 
       {/* @ts-ignore */}
-      <Grid container spacing={3}>
-  {currentRequisitions?.map((req) => (
-    <Grid item xs={12} sm={6} md={4} lg={3} key={req.requisition_id}>
-      <Card
+      <Box
         sx={{
-          // 👇 Set a fixed, explicit height for the card
-          height: 220, 
-          width: 200,
-          // Removed minHeight and relied on fixed height
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          cursor: 'pointer',
-          border: `1px solid ${theme.palette.divider}`,
-          boxShadow: 'none',
-          '&:hover': { boxShadow: theme.shadows[3] },
+          flexWrap: 'wrap',
+          gap: 2,
         }}
-        onClick={() => handleRequisitionClick(req.requisition_id)}
+        
       >
-        <CardContent sx={{ flexGrow: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Box sx={{
-              backgroundColor: theme.palette.icons?.container, 
-              borderRadius: (theme.shape.borderRadius as number) / 2, 
-              height: '40px',
-              width: '40px',
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center'
-            }}>
-              <WorkIcon sx={{ fontSize: 24, color: theme.palette.icons?.main }} />
-            </Box>
-            <Chip {...getStatusChipProps(req.status)} size="small" />
-          </Box>
-          {/* 👇 Apply CSS for Truncation/Overflow */}
-          <Typography 
-            variant="body1" 
-            component="div" 
-            sx={{ 
-              mb: 0.5,
-              display: '-webkit-box',
-              WebkitLineClamp: 1, // Set to 1 to force single line
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis'
-            }}
-          >
-            {req.position}
-          </Typography>
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
-            sx={{ 
-              mb: 1,
-              display: '-webkit-box',
-              WebkitLineClamp: 1, // Set to 1 to force single line
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis'
-            }}
-          >
-            {req.department}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mt: 2 }}>
-            <GroupIcon sx={{ mr: 0.5, fontSize: 18 }} />
-            <Typography variant="body2">{req.applicants} applicants</Typography>
-          </Box>
-        </CardContent>
-      </Card>
-    </Grid>
-  ))}
-</Grid>
+        {currentRequisitions?.map((req) => (
+          <RequisitionCard
+          key={req.requisition_id}
+            id={req.requisition_id}
+            role={req.position}
+            department={req.department}
+            candidateCount={req.applicants}
+            status={req.status}
+            showUploadButton={false}
+            handleRoute={handleRequisitionClick}
+          />
+        ))}
+      </Box>
+
 
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <Pagination

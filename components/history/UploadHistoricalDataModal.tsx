@@ -489,7 +489,7 @@ const UploadHistoricalDataModal = ({ open, onClose }: UploadHistoricalDataModalP
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth >
-      <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <DialogTitle component="div" sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Upload Historical Data</Typography>
         <IconButton aria-label="close" onClick={onClose} sx={{ color: (theme) => theme.palette.grey[500] }}>
           <CloseIcon />

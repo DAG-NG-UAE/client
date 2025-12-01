@@ -2,7 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Typography, Button, Select, MenuItem, InputLabel, FormControl, 
-         Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Pagination } from '@mui/material';
+         Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, Pagination, 
+         CircularProgress,
+         Alert} from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useTheme } from '@mui/material/styles';
@@ -121,15 +123,16 @@ const HistoricalData = () => {
             <TableRow sx={{backgroundColor:'#f9fafb'}}>
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>UPLOAD DATE</TableCell>
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>FILE NAME</TableCell>
-              {/* <TableCell>TYPE</TableCell> */}
-              {/* <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>YEAR</TableCell> */}
-              {/* <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>QUARTER</TableCell> */}
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>REQUISITIONS</TableCell>
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>CANDIDATES</TableCell>
-              {/* <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>STATUS</TableCell> */}
               <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>ACTIONS</TableCell>
             </TableRow>
           </TableHead>
+           {isLoading && <CircularProgress sx={{ display: 'block', my: 4 }} />}
+                {error && <Alert severity="error" sx={{ my: 4 }}>{error}</Alert>}
+                {!isLoading && !error && historicalRequisitions.length === 0 && (
+                  <Typography sx={{ my: 4 }}>No requisitions found.</Typography>
+                )}
           <TableBody>
             {paginatedData.map((row, index) => (
               <TableRow
@@ -140,9 +143,6 @@ const HistoricalData = () => {
                   {row.upload_date}
                 </TableCell>
                 <TableCell>{row.file_name}</TableCell>
-                {/* <TableCell><Chip {...getChipPropsForType(row.type)} size="small" /></TableCell> */}
-                {/* <TableCell>{row.year}</TableCell> */}
-                {/* <TableCell>{row.quarter}</TableCell> */}
                 <TableCell>
                   <Chip 
                     label={row.requisition_count} 
@@ -157,7 +157,6 @@ const HistoricalData = () => {
                     sx={{ backgroundColor: '#F3E8FF', color: '#7E22CE', borderRadius: '16px', fontWeight: 'bold' }}
                   />
                 </TableCell>
-                {/* <TableCell><Chip {...getChipPropsForStatus(row.status)} size="small" /></TableCell> */}
                 <TableCell>
                   <Button 
                     variant="text" 

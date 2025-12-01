@@ -16,6 +16,7 @@ import { getHistoricalRequisitionsById } from '@/api/historicalRequisitions';
 
 // Define types for the details view
 interface RequisitionDetail {
+  requisition_id: string;
   id: string;
   position: string;
   department: string;
@@ -158,12 +159,13 @@ const HistoricalDetailsPage = () => {
             }}>
                 {data?.data.map((req) => (
                     <RequisitionCard
-                        key={req.id}
+                        key={req.requisition_id}
                         id={req.id}
                         role={req.position}
                         department={req.department}
                         candidateCount={req.candidate_count}
                         status={req.status}
+                        showUploadButton={true}
                     />
                 ))}
             </Box>
