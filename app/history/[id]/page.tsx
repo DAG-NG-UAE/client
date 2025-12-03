@@ -160,7 +160,7 @@ const HistoricalDetailsPage = () => {
                 {data?.data.map((req) => (
                     <RequisitionCard
                         key={req.requisition_id}
-                        id={req.id}
+                        id={req.requisition_id}
                         role={req.position}
                         department={req.department}
                         candidateCount={req.candidate_count}

@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Stepper, Step, StepLabel, Box, Typography, Input, FormControlLabel, Checkbox, Pagination, PaginationItem, Chip, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { readHistoricalExcelFile, SheetData } from '../../utils/historicalExcelParser';
+import { readHistoricalExcelFile, SheetData } from '../../utils/excelParser';
 import { DOCUMENT_TYPES, DATABASE_FIELDS_BY_DOCUMENT_TYPE } from '../../utils/constants';
 import SheetMappingPreview from './SheetMappingPreview'; // Import the new component
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';

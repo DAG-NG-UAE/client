@@ -29,13 +29,13 @@ export const DOCUMENT_TYPES = {
 
 export const DATABASE_FIELDS_BY_DOCUMENT_TYPE = {
   [DOCUMENT_TYPES.RECRUITMENT_TRACKER]: [
-    { name: "Date of Request Received", required: true },
-    { name: "Role", required: true },
-    { name: "Department", required: true },
-    { name: "Region", required: true },
+    { name: "Date of Request Received", required: true, description: 'Date the request was sent' },
+    { name: "Role", required: true, description: 'Role applied for' },
+    { name: "Department", required: true, description: 'Department' },
+    { name: "Region", required: true, description: 'Region' },
     // { name: 'Hiring Manager', required: false },
-    // { name: 'Expected Start Date', required: false},
-    { name: "Status", required: false },
+    { name: 'Expected Start Date', required: false, description: 'Date the candidate is expected to start' },
+    { name: "Status", required: false, description: 'Status' },
     { name: "Candidate Name", required: true },
     { name: "Candidate Role", required: true },
     // { name: 'CV Source', required: false },
@@ -45,7 +45,7 @@ export const DATABASE_FIELDS_BY_DOCUMENT_TYPE = {
     // { name: 'Employment Status', required: false },
     // { name: 'Current Place Worked', required: false },
     // { name: 'Current Role', required: false },
-    { name: "Existing / Previous Salary", required: false },
+    { name: "Existing / Previous Salary", required: false, description: 'Previous Salary of Candidate' },
     // { name: 'Current Net Salary', required: false },
     // { name: 'Other Benefits', required: false },
     // { name: 'Notice Period', required: false },
@@ -56,8 +56,10 @@ export const DATABASE_FIELDS_BY_DOCUMENT_TYPE = {
     // { name: 'Children', required: false },
     // { name: 'Minimum expected Salary', required: false },
     // { name: 'Open to Relocation', required: false },
-    { name: "Gross Salary Offered", required: false },
-    { name: "Offered Date", required: false },
+    { name: "Source of Recruitment", required: false, description: "Source used to get the candidate"},
+    { name: "Gross Salary Offered", required: false, description: "Gross salary offered to the candidate" },
+    { name: "Offered Date", required: false, description: "Date when the offer was made"},
+    { name: "Joining date", required: false, description: "Date when the candidate is joining" },
   ],
   // Add more mappings for other document types
 };

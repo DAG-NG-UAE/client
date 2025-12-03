@@ -4,6 +4,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import WorkIcon from '@mui/icons-material/Work';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { getStatusChipProps } from '@/utils/statusColorMapping';
 
 interface RequisitionCardProps {
   id: string;
@@ -19,26 +20,7 @@ const RequisitionCard: React.FC<RequisitionCardProps> = ({ id, role, department,
   const theme = useTheme();
   const router = useRouter();
 
-  const getStatusChipProps = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'open':
-        return { label: 'Open', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
-      case 'in review':
-        return { label: 'In Review', color: 'warning' as 'warning', variant: 'outlined' as 'outlined' };
-      case 'closed':
-        return { label: 'Closed', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
-      case 'approved':
-        return { label: 'Approved', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
-      case 'pending':
-        return { label: 'Pending', color: 'error' as 'error', variant: 'outlined' as 'outlined' };
-      case 'hold':
-        return { label: 'On Hold', color: 'warning' as 'warning', variant: 'outlined' as 'outlined' };
-      case 'progress':
-        return { label: 'In Progress', color: 'primary' as 'primary', variant: 'outlined' as 'outlined' };
-      default:
-        return { label: status, color: 'default' as 'default', variant: 'outlined' as 'outlined' };
-    }
-  };
+  
 
   return (
     <Card 
@@ -92,7 +74,14 @@ const RequisitionCard: React.FC<RequisitionCardProps> = ({ id, role, department,
               backgroundColor: theme.palette.primary.main,
               '&:hover': { backgroundColor: theme.palette.primary.dark }
             }}
-            onClick={() => {router.push(`/candidate-upload`)}}
+            onClick={() => {
+              const params = new URLSearchParams({
+                requisitionId: id,
+                role: role,
+                department: department
+              });
+              router.push(`/candidate-upload?${params.toString()}`);
+            }}
           >
             Upload Candidates
           </Button>

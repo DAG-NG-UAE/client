@@ -26,10 +26,7 @@ const ColumnMappingDialog: React.FC<ColumnMappingDialogProps> = ({
   transformedData,
   requisitionId, // Destructure new prop
 }) => {
-  const [mapping, setMapping] = useState<{ [key: string]: string }>(() => {
-    const savedMapping = localStorage.getItem('defaultColumnMapping');
-    return savedMapping ? JSON.parse(savedMapping) : {};
-  });
+  const [mapping, setMapping] = useState<{ [key: string]: string }>({});
   const [saveAsDefault, setSaveAsDefault] = useState<boolean>(false);
   const [isMappingValid, setIsMappingValid] = useState<boolean>(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -60,10 +57,6 @@ const ColumnMappingDialog: React.FC<ColumnMappingDialogProps> = ({
 
   const handleMappingChange = (dbField: string, sourceHeader: string) => {
     setMapping(prev => ({ ...prev, [dbField]: sourceHeader }));
-  };
-
-  const handleSaveAsDefaultChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSaveAsDefault(event.target.checked);
   };
 
   const handleFinish = async () => {
@@ -116,15 +109,12 @@ const ColumnMappingDialog: React.FC<ColumnMappingDialogProps> = ({
         </Box>
       </DialogTitle>
       <DialogContent dividers>
-        <Typography variant="body1" sx={{ mb: 3 }}>
-          Match the columns from your Excel file to our system fields. Don't worry - we'll remember this for next time! 😊
-        </Typography>
 
         <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
           {remainingFieldsCount > 0 ? (
             <>
-              <WarningAmberIcon color="warning" />
-              <Typography color="warning.main">{remainingFieldsCount} required fields remaining</Typography>
+              <WarningAmberIcon color="error" />
+              <Typography color="error.main">{remainingFieldsCount} required fields remaining</Typography>
             </>
           ) : (
             <>
@@ -149,7 +139,7 @@ const ColumnMappingDialog: React.FC<ColumnMappingDialogProps> = ({
                     </TableCell>
 
                     {/* Column 2: Your Excel Columns (Dropdown with Arrow) */}
-                    <TableCell sx={{ width: '60%', ml:2, display: 'flex', alignItems: 'center', gap: 1, backgrounColor: 'red'}}>
+                    <TableCell sx={{ width: '60%', ml:2, display: 'flex', alignItems: 'center', gap: 1}}>
                       <ArrowForwardIcon sx={{ color: 'grey.500' }} />
                       <FormControl fullWidth size="medium" error={!isMapped} color='info'>
                         <InputLabel>{`Map to ${dbField}`}</InputLabel>
@@ -192,12 +182,7 @@ const ColumnMappingDialog: React.FC<ColumnMappingDialogProps> = ({
             </TableBody>
           </Table>
         </TableContainer>
-
-        <FormControlLabel
-          control={<Checkbox checked={saveAsDefault} onChange={handleSaveAsDefaultChange} />}
-          label="Remember this mapping for future uploads"
-          sx={{ mt: 4 }}
-        />
+        
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="inherit">Cancel</Button>

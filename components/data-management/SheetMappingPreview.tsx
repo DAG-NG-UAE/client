@@ -1,16 +1,17 @@
 import React from 'react';
-import { Box, Typography, Select, MenuItem, FormControl, InputLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Box, Typography, Select, MenuItem, FormControl, InputLabel, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionSummary, AccordionDetails, Tooltip } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-import { SheetData } from '../../utils/historicalExcelParser';
+import { SheetData } from '../../utils/excelParser';
 
 interface DatabaseField {
   name: string;
   required: boolean;
+  description?: string;
 }
 
 interface SheetMappingPreviewProps {
@@ -39,7 +40,7 @@ const SheetMappingPreview: React.FC<SheetMappingPreviewProps> = ({ sheet, column
   );
 
   const candidateProfileFields = databaseFields.filter(field =>
-    !['Date of Request Received', 'Role', 'Department', 'Region', 'Hiring Manager', 'Status'].includes(field.name)
+    !['Date of Request Received', 'Role', 'Department', 'Region', 'Status', 'Expected Start Date'].includes(field.name)
   );
 
   return (
@@ -73,9 +74,11 @@ const SheetMappingPreview: React.FC<SheetMappingPreviewProps> = ({ sheet, column
 
                   return (
                     <TableRow key={dbField.name} sx={{ '&:nth-of-type(odd)': { backgroundColor: '#f9f9f9' }, '&:hover': { backgroundColor: '#f0f0f0' } }}>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
-                        {dbField.name} {dbField.required && <Typography component="span" color="error.main" variant="caption">(Required)</Typography>}
-                      </TableCell>
+                      <Tooltip title={dbField.description}>
+                        <TableCell sx={{ fontWeight: 'bold' }}>
+                          {dbField.name} {dbField.required && <Typography component="span" color="error.main" variant="caption">(Required)</Typography>}
+                        </TableCell>
+                      </Tooltip>
                       <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <ArrowForwardIcon sx={{ color: 'grey.500' }} />
                         <FormControl fullWidth size="small">
@@ -132,9 +135,10 @@ const SheetMappingPreview: React.FC<SheetMappingPreviewProps> = ({ sheet, column
 
                   return (
                     <TableRow key={dbField.name} sx={{ '&:nth-of-type(odd)': { backgroundColor: '#f9f9f9' }, '&:hover': { backgroundColor: '#f0f0f0' } }}>
-                      <TableCell sx={{ fontWeight: 'bold' }}>
+                      <Tooltip title={dbField.description}> 
+                        <TableCell sx={{ fontWeight: 'bold' }}>
                         {dbField.name} {dbField.required && <Typography component="span" color="error.main" variant="caption">(Required)</Typography>}
-                      </TableCell>
+                      </TableCell></Tooltip>
                       <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <ArrowForwardIcon sx={{ color: 'grey.500' }} />
                         <FormControl fullWidth size="small">

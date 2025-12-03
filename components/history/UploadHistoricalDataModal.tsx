@@ -19,7 +19,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import PeopleIcon from '@mui/icons-material/People';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { readHistoricalExcelFile, SheetData } from '@/utils/historicalExcelParser';
+import { readHistoricalExcelFile, SheetData } from '@/utils/excelParser';
 import { DATABASE_FIELDS_BY_DOCUMENT_TYPE, DOCUMENT_TYPES } from '@/utils/constants';
 import SheetMappingPreview from '../data-management/SheetMappingPreview';
 import { uploadTrackerData } from '@/api/trackerUpload';

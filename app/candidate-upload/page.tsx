@@ -12,6 +12,10 @@ import { transformData } from '../../utils/dataTransformer';
 import TransformedTablePreviewDialog from '../../components/candidate-upload/TransformedTablePreviewDialog';
 import ColumnMappingDialog from '../../components/candidate-upload/ColumnMappingDialog';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getCandidatesForRequisition } from '@/api/candidate';
+import { getStatusChipProps } from '@/utils/statusColorMapping';
+import { getFirstAndLastInitials } from '@/utils/transform';
+import { CandidateProfile } from '@/interface/candidate';
 
 interface ExtractedData {
   labels: string[];
@@ -22,6 +26,8 @@ interface TransformedRecord {
   [key: string]: string;
 }
 
+
+
 const CandidateUploadPage = () => {
   const theme = useTheme()
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -31,8 +37,12 @@ const CandidateUploadPage = () => {
   const [parsedData, setParsedData] = useState<ExtractedData[]>([]);
   const [transformedData, setTransformedData] = useState<TransformedRecord[]>([]);
   const [transformedHeaders, setTransformedHeaders] = useState<string[]>([]);
+  const [candidates, setCandidates] = useState<CandidateProfile[]>([])
+  
   const searchParams = useSearchParams();
   const requisitionId = searchParams.get('requisitionId') || 'dummy_requisition_id'; // Get requisitionId from URL
+  const role = searchParams.get('role') || 'Role Name';
+  const department = searchParams.get('department') || 'Department';
 
   const router = useRouter()
   const handleOpenUploadDialog = () => {
@@ -42,6 +52,19 @@ const CandidateUploadPage = () => {
     }
     setUploadDialogOpen(true);
   };
+
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const candidates = await getCandidatesForRequisition(requisitionId);
+        console.log('Fetched candidates:', candidates);
+        setCandidates(candidates);
+      } catch (error) {
+        console.error('Error fetching candidates:', error);
+      }
+    };
+    fetchCandidates();
+  }, [requisitionId]);
 
   const handleCloseUploadDialog = () => {
     setUploadDialogOpen(false);
@@ -93,13 +116,13 @@ const CandidateUploadPage = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <WorkIcon sx={{ fontSize: 40, color: 'primary.main' }} />
           <Box>
-            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>Senior Frontend Developer</Typography>
-            <Typography variant="body2" color="text.secondary">Engineering</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{role}</Typography>
+            <Typography variant="body2" color="text.secondary">{department}</Typography>
           </Box>
         </Box>
         <Box sx={{ textAlign: 'right' }}>
           <Typography variant="body2" color="text.secondary">Candidates Linked</Typography>
-          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>5</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>{candidates.length}</Typography>
         </Box>
       </Paper>
 
@@ -131,22 +154,27 @@ const CandidateUploadPage = () => {
           </TableHead>
           <TableBody>
             {/* Example Rows - Replace with dynamic data */}
-            <TableRow>
-              <TableCell component="th" scope="row">
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar sx={{ bgcolor: 'primary.main', fontSize: '15px' }}>AJ</Avatar>
-                  <Typography variant="body1">Alice Johnson</Typography>
-                </Box>
-              </TableCell>
-              <TableCell>
-                <Typography variant="body2">alice.johnson@email.com</Typography>
-                <Typography variant="body2" color="text.secondary">(555) 123-4567</Typography>
-              </TableCell>
-              <TableCell>Oct 15, 2023</TableCell>
-              <TableCell>5 years</TableCell>
-              <TableCell>LinkedIn</TableCell>
-              <TableCell><Chip label="Hired" color="success" size="small" /></TableCell>
-            </TableRow>
+            {candidates.map((candidate) => (
+              <TableRow key={candidate.candidate_id}>
+                <TableCell component="th" scope="row">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar sx={{ bgcolor: 'primary.main', fontSize: '15px' }}>{getFirstAndLastInitials(candidate.candidate_name)}</Avatar>
+                    <Typography variant="body1">{candidate.candidate_name}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">{candidate.email ? candidate.email : '---'}</Typography>
+                  <Typography variant="body2" color="text.secondary">{candidate.mobile_number ? candidate.mobile_number : '---'}</Typography>
+                </TableCell>
+                <TableCell>Oct 15, 2023</TableCell>
+                <TableCell>{candidate.total_experience_years? candidate.total_experience_years : '---'}</TableCell>
+                <TableCell>{candidate.source ? candidate.source : '---'}</TableCell>
+                <TableCell>{candidate.current_status && 
+                    (<Chip {...getStatusChipProps(candidate.current_status)} size="small" />) 
+                    || '---' 
+                }</TableCell>
+              </TableRow>
+            ))}
             
           </TableBody>
         </Table>

@@ -117,84 +117,91 @@ const HistoricalData = () => {
         </FormControl>
       </Box>
 
-      <TableContainer component={Paper} sx={{ boxShadow: theme.shadows[1] }}>
-        <Table sx={{ minWidth: 650 }} aria-label="historical data table">
-          <TableHead>
-            <TableRow sx={{backgroundColor:'#f9fafb'}}>
-              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>UPLOAD DATE</TableCell>
-              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>FILE NAME</TableCell>
-              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>REQUISITIONS</TableCell>
-              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>CANDIDATES</TableCell>
-              <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>ACTIONS</TableCell>
-            </TableRow>
-          </TableHead>
-           {isLoading && <CircularProgress sx={{ display: 'block', my: 4 }} />}
-                {error && <Alert severity="error" sx={{ my: 4 }}>{error}</Alert>}
-                {!isLoading && !error && historicalRequisitions.length === 0 && (
-                  <Typography sx={{ my: 4 }}>No requisitions found.</Typography>
-                )}
-          <TableBody>
-            {paginatedData.map((row, index) => (
-              <TableRow
-                key={index}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row">
-                  {row.upload_date}
-                </TableCell>
-                <TableCell>{row.file_name}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={row.requisition_count} 
-                    size="small" 
-                    sx={{ backgroundColor: '#DBEAFE', color: '#2D5BFF', borderRadius: '16px', fontWeight: 'bold' }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={row.candidate_count} 
-                    size="small" 
-                    sx={{ backgroundColor: '#F3E8FF', color: '#7E22CE', borderRadius: '16px', fontWeight: 'bold' }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Button 
-                    variant="text" 
-                    size="small" 
-                    startIcon={<VisibilityIcon />} 
-                    sx={{ color: theme.palette.primary.main, textTransform: 'none' }}
-                    onClick={() => {
-                      const queryParams = new URLSearchParams({
-                        fileName: row.file_name,
-                        reqCount: row.requisition_count.toString(),
-                        candCount: row.candidate_count.toString(),
-                        dataSpan: 'Q4 2024', 
-                      }).toString();
-                      router.push(`/history/${row.historical_id}?${queryParams}`);
-                    }}
-                  >
-                    View Details
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {isLoading && <CircularProgress sx={{ display: 'block', my: 4 }} />}
+      {error && <Alert severity="error" sx={{ my: 4 }}>{error}</Alert>}
+      {!isLoading && !error && historicalRequisitions.length === 0 && (
+        <Typography sx={{ my: 4 }}>No requisitions found.</Typography>
+      )}
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
-        <Typography variant="body2" color="text.secondary">
-          Showing {(page - 1) * rowsPerPage + 1} to {Math.min(page * rowsPerPage, filteredData.length)} of {filteredData.length} uploads
-        </Typography>
-        <Pagination 
-          count={Math.ceil(filteredData.length / rowsPerPage)} 
-          page={page} 
-          onChange={handleChangePage} 
-          color="primary" 
-          siblingCount={0}
-          boundaryCount={1}
-        />
-      </Box>
+      {!isLoading && !error && historicalRequisitions.length > 0 && (
+        <>
+          <TableContainer component={Paper} sx={{ boxShadow: theme.shadows[1] }}>
+            <Table sx={{ minWidth: 650 }} aria-label="historical data table">
+              <TableHead>
+                <TableRow sx={{backgroundColor:'#f9fafb'}}>
+                  <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>UPLOAD DATE</TableCell>
+                  <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>FILE NAME</TableCell>
+                  <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>REQUISITIONS</TableCell>
+                  <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>CANDIDATES</TableCell>
+                  <TableCell sx={{color:"text.secondary", fontWeight:'bold'}}>ACTIONS</TableCell>
+                </TableRow>
+              </TableHead>
+              
+              <TableBody>
+                {paginatedData.map((row, index) => (
+                  <TableRow
+                    key={index}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      {row.upload_date}
+                    </TableCell>
+                    <TableCell>{row.file_name}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={row.requisition_count} 
+                        size="small" 
+                        sx={{ backgroundColor: '#DBEAFE', color: '#2D5BFF', borderRadius: '16px', fontWeight: 'bold' }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={row.candidate_count} 
+                        size="small" 
+                        sx={{ backgroundColor: '#F3E8FF', color: '#7E22CE', borderRadius: '16px', fontWeight: 'bold' }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="text" 
+                        size="small" 
+                        startIcon={<VisibilityIcon />} 
+                        sx={{ color: theme.palette.primary.main, textTransform: 'none' }}
+                        onClick={() => {
+                          const queryParams = new URLSearchParams({
+                            fileName: row.file_name,
+                            reqCount: row.requisition_count.toString(),
+                            candCount: row.candidate_count.toString(),
+                            dataSpan: 'Q4 2024', 
+                          }).toString();
+                          router.push(`/history/${row.historical_id}?${queryParams}`);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              Showing {(page - 1) * rowsPerPage + 1} to {Math.min(page * rowsPerPage, filteredData.length)} of {filteredData.length} uploads
+            </Typography>
+            <Pagination 
+              count={Math.ceil(filteredData.length / rowsPerPage)} 
+              page={page} 
+              onChange={handleChangePage} 
+              color="primary" 
+              siblingCount={0}
+              boundaryCount={1}
+            />
+          </Box>
+        </>
+        
+      )}
       {isModalOpen && <UploadHistoricalDataModal open={isModalOpen} onClose={handleCloseModal} />}
     </Box>
   );
