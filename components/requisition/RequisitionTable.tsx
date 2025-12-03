@@ -11,15 +11,91 @@ import {
   Typography,
   Box,
   Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import { getStatusChipProps } from '@/utils/statusColorMapping';
-import { EditDocument } from '@mui/icons-material';
+import { EditDocument, MoreVert, Visibility, Edit } from '@mui/icons-material';
+import { useState } from 'react';
 import { Requisition } from '@/interface/requisition';
+import Link from 'next/link';
 
 
 
 
-const RequisitionTable = ({requisitions}: {requisitions: Requisition[]}) => {
+const RowActions = ({ requisition }: { requisition: Partial<Requisition> }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  return (
+    <>
+      <IconButton
+        aria-label="more"
+        id={`action-button-${requisition.requisition_id}`}
+        aria-controls={open ? `action-menu-${requisition.requisition_id}` : undefined}
+        aria-expanded={open ? 'true' : undefined}
+        aria-haspopup="true"
+        onClick={handleClick}
+        size="small"
+      >
+        <MoreVert />
+      </IconButton>
+      <Menu
+        id={`action-menu-${requisition.requisition_id}`}
+        MenuListProps={{
+          'aria-labelledby': `action-button-${requisition.requisition_id}`,
+        }}
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+            elevation: 1,
+            sx: {
+                minWidth: 180,
+                mt: 1,
+                borderRadius: 2,
+                '& .MuiMenuItem-root': {
+                    px: 2,
+                    py: 1,
+                    mx: 1,
+                    my: 0.5,
+                    typography: 'body2',
+                    fontWeight: 500
+                }
+            }
+        }}
+      >
+        <MenuItem onClick={handleClose} component={Link} href={`/requisition/${requisition.requisition_id}`}>
+          <ListItemIcon>
+            <Visibility fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>View Requisition</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleClose} component={Link} href={`/requisition/${requisition.requisition_id}/edit`}>
+          <ListItemIcon>
+            <Edit fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Edit Requisition</ListItemText>
+        </MenuItem>
+      </Menu>
+    </>
+  );
+};
+
+const RequisitionTable = ({requisitions}: {requisitions: Partial<Requisition>[]}) => {
   return (
     <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
       <Table sx={{ minWidth: 650 }} aria-label="requisition table">
@@ -50,12 +126,12 @@ const RequisitionTable = ({requisitions}: {requisitions: Requisition[]}) => {
               </TableCell>
               <TableCell>{row.department}</TableCell>
               <TableCell>{row.requisition_raised_by}</TableCell>
-              <TableCell sx={{ color: 'text.secondary' }}>{row.submitted_date.split('T')[0]}</TableCell>
+              <TableCell sx={{ color: 'text.secondary' }}>{row?.submitted_date?.split('T')[0]}</TableCell>
               <TableCell>
                 <Chip
-                  label={row.status}
+                  label={row?.status}
                   size="small"
-                  color={getStatusChipProps(row.status).color}
+                  color={getStatusChipProps(row?.status).color}
                   sx={{
                     fontWeight: 500,
                     borderRadius: '6px'
@@ -76,17 +152,7 @@ const RequisitionTable = ({requisitions}: {requisitions: Requisition[]}) => {
                 </Button>
               </TableCell>
               <TableCell>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<EditDocument />}
-                  sx={{
-                    fontWeight: 500,
-                    borderRadius: '6px',
-                  }}
-                >
-                  View
-                </Button>
+                <RowActions requisition={row} />
               </TableCell>
             </TableRow>
           ))}

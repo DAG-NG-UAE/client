@@ -1,5 +1,5 @@
-export const getStatusChipProps = (status: string) => {
-  switch (status.toLowerCase()) {
+export const getStatusChipProps = (status: string | undefined) => {
+  switch (status?.toLowerCase()) {
     case 'open':
       return { label: 'Open', color: 'success' as 'success', variant: 'outlined' as 'outlined' };
     case 'hired':
@@ -19,6 +19,6 @@ export const getStatusChipProps = (status: string) => {
     case 'progress':
       return { label: 'In Progress', color: 'primary' as 'primary', variant: 'outlined' as 'outlined' };
     default:
-      return { label: status, color: 'default' as 'default', variant: 'outlined' as 'outlined' };
+      return { label: status || 'Unknown', color: 'default' as 'default', variant: 'outlined' as 'outlined' };
   }
 };

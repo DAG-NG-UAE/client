@@ -1,14 +1,9 @@
 import axios from 'axios';
 import axiosInstance from './axiosInstance';
+import { Requisition } from '@/interface/requisition';
 
-interface Requisition {
-  id: string;
-  title: string;
-  status: string;
-  // Add other requisition fields as they exist in your backend
-}
 
-export const getRequisitions = async (status?: string): Promise<Requisition[]> => {
+export const getRequisitions = async (status?: string): Promise<Partial<Requisition>[]> => {
   try {
     console.log(`the params being passed ${status}`)
     const config = {
@@ -21,6 +16,17 @@ export const getRequisitions = async (status?: string): Promise<Requisition[]> =
     return response.data.data;
   } catch (error) {
     console.error('Error fetching requisitions:', error);
+    throw error;
+  }
+};
+
+export const getSingleRequisition = async (id: string): Promise<Partial<Requisition>> => {
+  try {
+    const response = await axiosInstance.get(`/requistion/single?requisitionId=${id}`);
+    console.log('The response we get is', JSON.stringify(response))
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching requisition:', error);
     throw error;
   }
 };

@@ -11,7 +11,7 @@ import { Requisition } from '@/interface/requisition';
 import { useState } from 'react';
 
 const RequisitionPage = () => {
-  const [requisitions, setRequisitions] = useState<any[]>([]);
+  const [requisitions, setRequisitions] = useState<Partial<Requisition>[]>([]);
 
   useEffect(() => {
     const fetchRequisitions = async () => {
