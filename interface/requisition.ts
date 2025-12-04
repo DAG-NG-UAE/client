@@ -13,7 +13,7 @@ export interface Requisition {
   proposed_salary?: string;
   posting_locations?: string[];
   recruiter?: string;
-  job_description?: string;
+  content?: string;
   activity_log?: {
     title: string;
     user: string;

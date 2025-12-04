@@ -10,12 +10,14 @@ import JobDescription from '@/components/requisition/JobDescription';
 import { Requisition } from '@/interface/requisition';
 import { Save } from '@mui/icons-material';
 import { getSingleRequisition } from '@/api/requisitionApi';
+import TurndownService from 'turndown';
 
 
 const RequisitionEditPage = () => {
   const params = useParams();
   const router = useRouter();
   const [requisition, setRequisition] = useState<Partial<Requisition>>({});
+  const [jobDescriptionHtml, setJobDescriptionHtml] = useState<string>('');
 
   useEffect(() => {
     const fetchSingleRequisition = async () => {
@@ -30,9 +32,12 @@ const RequisitionEditPage = () => {
   }, [params.id]);
 
   const handleSave = () => {
+    const turndownService = new TurndownService();
+    const markdown = turndownService.turndown(jobDescriptionHtml);
+    console.log('Saving markdown...', markdown);
     // In a real app, save to API
     console.log('Saving requisition...', requisition);
-    router.push(`/requisition/${params.id}`);
+    // router.push(`/requisition/${params.id}`);
   };
 
   if (!requisition) {
@@ -51,7 +56,11 @@ const RequisitionEditPage = () => {
 
         <JobPostingDetails requisition={requisition} isEditMode />
 
-        <JobDescription requisition={requisition} isEditMode />
+        <JobDescription 
+          requisition={requisition} 
+          isEditMode 
+          onContentChange={setJobDescriptionHtml}
+        />
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
             <Button 

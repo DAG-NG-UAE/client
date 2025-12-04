@@ -47,7 +47,7 @@ const JobDescriptionHistory = () => {
                   </Typography>
                 </Box>
               }
-              sx={{ m: 0 }}
+              sx={{ ListItemTextProps: { component: 'div' }}}
             />
           </ListItem>
         ))}

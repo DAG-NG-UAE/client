@@ -5,11 +5,15 @@ import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import { FormatBold, FormatItalic, FormatUnderlined, FormatListBulleted, FormatListNumbered, Title, Link as LinkIcon, Code } from '@mui/icons-material';
 import { Requisition } from '@/interface/requisition';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { marked } from 'marked';
+import TurndownService from 'turndown';
 
 interface JobDescriptionProps {
   requisition: Partial<Requisition>;
   isEditMode?: boolean;
+  onContentChange?: (content: string) => void;
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
@@ -67,7 +71,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 };
 
-const JobDescription = ({ requisition, isEditMode = false }: JobDescriptionProps) => {
+const JobDescription = ({ requisition, isEditMode = false, onContentChange }: JobDescriptionProps) => {
+  const turndownService = useMemo(() => new TurndownService(), []);
+
+  // Convert initial Markdown to HTML for Tiptap
+  const initialContent = useMemo(() => {
+    return requisition.content ? marked.parse(requisition.content) : '<p>No job description available.</p>';
+  }, [requisition.content]);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -77,8 +88,13 @@ const JobDescription = ({ requisition, isEditMode = false }: JobDescriptionProps
       }),
     ],
     immediatelyRender: false,
-    content: requisition.job_description || '<p>No job description available.</p>',
+    content: initialContent as string, // marked.parse returns string | Promise<string>
     editable: isEditMode,
+    onUpdate: ({ editor }) => {
+      // Convert HTML back to Markdown
+      const markdown = turndownService.turndown(editor.getHTML());
+      onContentChange?.(markdown);
+    },
     editorProps: {
         attributes: {
             class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-[200px]',
@@ -88,14 +104,16 @@ const JobDescription = ({ requisition, isEditMode = false }: JobDescriptionProps
 
   // Update content if requisition changes (e.g. after fetch)
   useEffect(() => {
-      if (editor && requisition.job_description) {
-          // Only set content if it's different to avoid cursor jumps, 
-          // but here we just set it on mount/change mostly.
-          if (editor.getHTML() !== requisition.job_description) {
-             editor.commands.setContent(requisition.job_description);
+      if (editor && requisition.content) {
+          const htmlContent = marked.parse(requisition.content) as string;
+          // Only set content if it's different to avoid cursor jumps
+          // Note: This is a rough check because HTML <-> MD conversion might not be stable
+          // But it helps when switching records
+          if (editor.getHTML() !== htmlContent && !editor.isFocused) {
+             editor.commands.setContent(htmlContent);
           }
       }
-  }, [requisition.job_description, editor]);
+  }, [requisition.content, editor]);
 
   useEffect(() => {
       if (editor) {
@@ -122,6 +140,10 @@ const JobDescription = ({ requisition, isEditMode = false }: JobDescriptionProps
               outline: 'none',
               p: isEditMode ? 2 : 0,
           },
+          // Styles for view mode (ReactMarkdown) and edit mode (Tiptap)
+          '& .prose': {
+             maxWidth: 'none',
+          },
           '& ul': {
               listStyleType: 'disc',
               pl: 2
@@ -131,8 +153,16 @@ const JobDescription = ({ requisition, isEditMode = false }: JobDescriptionProps
               pl: 2
           }
       }}>
-        {isEditMode && <MenuBar editor={editor} />}
-        <EditorContent editor={editor} />
+        {isEditMode ? (
+          <>
+            <MenuBar editor={editor} />
+            <EditorContent editor={editor} />
+          </>
+        ) : (
+          <Box className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none" sx={{ p: 0 }}>
+             <ReactMarkdown>{requisition.content || 'No job description available.'}</ReactMarkdown>
+          </Box>
+        )}
       </Box>
     </Paper>
   );
