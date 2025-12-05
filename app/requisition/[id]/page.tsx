@@ -72,6 +72,7 @@ const RequisitionViewPage = () => {
         try {
           const response = await getSingleRequisition(params.id as string);
           setRequisition(response);
+          console.log('Requisition fetched:', response);
         } catch (error) {
           console.error('Error fetching requisition:', error);
         }

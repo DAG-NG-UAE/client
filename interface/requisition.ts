@@ -1,3 +1,9 @@
+export interface RequisitionPosition {
+  position_slot_id: string;
+  slot_number: number;
+  location: string;
+}
+
 export interface Requisition {
   requisition_id: string;
   requisition_raised_by: string;
@@ -14,6 +20,9 @@ export interface Requisition {
   posting_locations?: string[];
   recruiter?: string;
   content?: string;
+  requisition_positions?: RequisitionPosition[];
+  published?: boolean; 
+  public_share_link?:string;
   activity_log?: {
     title: string;
     user: string;

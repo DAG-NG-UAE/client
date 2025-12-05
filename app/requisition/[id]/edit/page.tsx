@@ -9,7 +9,7 @@ import JobPostingDetails from '@/components/requisition/JobPostingDetails';
 import JobDescription from '@/components/requisition/JobDescription';
 import { Requisition } from '@/interface/requisition';
 import { Save } from '@mui/icons-material';
-import { getSingleRequisition, updateRequisition } from '@/api/requisitionApi';
+import { getSingleRequisition, publishRequisition, updateRequisition } from '@/api/requisitionApi';
 
 
 
@@ -19,15 +19,16 @@ const RequisitionEditPage = () => {
   const [requisition, setRequisition] = useState<Partial<Requisition>>({});
   const [jobDescriptionMarkdown, setJobDescriptionMarkdown] = useState<string>('');
 
+  const fetchSingleRequisition = async () => {
+    try {
+      const response = await getSingleRequisition(params.id as string);
+      setRequisition(response);
+    } catch (error) {
+      console.error('Error fetching requisition:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchSingleRequisition = async () => {
-      try {
-        const response = await getSingleRequisition(params.id as string);
-        setRequisition(response);
-      } catch (error) {
-        console.error('Error fetching requisition:', error);
-      }
-    };
     fetchSingleRequisition();
   }, [params.id]);
 
@@ -46,6 +47,12 @@ const RequisitionEditPage = () => {
     router.push(`/requisition/${params.id}`);
   };
 
+  const handlePublishRequisition = async(requisitionId: string) => { 
+    await publishRequisition(requisitionId);
+    // Re-fetch the single requisition after publishing/unpublishing
+    fetchSingleRequisition();
+  }
+
   if (!requisition) {
     return <Box sx={{ p: 3 }}><CircularProgress /></Box>;
   }
@@ -60,7 +67,7 @@ const RequisitionEditPage = () => {
         />
         <CoreDetails requisition={requisition} />
 
-        <JobPostingDetails requisition={requisition} isEditMode />
+        <JobPostingDetails requisition={requisition} isEditMode handlePublishRequisition={handlePublishRequisition} />
 
         <JobDescription 
           requisition={requisition} 

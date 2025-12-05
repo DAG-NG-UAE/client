@@ -1,27 +1,27 @@
 import { Box, Typography, Paper, Chip, TextField, Stack, IconButton, MenuItem, Select, Button, useTheme } from '@mui/material';
-import { Requisition } from '@/interface/requisition';
+import { Requisition, RequisitionPosition } from '@/interface/requisition';
 import { Add, Close } from '@mui/icons-material';
 import { useState } from 'react';
+import { publishRequisition } from '@/api/requisitionApi';
 
 interface JobPostingDetailsProps {
   requisition: Partial<Requisition>;
   isEditMode?: boolean;
+  handlePublishRequisition?:(requisitionId:string) => void
 }
 
-const JobPostingDetails = ({ requisition, isEditMode = false }: JobPostingDetailsProps) => {
+const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequisition}: JobPostingDetailsProps) => {
+  console.log('JobPostingDetails requisition:', requisition.requisition_positions);
   const theme = useTheme();
-  const [locations, setLocations] = useState<string[]>(requisition.posting_locations || []);
+  const [locations, setLocations] = useState<RequisitionPosition[]>(requisition.requisition_positions || []);
   const [newLocation, setNewLocation] = useState('');
 
   const handleAddLocation = () => {
-    if (newLocation && !locations.includes(newLocation)) {
-      setLocations([...locations, newLocation]);
-      setNewLocation('');
-    }
-  };
+     setLocations([...locations, { position_slot_id: '', slot_number: 0, location: newLocation }]);
+    };
 
-  const handleRemoveLocation = (locToRemove: string) => {
-    setLocations(locations.filter(loc => loc !== locToRemove));
+  const handleRemoveLocation = (locToRemove: RequisitionPosition) => {
+    setLocations(locations.filter(loc => loc.position_slot_id !== locToRemove.position_slot_id));
   };
 
   return (
@@ -52,10 +52,10 @@ const JobPostingDetails = ({ requisition, isEditMode = false }: JobPostingDetail
                 </IconButton>
               </Stack>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {locations.map((loc) => (
+                {requisition.requisition_positions?.map((loc) => (
                   <Chip
-                    key={loc}
-                    label={loc}
+                    key={loc.position_slot_id}
+                    label={loc.location}
                     onDelete={() => handleRemoveLocation(loc)}
                     color="primary"
                     variant="outlined"
@@ -66,28 +66,13 @@ const JobPostingDetails = ({ requisition, isEditMode = false }: JobPostingDetail
             </Box>
           ) : (
             <Stack direction="row" spacing={1}>
-              {requisition.posting_locations?.map((loc) => (
-                <Chip key={loc} label={loc} size="small" color="primary" variant="outlined" sx={{ bgcolor: 'action.hover' }} />
+              {requisition.requisition_positions?.map((loc) => (
+                <Chip key={loc.position_slot_id} label={loc.location} size="small" color="primary" variant="outlined" sx={{ bgcolor: 'action.hover' }} />
               )) || <Typography variant="body2" color="text.secondary">No locations set</Typography>}
             </Stack>
           )}
         </Box>
-        {/* External Job Title
-        <Box>
-          <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-            External Job Title (Shown to candidates)
-          </Typography>
-          {isEditMode ? (
-            <TextField
-              fullWidth
-              size="small"
-              defaultValue={requisition.position} // Assuming position is external title for now
-              placeholder="e.g. Senior Frontend Engineer"
-            />
-          ) : (
-             <Typography variant="body1">{requisition.position}</Typography>
-          )}
-        </Box> */}
+        
 
         {/* Recruiter Assigned */}
         <Box>
@@ -116,7 +101,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false }: JobPostingDetail
       </Box>
       <Box sx={{mt: 3}}>
         <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-          Current publisication status
+          Current publication status
         </Typography>
 
         <Box display="flex" alignItems="center" gap={3}>
@@ -124,11 +109,12 @@ const JobPostingDetails = ({ requisition, isEditMode = false }: JobPostingDetail
             variant="contained" 
             size="small" 
             sx={{color: requisition.current_job_description_id == null ? theme.palette.success.main : theme.palette.error.main}}
+            onClick={() => requisition.requisition_id && handlePublishRequisition?.(requisition.requisition_id)}
           >
-            {requisition.current_job_description_id == null ? 'Publish' : 'Unpublish'}
+            {requisition.published == false ? 'Publish' : 'Unpublish'}
           </Button>
           <Typography variant="body2" color="text.secondary">
-            {requisition.current_job_description_id == null ? 'Write job description first' : 'Publish to careers page'}
+            {requisition.current_job_description_id == null ? 'Write job description first' : ''}
           </Typography>
         </Box>
         {/* display the public application link in a copyable field */}
@@ -137,7 +123,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false }: JobPostingDetail
             Public Application Link
           </Typography>
           <p>
-            {requisition.current_job_description_id == null ? '' : `https://careers.page/${requisition.current_job_description_id}`}
+            {requisition.public_share_link == null ? '' : `${requisition.public_share_link}` }
           </p>
         </Box>
       </Box>

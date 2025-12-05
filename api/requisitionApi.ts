@@ -50,3 +50,13 @@ export const updateRequisition = async (
     throw error;
   }
 };
+
+export const publishRequisition = async (requisitionId: string) => { 
+  try{ 
+    const response = await axiosInstance.put(`/requistion/publish?requisitionId=${requisitionId}`)
+    return response.data.data
+  }catch(error){ 
+    console.error("Error publishing the requisition", error)
+    throw error
+  }
+}
