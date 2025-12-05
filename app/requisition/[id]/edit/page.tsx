@@ -9,15 +9,15 @@ import JobPostingDetails from '@/components/requisition/JobPostingDetails';
 import JobDescription from '@/components/requisition/JobDescription';
 import { Requisition } from '@/interface/requisition';
 import { Save } from '@mui/icons-material';
-import { getSingleRequisition } from '@/api/requisitionApi';
-import TurndownService from 'turndown';
+import { getSingleRequisition, updateRequisition } from '@/api/requisitionApi';
+
 
 
 const RequisitionEditPage = () => {
   const params = useParams();
   const router = useRouter();
   const [requisition, setRequisition] = useState<Partial<Requisition>>({});
-  const [jobDescriptionHtml, setJobDescriptionHtml] = useState<string>('');
+  const [jobDescriptionMarkdown, setJobDescriptionMarkdown] = useState<string>('');
 
   useEffect(() => {
     const fetchSingleRequisition = async () => {
@@ -31,13 +31,19 @@ const RequisitionEditPage = () => {
     fetchSingleRequisition();
   }, [params.id]);
 
-  const handleSave = () => {
-    const turndownService = new TurndownService();
-    const markdown = turndownService.turndown(jobDescriptionHtml);
-    console.log('Saving markdown...', markdown);
-    // In a real app, save to API
-    console.log('Saving requisition...', requisition);
+  const handleSave = async () => {
+    console.log('Saving markdown...', jobDescriptionMarkdown);
+    
+    // Update requisition with markdown
+    const updatedRequisition = {
+      ...requisition,
+      job_description: jobDescriptionMarkdown,
+    };
+    console.log('Saving requisition...', updatedRequisition);
     // router.push(`/requisition/${params.id}`);
+    await updateRequisition(params.id as string, updatedRequisition);
+    console.log('Requisition saved successfully');
+    router.push(`/requisition/${params.id}`);
   };
 
   if (!requisition) {
@@ -59,7 +65,7 @@ const RequisitionEditPage = () => {
         <JobDescription 
           requisition={requisition} 
           isEditMode 
-          onContentChange={setJobDescriptionHtml}
+          onContentChange={setJobDescriptionMarkdown}
         />
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
