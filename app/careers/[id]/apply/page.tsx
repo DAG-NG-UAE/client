@@ -84,6 +84,14 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
   const [location, setLocation] = useState(''); 
   const [careerDetails, setCareerDetails] = useState<Partial<Requisition>>({});
 
+  // Form field states
+  const [fullName, setFullName] = useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [expectedSalary, setExpectedSalary] = useState('');
+  const [coverLetter, setCoverLetter] = useState('');
+  const [privacyConsent, setPrivacyConsent] = useState(false);
+
   const fetchJobDetails = async (slug:string) => { 
     try{ 
       const result = await getCareerDetail(slug)
@@ -99,6 +107,32 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
   }, [])
 
   // submit the form 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle form submission logic here
+    console.log({
+      fullName,
+      emailAddress,
+      phoneNumber,
+      availability,
+      location,
+      expectedSalary,
+      coverLetter,
+      privacyConsent,
+      position: careerDetails.position, // Include the pre-filled position
+      department: careerDetails.department // Include the department
+    });
+    alert('Application Submitted!');
+  };
+
+  const isFormValid = 
+    fullName !== '' &&
+    emailAddress !== '' &&
+    phoneNumber !== '' &&
+    availability !== '' &&
+    location !== '' &&
+    expectedSalary !== '' &&
+    privacyConsent;
 
 
   return (
@@ -132,6 +166,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
       {/* Main Content */}
       <Container maxWidth="md" sx={{ mt: -8, mb: 8, position: 'relative', zIndex: 2 }}>
         <Paper elevation={0} sx={{ p: 6, borderRadius: 4, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)', bgcolor: 'background.paper' }}>
+          <form onSubmit={handleSubmit}> {/* Wrap content in form tag */}
           {/* <Typography variant="h5" sx={{ mb: 4, fontWeight: 600 }}>
             Submit Your Application
           </Typography> */}
@@ -141,13 +176,13 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
             <SectionHeader title="Personal Information" />
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, md: 6 }}>
-                <FormInput label="Full Name" required placeholder="John Doe" />
+                <FormInput label="Full Name" required placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
-                <FormInput label="Email Address" required placeholder="john.doe@email.com" type="email" />
+                <FormInput label="Email Address" required placeholder="john.doe@email.com" type="email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
-                <FormInput label="Phone Number" required placeholder="(555) 123-4567" type="tel" />
+                <FormInput label="Phone Number" required placeholder="(555) 123-4567" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <FormInput label="Position Applied For" required disabled={true} value={careerDetails.position} />
@@ -186,7 +221,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
               </Box>
             </Box>
 
-            <FormInput label="Expected Salary" required placeholder="e.g., $120,000 - $140,000 or Negotiable" />
+            <FormInput label="Expected Salary" required placeholder="e.g., $120,000 - $140,000 or Negotiable" value={expectedSalary} onChange={(e) => setExpectedSalary(e.target.value)} />
 
             <Box mb={3}>
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
@@ -216,7 +251,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
                 <Select
                   fullWidth
                   displayEmpty
-                  value={availability}
+                  value={location} // Changed from availability to location
                   onChange={(e) => setLocation(e.target.value)}
                   sx={{ borderRadius: 2, bgcolor: 'background.paper' }}
                 >
@@ -235,6 +270,8 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
               placeholder="Tell us why you're interested in this position and what makes you a great fit..."
               multiline
               rows={4}
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
             />
           </Box>
 
@@ -244,7 +281,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
           <Box mb={4}>
             <SectionHeader title="Privacy & Data Protection" />
             <FormControlLabel
-              control={<Checkbox />}
+              control={<Checkbox checked={privacyConsent} onChange={(e) => setPrivacyConsent(e.target.checked)} />}
               label={
                 <Typography variant="body2" component="span">
                   I confirm that I have read and understood the Company Recruitment Privacy Notice linked below. <Box component="span" sx={{ color: 'error.main' }}>*</Box>
@@ -268,17 +305,18 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
             <Button variant="outlined" size="large" sx={{ px: 4, borderColor: 'divider', color: 'text.secondary' }}>
               Cancel
             </Button>
-            <Button variant="contained" size="large" sx={{ px: 4 }}>
+            <Button variant="contained" size="large" sx={{ px: 4 }} type="submit" disabled={!isFormValid}> {/* Add type="submit" and disabled prop */}
               Submit Application
             </Button>
           </Stack>
 
+        </form> {/* Close form tag */}
         </Paper>
-        
         <Typography variant="caption" align="center" display="block" mt={4} color="textSecondary">
           Having trouble with your application? Contact us at <span style={{ color: theme.palette.primary.main }}>careers@company.com</span>
         </Typography>
       </Container>
     </Box>
-  );
+  )
+
 }
