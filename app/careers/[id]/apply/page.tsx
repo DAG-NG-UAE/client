@@ -91,6 +91,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
   const [expectedSalary, setExpectedSalary] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
   const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [cvFile, setCvFile] = useState<File | null>(null); // State for CV file
 
   const fetchJobDetails = async (slug:string) => { 
     try{ 
@@ -101,6 +102,29 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
     }
   
   }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setCvFile(event.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    // You might want to add some visual feedback here, e.g., change border color
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    // Revert visual feedback
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    if (event.dataTransfer.files && event.dataTransfer.files[0]) {
+      setCvFile(event.dataTransfer.files[0]);
+    }
+  };
 
   useEffect(() => { 
     fetchJobDetails('340ff80e-eede-45a8-a0c9-55b3435e73c4')
@@ -119,6 +143,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
       expectedSalary,
       coverLetter,
       privacyConsent,
+      cvFile, // Include the uploaded CV file
       position: careerDetails.position, // Include the pre-filled position
       department: careerDetails.department // Include the department
     });
@@ -132,6 +157,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
     availability !== '' &&
     location !== '' &&
     expectedSalary !== '' &&
+    cvFile !== null && // Check if CV file is uploaded
     privacyConsent;
 
 
@@ -201,20 +227,42 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
                 CV/Resume <span style={{ color: theme.palette.error.main }}>*</span>
               </Typography>
-              <Box sx={{ 
-                border: '2px dashed',
-                borderColor: 'divider',
-                borderRadius: 2, 
-                p: 4, 
-                textAlign: 'center',
-                cursor: 'pointer',
-                bgcolor: 'background.default',
-                '&:hover': { bgcolor: 'action.hover', borderColor: 'primary.main' }
-              }}>
-                <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
-                <Typography variant="body2" color="textSecondary">
-                  Click to upload or drag and drop
-                </Typography>
+              <Box
+                sx={{
+                  border: '2px dashed',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  p: 4,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  bgcolor: 'background.default',
+                  '&:hover': { bgcolor: 'action.hover', borderColor: 'primary.main' }
+                }}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => document.getElementById('cv-upload-input')?.click()} // Trigger file input click
+              >
+                <input
+                  type="file"
+                  id="cv-upload-input"
+                  hidden
+                  accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={handleFileChange}
+                />
+                {cvFile ? (
+                  <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
+                    <Typography variant="body1">{cvFile.name}</Typography>
+                    <Button size="small" onClick={(e) => { e.stopPropagation(); setCvFile(null); }}>Remove</Button>
+                  </Stack>
+                ) : (
+                  <>
+                    <CloudUploadIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+                    <Typography variant="body2" color="textSecondary">
+                      Click to upload or drag and drop
+                    </Typography>
+                  </>
+                )}
                 <Typography variant="caption" color="textSecondary" display="block" mt={0.5}>
                   Accepted formats: PDF, DOC, DOCX (Max 5MB)
                 </Typography>
