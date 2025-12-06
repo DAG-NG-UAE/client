@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Container,
@@ -21,6 +21,8 @@ import {
   useTheme
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { getCareerDetail } from '@/api/requisitionApi';
+import { Requisition } from '@/interface/requisition';
 
 // Reusable Form Input Component
 interface FormInputProps {
@@ -31,6 +33,7 @@ interface FormInputProps {
   multiline?: boolean;
   rows?: number;
   value?: string;
+  disabled?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
@@ -41,7 +44,8 @@ const FormInput: React.FC<FormInputProps> = ({
   type = 'text',
   multiline = false,
   rows,
-  value,
+  value = '', // Initialize value to empty string to ensure it's always controlled
+  disabled = false, // Add disabled prop with default false
   onChange
 }) => (
   <Box sx={{ mb: 2 }}>
@@ -58,6 +62,7 @@ const FormInput: React.FC<FormInputProps> = ({
       variant="outlined"
       size="medium"
       value={value}
+      disabled={disabled} // Pass disabled prop to TextField
       onChange={onChange}
       InputProps={{
         sx: { borderRadius: 2, backgroundColor: 'background.paper' }
@@ -76,6 +81,25 @@ const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
 export default function ApplyPage({ params }: { params: { id: string } }) {
   const theme = useTheme();
   const [availability, setAvailability] = useState('');
+  const [location, setLocation] = useState(''); 
+  const [careerDetails, setCareerDetails] = useState<Partial<Requisition>>({});
+
+  const fetchJobDetails = async (slug:string) => { 
+    try{ 
+      const result = await getCareerDetail(slug)
+      setCareerDetails(result)
+    }catch(error){ 
+      console.log("Error fetching career details")
+    }
+  
+  }
+
+  useEffect(() => { 
+    fetchJobDetails('340ff80e-eede-45a8-a0c9-55b3435e73c4')
+  }, [])
+
+  // submit the form 
+
 
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -90,16 +114,17 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
         <Container maxWidth="lg">
           <Stack spacing={2} alignItems="center" textAlign="center">
             <Typography variant="h3" fontWeight="bold">
-              Senior Frontend Developer
+              {careerDetails.position}
             </Typography>
             <Typography variant="h6" sx={{ opacity: 0.9 }}>
-              Engineering • San Francisco, CA • Full-time
+              {careerDetails.department} • {careerDetails.requisition_positions?.slice(0, 2).map((location) => location.location).join(', ')}
+              {careerDetails.requisition_positions && careerDetails.requisition_positions.length > 2 && ' ...'}
             </Typography>
-            <Stack direction="row" spacing={1} mt={2}>
+            {/* <Stack direction="row" spacing={1} mt={2}>
               <Chip label="Remote Available" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'inherit' }} />
               <Chip label="$120k - $160k" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'inherit' }} />
               <Chip label="Full Benefits" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'inherit' }} />
-            </Stack>
+            </Stack> */}
           </Stack>
         </Container>
       </Box>
@@ -125,7 +150,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
                 <FormInput label="Phone Number" required placeholder="(555) 123-4567" type="tel" />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
-                <FormInput label="Position Applied For" required value="Senior Frontend Developer" />
+                <FormInput label="Position Applied For" required disabled={true} value={careerDetails.position} />
               </Grid>
             </Grid>
           </Box>
@@ -181,6 +206,28 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
                 <MenuItem value="2_weeks">2 Weeks Notice</MenuItem>
                 <MenuItem value="1_month">1 Month Notice</MenuItem>
               </Select>
+            </Box>
+
+            <Box mb={3}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
+                    Select Location <span style={{ color: theme.palette.error.main }}>*</span>
+                </Typography>
+                {/* display the available locations to the user so they click the locations they are applying for  */}
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={availability}
+                  onChange={(e) => setLocation(e.target.value)}
+                  sx={{ borderRadius: 2, bgcolor: 'background.paper' }}
+                >
+                  <MenuItem value ="" disabled>
+                    <Typography color="textSecondary">Select Location</Typography>
+                  </MenuItem>
+                  {careerDetails.requisition_positions?.map((location) => (
+                    <MenuItem value={location.position_slot_id}>{location.location}</MenuItem>
+                  ))}
+                 
+                </Select>
             </Box>
 
             <FormInput 

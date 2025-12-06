@@ -35,6 +35,16 @@ export const getSingleRequisition = async (
   }
 };
 
+export const getCareerDetail = async (slug:string): Promise<Partial<Requisition>> => { 
+try{ 
+  const response = await axiosInstance.get(`/requistion/career?slug=${slug}`)
+  return response.data.data
+}catch(error){ 
+  console.error('Error fetching requisition by slug')
+  throw error 
+}
+}
+
 export const updateRequisition = async (
   id: string,
   data: Partial<Requisition>
