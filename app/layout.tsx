@@ -32,6 +32,7 @@ export default function RootLayout({
   const theme = getAppTheme(isDarkMode ? 'dark' : 'light');
 
   const isLoginPage = pathname === '/login';
+  const isPublicPage = pathname?.startsWith('/careers');
 
   return (
     <html lang="en">
@@ -39,14 +40,14 @@ export default function RootLayout({
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            {isLoginPage ? (
+            {isLoginPage || isPublicPage ? (
               <Box sx={{
-                backgroundColor: theme.palette.loginBackground,
+                backgroundColor: isLoginPage ? theme.palette.loginBackground : theme.palette.background.default,
                 minHeight: '100vh',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
+                justifyContent: isLoginPage ? 'center' : 'flex-start',
+                alignItems: isLoginPage ? 'center' : 'stretch',
               }}>
                 {children}
               </Box>
