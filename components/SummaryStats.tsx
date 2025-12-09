@@ -28,17 +28,10 @@ const StatCard: React.FC<StatCardProps> = ({ title, value }) => (
   </Paper>
 );
 
-const SummaryStats = () => {
-  const stats = [
-    { title: 'Total Requisitions', value: 'X' },
-    { title: 'Pending Review', value: 'X' },
-    { title: 'Approved', value: 'X' },
-    { title: 'In Progress', value: 'X' },
-  ];
-
+const SummaryStats = ({stats}: {stats: {title: string; value: string | number}[]}) => {
   return (
     <Grid container spacing={3} sx={{ mb: 4 }}>
-      {stats.map((stat) => (
+      {stats.map((stat: {title: string; value: string | number}) => (
         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={stat.title}>
           <StatCard title={stat.title} value={stat.value} />
         </Grid>

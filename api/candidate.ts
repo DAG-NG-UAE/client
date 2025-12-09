@@ -11,3 +11,22 @@ export const getCandidatesForRequisition = async (requisitionId: string) => {
         throw error;
     }
 };
+
+export const apply = async(applicantData: FormData, slug: string) => { 
+    try { 
+        console.log('Making request to backend...');
+        const response = await axiosInstance.post(
+            `application?slug=${slug}`, 
+            applicantData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            }
+        );
+        return response.data.data;
+    } catch (error) {
+        console.error('Error applying:', error);
+        throw error;
+    }
+}

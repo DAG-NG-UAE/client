@@ -23,6 +23,7 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { getCareerDetail } from '@/api/requisitionApi';
 import { Requisition } from '@/interface/requisition';
+import { apply } from '@/api/candidate';
 
 // Reusable Form Input Component
 interface FormInputProps {
@@ -103,9 +104,15 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
   
   }
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setCvFile(event.target.files[0]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+  
+    if (files && files.length > 0) {
+      const selectedFile = files[0];
+      // CRITICAL: Set the raw File object to state
+      setCvFile(selectedFile); 
+    } else {
+      setCvFile(null);
     }
   };
 
@@ -130,26 +137,6 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
     fetchJobDetails('340ff80e-eede-45a8-a0c9-55b3435e73c4')
   }, [])
 
-  // submit the form 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission logic here
-    console.log({
-      fullName,
-      emailAddress,
-      phoneNumber,
-      availability,
-      location,
-      expectedSalary,
-      coverLetter,
-      privacyConsent,
-      cvFile, // Include the uploaded CV file
-      position: careerDetails.position, // Include the pre-filled position
-      department: careerDetails.department // Include the department
-    });
-    alert('Application Submitted!');
-  };
-
   const isFormValid = 
     fullName !== '' &&
     emailAddress !== '' &&
@@ -159,6 +146,66 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
     expectedSalary !== '' &&
     cvFile !== null && // Check if CV file is uploaded
     privacyConsent;
+  
+  // submit the form 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!isFormValid) {
+      alert('Please fill all required fields and accept the privacy notice.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('fullName', fullName);
+    formData.append('emailAddress', emailAddress);
+    formData.append('phoneNumber', phoneNumber);
+    formData.append('availability', availability);
+    formData.append('expectedSalary', expectedSalary);
+    formData.append('coverLetter', coverLetter);
+    formData.append('privacyConsent', String(privacyConsent)); // Convert boolean to string
+    if (careerDetails.position) {
+      formData.append('position', careerDetails.position);
+    }
+    if (careerDetails.department) {
+      formData.append('department', careerDetails.department);
+    }
+    if (cvFile) {
+      console.log('File being sent:', {
+        name: cvFile.name,
+        size: cvFile.size,
+        type: cvFile.type,
+        lastModified: cvFile.lastModified
+      });
+      formData.append('cvFile', cvFile, cvFile.name); // Explicitly include filename
+    }
+    formData.append('requisitionPositionSlot', location) // This was added by the user in the previous turn
+
+
+   // Better FormData logging
+  console.log('FormData contents:');
+  for (const pair of formData.entries()) {
+    if (pair[1] instanceof File) {
+      console.log(`${pair[0]}:`, {
+        name: pair[1].name,
+        size: pair[1].size,
+        type: pair[1].type
+      });
+    } else {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
+  }
+
+    // submit the form 
+    try{
+      const response = await apply(formData,'340ff80e-eede-45a8-a0c9-55b3435e73c4' )
+    }catch(error){ 
+      console.error('Error submitting form:', error);
+      alert('An error occurred during submission.');
+    }
+  };
+
+ 
 
 
   return (
@@ -192,7 +239,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
       {/* Main Content */}
       <Container maxWidth="md" sx={{ mt: -8, mb: 8, position: 'relative', zIndex: 2 }}>
         <Paper elevation={0} sx={{ p: 6, borderRadius: 4, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)', bgcolor: 'background.paper' }}>
-          <form onSubmit={handleSubmit}> {/* Wrap content in form tag */}
+          <form onSubmit={handleSubmit} encType="multipart/form-data"> {/* Wrap content in form tag */}
           {/* <Typography variant="h5" sx={{ mb: 4, fontWeight: 600 }}>
             Submit Your Application
           </Typography> */}

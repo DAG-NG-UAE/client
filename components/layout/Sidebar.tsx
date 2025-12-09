@@ -26,7 +26,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' }, // Changed path to /dashboard
     { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition' },
-    // { text: 'Candidates', icon: <PeopleIcon />, path: '/candidates' },
+    { text: 'Candidates', icon: <PeopleIcon />, path: '/candidates' },
     // { text: 'Interviews', icon: <EventNoteIcon />, path: '/interviews' },
     // { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
     { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history'},
