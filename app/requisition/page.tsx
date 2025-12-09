@@ -32,7 +32,7 @@ const RequisitionPage = () => {
     fetchRequisitions();
   }, []);
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: 'background.default' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
       <Container maxWidth="xl">
         {/* Header */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
