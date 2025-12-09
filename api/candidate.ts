@@ -30,3 +30,23 @@ export const apply = async(applicantData: FormData, slug: string) => {
         throw error;
     }
 }
+
+export const getAllCandidates = async() => { 
+    try{ 
+        const response = await axiosInstance.get(`candidate`)
+        return response.data.data
+    }catch(error){ 
+        console.error('Error fetching all candidates:', error);
+        throw error;
+    }
+}
+
+export const getSingleCandidate = async(candidateId: string) => { 
+    try{ 
+        const response = await axiosInstance.get(`candidate/single?candidateId=${candidateId}`)
+        return response.data.data
+    }catch(error){ 
+        console.error("Error fetching single candidate details")
+        throw error
+    }
+}

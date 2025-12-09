@@ -170,7 +170,17 @@ const CandidateUploadPage = () => {
                 <TableCell>{candidate.total_experience_years? candidate.total_experience_years : '---'}</TableCell>
                 <TableCell>{candidate.source ? candidate.source : '---'}</TableCell>
                 <TableCell>{candidate.current_status && 
-                    (<Chip {...getStatusChipProps(candidate.current_status)} size="small" />) 
+                    (<Chip 
+                      {...getStatusChipProps(candidate.current_status)} 
+                      size="small" 
+                      sx={{ 
+                        color: getStatusChipProps(candidate.current_status).color,
+                        backgroundColor: getStatusChipProps(candidate.current_status).sx?.bgColor,
+                        borderColor: getStatusChipProps(candidate.current_status).sx?.borderColor,
+                        borderRadius: '6px', 
+                        fontWeight: 500
+                      }}
+                    />) 
                     || '---' 
                 }</TableCell>
               </TableRow>

@@ -1,12 +1,15 @@
 "use client"
+import { getAllCandidates } from "@/api/candidate";
 import CandidateTable from "@/components/candidates/CandidateTable";
 import Filters from "@/components/Filters";
 import RequisitionFilters from "@/components/Filters";
 import SummaryStats from "@/components/SummaryStats";
 import { CandidateProfile } from "@/interface/candidate";
 import { Box, Container, Stack, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 
 const CandidatesPage = () => { 
+  const [candidates, setCandidates] = useState<Partial<CandidateProfile>[]>([]);
   const textPlaceholder = "Search candidate...";
   const allRoles = [
     { text: 'All Roles', value: 'all' },
@@ -21,77 +24,26 @@ const CandidatesPage = () => {
     { text: 'Engineering', value: 'Engineering' },
     { text: 'Product', value: 'Product' }
   ];
+
   const allYears = [
     { text: 'All years', value: 'all'}, 
     { text: '2025', value: '2025'}
   ]
 
-  const candidates: Partial<CandidateProfile>[] = [
-    {
-      candidate_id: '1',
-      candidate_name: 'John Doe',
-      role_applied_for: 'Data Analyst',
-      department: 'Engineering',
-      submitted_date: '2023-10-15',
-      total_experience_years: '2',
-      source: 'LinkedIn',
-      current_status: 'Applied',
-      email: 'john.doe@example.com',
-      mobile_number: '1234567890',
-      location: 'New York',
-      privacy_consent: true,
-      cover_letter: 'This is a cover letter',
-      cv_path: 'path/to/cv.pdf',
-    }, 
-    {
-      candidate_id: '2',
-      candidate_name: 'Jane Smith',
-      role_applied_for: 'Data Engineer',
-      department: 'Engineering',
-      submitted_date: '2023-10-16',
-      total_experience_years: '3',
-      source: 'Indeed',
-      current_status: 'Shortlisted',
-      email: 'jane.smith@example.com',
-      mobile_number: '0987654321',
-      location: 'Los Angeles',
-      privacy_consent: true,
-      cover_letter: 'This is another cover letter',
-      cv_path: 'path/to/another_cv.pdf',
-    },
-    {
-      candidate_id: '3',
-      candidate_name: 'John Doe',
-      role_applied_for: 'Data Analyst',
-      department: 'Engineering',
-      submitted_date: '2023-10-15',
-      total_experience_years: '2',
-      source: 'LinkedIn',
-      current_status: 'Applied',
-      email: 'john.doe@example.com',
-      mobile_number: '1234567890',
-      location: 'New York',
-      privacy_consent: true,
-      cover_letter: 'This is a cover letter',
-      cv_path: 'path/to/cv.pdf',
-    }, 
-    {
-      candidate_id: '4',
-      candidate_name: 'Jane Smith',
-      role_applied_for: 'Data Engineer',
-      department: 'Engineering',
-      submitted_date: '2023-10-16',
-      total_experience_years: '3',
-      source: 'Indeed',
-      current_status: 'Shortlisted',
-      email: 'jane.smith@example.com',
-      mobile_number: '0987654321',
-      location: 'Los Angeles',
-      privacy_consent: true,
-      cover_letter: 'This is another cover letter',
-      cv_path: 'path/to/another_cv.pdf',
+  const fetchAllCandidates = async() => { 
+    try{ 
+      console.log('in the fetch all candidates')
+      const result = await getAllCandidates()
+      setCandidates(result)
+    }catch(error){ 
+      console.log('An error occurred')
     }
-  ];
+  }
+
+  useEffect(() => { 
+    fetchAllCandidates()
+  }, [])
+ 
     return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
       <Container maxWidth="xl">

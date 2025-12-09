@@ -14,9 +14,15 @@ const DetailItem = ({ label, value, isStatus = false }: { label: string; value: 
     {isStatus && typeof value === 'string' ? (
        <Chip
        size="small"
-       {...getStatusChipProps(value)}
-       sx={{ borderRadius: '6px', fontWeight: 500 }}
-     />
+       {...getStatusChipProps(value)} 
+          sx={{ 
+          color: getStatusChipProps(value).color,
+          backgroundColor: getStatusChipProps(value).sx,
+          borderColor: getStatusChipProps(value).sx,
+          borderRadius: '6px', 
+          fontWeight: 500
+        }}
+      />
     ) : (
       <Typography variant="body2" fontWeight={500}>
         {value || '-'}

@@ -82,6 +82,7 @@ const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
 export default function ApplyPage({ params }: { params: { id: string } }) {
   const theme = useTheme();
   const [availability, setAvailability] = useState('');
+  const [experience, setExperience] = useState('');
   const [location, setLocation] = useState(''); 
   const [careerDetails, setCareerDetails] = useState<Partial<Requisition>>({});
 
@@ -109,7 +110,6 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
   
     if (files && files.length > 0) {
       const selectedFile = files[0];
-      // CRITICAL: Set the raw File object to state
       setCvFile(selectedFile); 
     } else {
       setCvFile(null);
@@ -142,6 +142,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
     emailAddress !== '' &&
     phoneNumber !== '' &&
     availability !== '' &&
+    experience !== '' &&
     location !== '' &&
     expectedSalary !== '' &&
     cvFile !== null && // Check if CV file is uploaded
@@ -161,6 +162,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
     formData.append('emailAddress', emailAddress);
     formData.append('phoneNumber', phoneNumber);
     formData.append('availability', availability);
+    formData.append('experience', experience);
     formData.append('expectedSalary', expectedSalary);
     formData.append('coverLetter', coverLetter);
     formData.append('privacyConsent', String(privacyConsent)); // Convert boolean to string
@@ -320,6 +322,28 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
 
             <Box mb={3}>
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
+                Experience <span style={{ color: theme.palette.error.main }}>*</span>
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
+                sx={{ borderRadius: 2, bgcolor: 'background.paper' }}
+              >
+                <MenuItem value="" disabled>
+                  <Typography color="textSecondary">Select experience</Typography>
+                </MenuItem>
+                <MenuItem value="0-6months">0-6 Months</MenuItem>
+                <MenuItem value="1-3years">1-3 years</MenuItem>
+                <MenuItem value="4-8years">4-8 years</MenuItem>
+                <MenuItem value="10+years">10+ years</MenuItem>
+                <MenuItem value="20+years">20+ years</MenuItem>
+              </Select>
+            </Box>
+
+            <Box mb={3}>
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
                 Availability to Join <span style={{ color: theme.palette.error.main }}>*</span>
               </Typography>
               <Select
@@ -333,8 +357,9 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
                   <Typography color="textSecondary">Select availability</Typography>
                 </MenuItem>
                 <MenuItem value="immediate">Immediately</MenuItem>
-                <MenuItem value="2_weeks">2 Weeks Notice</MenuItem>
-                <MenuItem value="1_month">1 Month Notice</MenuItem>
+                <MenuItem value="2weeks">2 Weeks Notice</MenuItem>
+                <MenuItem value="1month">1 Month Notice</MenuItem>
+                <MenuItem value="3month">3 Month Notice</MenuItem>
               </Select>
             </Box>
 
