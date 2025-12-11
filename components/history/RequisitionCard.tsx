@@ -45,7 +45,15 @@ const RequisitionCard: React.FC<RequisitionCardProps> = ({ id, role, department,
           <Box sx={{ p: 1, backgroundColor: '#DBEAFE', borderRadius: 2, color: '#155dfc' }}>
             <WorkIcon />
           </Box>
-          <Chip {...getStatusChipProps(status)} size="small" />
+          <Chip 
+            {...getStatusChipProps(status)} 
+            size="small" 
+            sx={{ 
+              borderRadius: '6px', 
+              fontWeight: 500,
+              ...(getStatusChipProps(status).sx || {})
+            }}
+          />
         </Box>
         
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '1.1rem' }}>

@@ -74,11 +74,6 @@ const CandidateTable = ({candidates}: {candidates: Partial<CandidateProfile>[]})
                     (<Chip 
                         {...getStatusChipProps(candidate.current_status)} 
                         size="small" 
-                        sx={{ 
-                        color: getStatusChipProps(candidate.current_status).color,
-                        backgroundColor: getStatusChipProps(candidate.current_status).sx,
-                        borderColor: getStatusChipProps(candidate.current_status).sx,
-                        }}
                     />) 
                     || '---' 
                 }</TableCell>

@@ -1,4 +1,4 @@
-import axiosInstance from "./axiosInstance";
+import axiosInstance, { API_BASE_URL } from "./axiosInstance";
 
 // get the candidates for a requisition 
 export const getCandidatesForRequisition = async (requisitionId: string) => {
@@ -31,9 +31,15 @@ export const apply = async(applicantData: FormData, slug: string) => {
     }
 }
 
-export const getAllCandidates = async() => { 
+export const getAllCandidates = async(requisitionId?:string) => { 
     try{ 
-        const response = await axiosInstance.get(`candidate`)
+        const queryParams = new URLSearchParams()
+        if(requisitionId && requisitionId.trim().toLowerCase() !== 'all'){
+            queryParams.append('requisitionId', requisitionId)
+        }
+        const queryString = queryParams.toString()
+        const url = requisitionId ? `candidate?${queryString}` : `candidate`
+        const response = await axiosInstance.get(url)
         return response.data.data
     }catch(error){ 
         console.error('Error fetching all candidates:', error);
@@ -45,6 +51,16 @@ export const getSingleCandidate = async(candidateId: string) => {
     try{ 
         const response = await axiosInstance.get(`candidate/single?candidateId=${candidateId}`)
         return response.data.data
+    }catch(error){ 
+        console.error("Error fetching single candidate details")
+        throw error
+    }
+}
+
+export const getCandidateResume = async(candidateId:string) => { 
+    try{ 
+        const resumeLink = `${API_BASE_URL}/candidate/resume?candidateId=${candidateId}`
+        return resumeLink
     }catch(error){ 
         console.error("Error fetching single candidate details")
         throw error

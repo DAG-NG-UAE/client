@@ -1,3 +1,8 @@
+export interface AvailablePositions { 
+  requisition_id: string; 
+  position: string 
+}
+
 export interface RequisitionPosition {
   position_slot_id: string;
   slot_number: number;

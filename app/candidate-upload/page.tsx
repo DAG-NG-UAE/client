@@ -174,11 +174,9 @@ const CandidateUploadPage = () => {
                       {...getStatusChipProps(candidate.current_status)} 
                       size="small" 
                       sx={{ 
-                        color: getStatusChipProps(candidate.current_status).color,
-                        backgroundColor: getStatusChipProps(candidate.current_status).sx?.bgColor,
-                        borderColor: getStatusChipProps(candidate.current_status).sx?.borderColor,
                         borderRadius: '6px', 
-                        fontWeight: 500
+                        fontWeight: 500,
+                        ...(getStatusChipProps(candidate.current_status).sx || {})
                       }}
                     />) 
                     || '---' 

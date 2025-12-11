@@ -128,13 +128,13 @@ const RequisitionTable = ({requisitions}: {requisitions: Partial<Requisition>[]}
               <TableCell>{row.requisition_raised_by}</TableCell>
               <TableCell sx={{ color: 'text.secondary' }}>{row?.submitted_date?.split('T')[0]}</TableCell>
               <TableCell>
-                <Chip
-                  label={row?.status}
-                  size="small"
-                  color={getStatusChipProps(row?.status).color}
-                  sx={{
+              <Chip 
+                  {...getStatusChipProps(row.status)} 
+                  size="small" 
+                  sx={{ 
+                    borderRadius: '6px', 
                     fontWeight: 500,
-                    borderRadius: '6px'
+                    ...(getStatusChipProps(row.status).sx || {})
                   }}
                 />
               </TableCell>

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL for your API (can be configured via environment variables)
-const API_BASE_URL =  'http://localhost:5000'; // Backend url - Base URL should not include specific endpoints like /api or /requisition
+export const API_BASE_URL =  'http://localhost:5000'; // Backend url - Base URL should not include specific endpoints like /api or /requisition
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,

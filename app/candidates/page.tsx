@@ -1,48 +1,89 @@
 "use client"
+import { getCandidateCardStat } from "@/api/analytics";
 import { getAllCandidates } from "@/api/candidate";
+import { getPosition } from "@/api/requisitionApi";
 import CandidateTable from "@/components/candidates/CandidateTable";
 import Filters from "@/components/Filters";
 import RequisitionFilters from "@/components/Filters";
 import SummaryStats from "@/components/SummaryStats";
+import { CandidateCardStat } from "@/interface/analytics";
 import { CandidateProfile } from "@/interface/candidate";
+import { AvailablePositions } from "@/interface/requisition";
 import { Box, Container, Stack, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 
 const CandidatesPage = () => { 
   const [candidates, setCandidates] = useState<Partial<CandidateProfile>[]>([]);
-  const textPlaceholder = "Search candidate...";
-  const allRoles = [
-    { text: 'All Roles', value: 'all' },
-    { text: 'Data Analyst Intern', value: 'Data Analyst Intern' },
-    { text: 'Data Analyst', value: 'Data Analyst' },
-    { text: 'Data Engineer', value: 'Data Engineer' },
-    { text: 'Data Scientist', value: 'Data Scientist' },
-  ];
-
-  const allDepartments = [
-    { text: 'All Departments', value: 'all' },
-    { text: 'Engineering', value: 'Engineering' },
-    { text: 'Product', value: 'Product' }
-  ];
+  const [positions, setPositions] = useState<AvailablePositions[]>([])
+  const [candidateStat, setCandidateStat] = useState<Partial<CandidateCardStat>>({})
+  const [selectedRequisitionId, setSelectedRequisitionId] = useState<string>('all');
+  const [selectedYear, setSelectedYear] = useState<string>('all');
 
   const allYears = [
     { text: 'All years', value: 'all'}, 
     { text: '2025', value: '2025'}
   ]
 
-  const fetchAllCandidates = async() => { 
+  const candidateCardStat = async(requisitionId: string = 'all', year: string = 'all') => { 
+    try{ 
+      const result = await getCandidateCardStat(requisitionId, year)
+      setCandidateStat(result)
+    }catch(error){ 
+      console.log('An error occurred while fetching the candidate card stat')
+    }
+  }
+
+  const filterCandidatesByRole = async(requisitionId: string) => { 
+    // get the requisitionId that was passed
+    console.log(`we want to filter by requisition => ${requisitionId}`)
+    setSelectedRequisitionId(requisitionId);
+    await fetchAllCandidates(requisitionId)
+    await candidateCardStat(requisitionId, selectedYear)
+  }
+
+  const handleYearChange = async(year: string) => {
+    setSelectedYear(year);
+    await candidateCardStat(selectedRequisitionId, year);
+  }
+
+  const fetchAllCandidates = async(requisitionId?: string) => { 
     try{ 
       console.log('in the fetch all candidates')
-      const result = await getAllCandidates()
-      setCandidates(result)
+      const result = await getAllCandidates(requisitionId)
+      setCandidates(result.mainResult)
     }catch(error){ 
       console.log('An error occurred')
     }
   }
 
+  const fetchPosition = async() => { 
+    try{ 
+      const result = await getPosition()
+      console.log(`we have the position ${JSON.stringify(result)}`)
+      setPositions(result)
+    }catch(error){ 
+      console.log("An error occurred while getting the position ")
+    }
+  }
+
   useEffect(() => { 
+    candidateCardStat()
+    fetchPosition()
     fetchAllCandidates()
   }, [])
+
+  const allRoles = [
+    { text: 'All Roles', value: 'all' },
+    ...positions
+      .map((position) => ({
+        text: position.position,
+        value: position.requisition_id,
+      }))
+     
+  ];
+  console.log(`we have the position ${JSON.stringify(allRoles)}`)
+
+  // get the position from the candidates
  
     return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
@@ -61,13 +102,13 @@ const CandidatesPage = () => {
 
         {/* Summary Stats */}
         <SummaryStats stats={[
-            { title: 'Total Candidates', value: '200' },
-            { title: 'Applied', value: '100' },
-            { title: 'Screening', value: '50' },
-            { title: 'Interview', value: '20' },
-            { title: 'Offer Stage', value: '10' },
-            { title: 'Hired', value: '5' },
-            { title: 'Rejected', value: '5' }
+            { title: 'Total Candidates', value: candidateStat.total_candidates || '0' },
+            { title: 'Applied', value: candidateStat.count_applied || '0' },
+            { title: 'Screening', value: candidateStat.count_screening || '0' },
+            { title: 'Interview', value: candidateStat.count_interview || '0' },
+            { title: 'Offer Stage', value: candidateStat.count_offer || '0' },
+            { title: 'Hired', value: candidateStat.count_hired || '0' },
+            { title: 'Rejected', value: candidateStat.count_rejected || '0' }
           ]} />
 
         {/* Filters */}
@@ -75,8 +116,10 @@ const CandidatesPage = () => {
           menuItems={allRoles} 
           textPlaceholder="Search candidate..." 
           isCandidate={true} 
-          allDepartments={allDepartments}
+          // allDepartments={allDepartments}
           allYears={allYears}
+          filterFunction={filterCandidatesByRole}
+          onYearChange={handleYearChange}
         />
 
         {/* Table */}

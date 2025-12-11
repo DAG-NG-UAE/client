@@ -6,22 +6,6 @@ export const getStatusChipProps = (status: string | undefined) => {
         color: "success" as "success",
         variant: "outlined" as "outlined",
       };
-    case "hired":
-      return {
-        label: "Hired",
-        color: "success" as "success",
-        variant: "outlined" as "outlined",
-      };
-    case "shortlisted":
-       return {
-        label: "Shortlisted",
-        sx: {
-          bgcolor: "red",
-          color: "#fef9c2",
-          borderColor: "#e9d5ff",
-        },
-        variant: "filled" as "filled",
-      };
     case "in review":
       return {
         label: "In Review",
@@ -58,39 +42,57 @@ export const getStatusChipProps = (status: string | undefined) => {
         color: "primary" as "primary",
         variant: "outlined" as "outlined",
       };
+    case "hired":
+    return {
+      label: "Hired", 
+      sx: {
+        bgcolor: "#cbfbf1",
+        color: "#46958e",
+      },
+      variant: "filled" as "filled",
+    };
+  case "shortlisted":
+    return {
+      label: "Shortlisted",
+      sx: {
+        bgcolor: "#fef9c2",
+        color: "#b7904d",
+      },
+      variant: "filled" as "filled",
+    };
     case "applied":
       return {
         label: "Applied",
-        color: "primary" as "primary",
-        variant: "outlined" as "outlined",
+        sx: {
+          bgcolor: "#dbeafe",
+          color: "#5c78d0"
+        },
+        variant: "filled" as "filled",
       };
     case "interview":
       return {
         label: "Interview",
         sx: {
           bgcolor: "#f3e8ff",
-          color: "#6b21a8",
-          borderColor: "#e9d5ff",
+          color: "#6b21a8"
         },
         variant: "filled" as "filled",
       };
     case "offer":
       return {
         label: "Offer",
-        sx:{ 
-          bgColor: "#f3e8ff",
-          color: "#dbfce7",
-          borderColor: "#dbfce7",
+        sx: {
+          bgcolor: "#dbfce7",
+          color: "#83c09d"
         },
         variant: "filled" as "filled",
       };
     case "reject":
       return {
         label: "Rejected",
-        sx:{ 
-          bgColor: "#bb474f",
-          color: "#bb474f",
-          borderColor: "#bb474f",
+        sx: {
+          bgcolor: "#ffe2e2",
+          color: "#b3353e"
         },
         variant: "filled" as "filled",
       };

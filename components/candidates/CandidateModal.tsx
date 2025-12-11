@@ -12,7 +12,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StarIcon from '@mui/icons-material/Star';
-import { getSingleCandidate } from "@/api/candidate";
+import { getCandidateResume, getSingleCandidate } from "@/api/candidate";
 import { useEffect, useState } from "react";
 
 interface CandidateModalProps {
@@ -42,25 +42,30 @@ const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label?: str
 const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     const theme = useTheme();
 
-    if (!candidate) return null;
-   
+    const [fetchedDetails, setFetchedDetails] = useState<Partial<CandidateProfile> | null>(null);
     const allStatuses = ['Screening', 'Interview', 'Offer', 'Hired', 'Reject'];
-    const [candidateDetail, setCandidateDetail] = useState<Partial<CandidateProfile>>({})
-
-    const fetchCandidateDetail = async() => { 
-        try{ 
-            const response = await getSingleCandidate(candidate.candidate_id!)
-            setCandidateDetail(response)
-        }catch(error){ 
-            throw error
-        }
-    }
 
     useEffect(() => { 
-        if(candidate.candidate_id){ 
+        if(open && candidate?.candidate_id){ 
+            const fetchCandidateDetail = async() => { 
+                try{ 
+                    const response = await getSingleCandidate(candidate.candidate_id!)
+                    setFetchedDetails(response)
+                }catch(error){ 
+                    throw error
+                }
+            }
             fetchCandidateDetail()
         }
-    }, [])
+    }, [open, candidate?.candidate_id])
+
+    if (!candidate) return null;
+
+    const handleViewResume = async(candidateId:string) => {
+        // This will hit your new API endpoint and the browser will display the PDF/file.
+        const resumeUrl = await getCandidateResume(candidateId);
+        window.open(resumeUrl, '_blank'); 
+    };
 
     return (
         <Dialog 
@@ -110,10 +115,15 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                 Current Status
                             </Typography>
                             {candidate.current_status && (
-                                <Chip 
+                                (<Chip 
                                     {...getStatusChipProps(candidate.current_status)} 
-                                    label={candidate.current_status}
-                                />
+                                    size="small" 
+                                    sx={{ 
+                                    borderRadius: '6px', 
+                                    fontWeight: 500,
+                                    ...(getStatusChipProps(candidate.current_status).sx || {})
+                                    }}
+                                />) 
                             )}
                         </Box>
                         <Button variant="contained" color="primary" sx={{ textTransform: 'none', borderRadius: 2 }}>
@@ -151,12 +161,12 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                             />
                             <DetailItem 
                                 icon={<AttachMoneyIcon fontSize="small" />} 
-                                value={candidate.salary_target_min ? `$${candidate.salary_target_min}` : undefined} 
+                                value={fetchedDetails?.salary_target_min ? `$${fetchedDetails.salary_target_min}` : undefined} 
                                 label="Expected Salary"
                             />
                             <DetailItem 
                                 icon={<CalendarTodayIcon fontSize="small" />} 
-                                value={candidateDetail.notice_period} 
+                                value={fetchedDetails?.notice_period} 
                                 label="Notice Period"
                             />
                         </Paper>
@@ -177,7 +187,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                 </Box>
                                 <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
                                     <Typography variant="body2" color="text.secondary">Experience:</Typography>
-                                    <Typography variant="body2">{candidateDetail.total_experience_years}</Typography>
+                                    <Typography variant="body2">{fetchedDetails?.total_experience_years}</Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
                                     <Typography variant="body2" color="text.secondary">Education:</Typography>
@@ -195,7 +205,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                     <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                         <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
                             <SectionTitle>Resume</SectionTitle>
-                            <Button startIcon={<OpenInNewIcon />} sx={{ textTransform: 'none' }}>
+                            <Button onClick={() => handleViewResume(candidate.candidate_id!)} startIcon={<OpenInNewIcon />} sx={{ textTransform: 'none' }}>
                                 View Resume
                             </Button>
                         </Paper>

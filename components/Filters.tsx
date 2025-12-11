@@ -24,13 +24,22 @@ interface FilterProps {
   isCandidate?: boolean;
   allDepartments?: MenuItems[];
   allYears?: MenuItems[];
+  filterFunction?: (requisitionId:string) => void;
+  onYearChange?: (year: string) => void;
 }
 
-const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYears}: FilterProps) => {
-  const [status, setStatus] = React.useState('all');
+const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYears, filterFunction, onYearChange}: FilterProps) => {
+  const [role, setRole] = React.useState('all');
+  const [year, setYear] = React.useState('all');
 
-  const handleStatusChange = (event: SelectChangeEvent) => {
-    setStatus(event.target.value as string);
+  const handleRoleChange = (event: SelectChangeEvent) => {
+    filterFunction && filterFunction(event.target.value as string)
+    setRole(event.target.value as string);
+  };
+
+  const handleYearChange = (event: SelectChangeEvent) => {
+    onYearChange && onYearChange(event.target.value as string)
+    setYear(event.target.value as string);
   };
 
   return (
@@ -61,8 +70,8 @@ const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYe
       <Stack direction="row" spacing={2} sx={{ width: { xs: '100%', md: 'auto' } }}>
         <FormControl sx={{ minWidth: 150 }}>
           <Select
-            value={status}
-            onChange={handleStatusChange}
+            value={role}
+            onChange={handleRoleChange}
             displayEmpty
             inputProps={{ 'aria-label': 'Status' }}
             sx={{ backgroundColor: 'background.paper' }}
@@ -74,7 +83,7 @@ const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYe
             ))}
           </Select>
         </FormControl>
-        {isCandidate && (
+        {/* {isCandidate && (
           <FormControl sx={{ minWidth: 150 }}>
           <Select
             value={status}
@@ -90,13 +99,13 @@ const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYe
             ))}
           </Select>
         </FormControl>
-        )}
+        )} */}
         {/* all years for the candidate */}
         {isCandidate && (
           <FormControl sx={{ minWidth: 150 }}>
           <Select
-            value={status}
-            onChange={handleStatusChange}
+            value={year}
+            onChange={handleYearChange}
             displayEmpty
             inputProps={{ 'aria-label': 'Status' }}
             sx={{ backgroundColor: 'background.paper' }}
