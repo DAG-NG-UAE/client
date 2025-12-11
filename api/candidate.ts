@@ -1,3 +1,4 @@
+import { CandidateProfile } from "@/interface/candidate";
 import axiosInstance, { API_BASE_URL } from "./axiosInstance";
 
 // get the candidates for a requisition 
@@ -63,6 +64,16 @@ export const getCandidateResume = async(candidateId:string) => {
         return resumeLink
     }catch(error){ 
         console.error("Error fetching single candidate details")
+        throw error
+    }
+}
+
+export const updateCandidateStatus = async(updateData:Partial<CandidateProfile>) => { 
+    try{ 
+        const response = await axiosInstance.put(`/candidate`, updateData)
+        return response.data.data
+    }catch(error){ 
+        console.error("Error updating candidate status")
         throw error
     }
 }

@@ -3,7 +3,8 @@ import { getFirstAndLastInitials } from "@/utils/transform";
 import { getStatusChipProps } from "@/utils/statusColorMapping";
 import { 
     Dialog, DialogTitle, DialogContent, IconButton, Typography, Box, Avatar, 
-    Button, Chip, Paper, Divider, TextField, Stack, useTheme
+    Button, Chip, Paper, Divider, TextField, Stack, useTheme,
+    DialogActions
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import EmailIcon from '@mui/icons-material/Email';
@@ -12,8 +13,10 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StarIcon from '@mui/icons-material/Star';
-import { getCandidateResume, getSingleCandidate } from "@/api/candidate";
+import { getCandidateResume, getSingleCandidate, updateCandidateStatus } from "@/api/candidate";
 import { useEffect, useState } from "react";
+import { determineActions } from "@/utils/determineActions";
+import { CandidateActions, CandidateActionButton, CandidateStatus } from "@/interface/candidate";
 
 interface CandidateModalProps {
     open: boolean;
@@ -43,7 +46,73 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     const theme = useTheme();
 
     const [fetchedDetails, setFetchedDetails] = useState<Partial<CandidateProfile> | null>(null);
-    const allStatuses = ['Screening', 'Interview', 'Offer', 'Hired', 'Reject'];
+    const [notesModalOpen, setNotesModalOpen] = useState(false);
+    const [note, setNote] = useState('');
+    const [currentAction, setCurrentAction] = useState<CandidateActionButton | null>(null);
+    const [updateCandidate, setUpdateCandidate] = useState(false);
+
+    const handleAction = (action: CandidateActionButton) => {
+        if (action.requiresNotes) {
+            setCurrentAction(action);
+            setNotesModalOpen(true);
+        } else {
+            // For actions that don't require notes, we could call the API directly.
+            console.log("Performing action directly:", action);
+        }
+    };
+
+    const handleSubmitNote = async () => {
+        if (!currentAction || !candidate?.candidate_id) return;
+
+        console.log(`Submitting action: ${currentAction.actionType} for candidate: ${candidate.candidate_id} with status: ${currentAction.targetStatus} and note: ${note}`);
+        
+        const body: Partial<CandidateProfile> = { 
+            candidate_id: candidate.candidate_id, 
+            requisition_id: candidate.requisition_id,
+            old_status: candidate.current_status?.toLowerCase(),
+            new_status: currentAction.targetStatus?.toLowerCase(),
+            current_status: currentAction.targetStatus?.toLowerCase(),
+            notes: note
+        }
+        // Placeholder for API call:
+        await updateCandidateStatus(body);
+
+        // Reset and close modals
+        setNotesModalOpen(false);
+        setNote('');
+        setCurrentAction(null);
+        setUpdateCandidate(true); // Trigger re-fetch of candidate details
+    };
+
+    const NotesConfirmationModal = (
+        <Dialog open={notesModalOpen} onClose={() => setNotesModalOpen(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Reason for: {currentAction?.label}</DialogTitle>
+            <DialogContent>
+                <TextField
+                    autoFocus
+                    margin="dense"
+                    id="note"
+                    label="Add a note"
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    rows={4}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder={`Provide a reason for moving this candidate to ${currentAction?.targetStatus}...`}
+                />
+            </DialogContent>
+            <DialogActions sx={{ p: 3 }}>
+                <Button onClick={() => setNotesModalOpen(false)}>Cancel</Button>
+                <Button onClick={handleSubmitNote} variant="contained" disabled={!note}>Submit</Button>
+            </DialogActions>
+        </Dialog>
+    );
+
+    const { progressionAction, rejectionAction } = fetchedDetails?.current_status
+        ? determineActions(fetchedDetails.current_status as CandidateStatus)
+        : { progressionAction: null, rejectionAction: null };
 
     useEffect(() => { 
         if(open && candidate?.candidate_id){ 
@@ -57,7 +126,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
             }
             fetchCandidateDetail()
         }
-    }, [open, candidate?.candidate_id])
+    }, [open, candidate?.candidate_id, updateCandidate])
 
     if (!candidate) return null;
 
@@ -114,35 +183,40 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                                 Current Status
                             </Typography>
-                            {candidate.current_status && (
-                                (<Chip 
-                                    {...getStatusChipProps(candidate.current_status)} 
-                                    size="small" 
-                                    sx={{ 
-                                    borderRadius: '6px', 
-                                    fontWeight: 500,
-                                    ...(getStatusChipProps(candidate.current_status).sx || {})
+                            {fetchedDetails?.current_status && (
+                                <Chip
+                                    {...getStatusChipProps(fetchedDetails.current_status)}
+                                    size="small"
+                                    sx={{
+                                        borderRadius: '6px',
+                                        fontWeight: 500,
+                                        ...(getStatusChipProps(fetchedDetails.current_status).sx || {})
                                     }}
-                                />) 
+                                />
                             )}
                         </Box>
-                        <Button variant="contained" color="primary" sx={{ textTransform: 'none', borderRadius: 2 }}>
-                            Move to Offer
-                        </Button>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        {allStatuses.map((status) => {
-                            const statusProps = getStatusChipProps(status);
-                            return (
-                                <Chip 
-                                    key={status} 
-                                    {...statusProps}
-                                    variant={candidate.current_status === status ? "filled" : "outlined"}
-                                    onClick={() => {}} 
-                                    sx={{ borderRadius: 1, ...(statusProps as any).sx }}
-                                />
-                            );
-                        })}
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            {rejectionAction && (
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    sx={{ textTransform: 'none', borderRadius: 2 }}
+                                    onClick={() => handleAction(rejectionAction)}
+                                >
+                                    {rejectionAction.label}
+                                </Button>
+                            )}
+                            {progressionAction && (
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{ textTransform: 'none', borderRadius: 2 }}
+                                    onClick={() => handleAction(progressionAction)}
+                                >
+                                    {progressionAction.label}
+                                </Button>
+                            )}
+                        </Box>
                     </Box>
                 </Paper>
 
@@ -264,6 +338,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                     </Box>
                 </Box>
             </DialogContent>
+            {NotesConfirmationModal}
         </Dialog>
     );
 };
