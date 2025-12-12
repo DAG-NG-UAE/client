@@ -80,3 +80,54 @@ export interface HistoricalRecord {
   candidate_count: number;
   status: string;
 }
+
+export const statusDetails: { [key: string]: { title: string; subtitle: string } } = {
+  all: {
+    title: 'Manage Candidates', 
+    subtitle: 'Manage and track all candidate applications'
+  },
+  applied: {
+    title: 'Applied Candidates',
+    subtitle: 'View and manage all candidates who have applied for open positions.',
+  },
+  shortlisted: {
+    title: 'Shortlisted Candidates',
+    subtitle: 'View and manage all shortlisted candidates for various roles.',
+  },
+  'interview-scheduled': {
+    title: 'Interview Scheduled',
+    subtitle: 'Candidates who have an interview scheduled.',
+  },
+  'pending-feedback': {
+    title: 'Pending Feedback',
+    subtitle: 'Candidates for whom feedback is pending post-interview.',
+  },
+  interviewed: {
+    title: 'Interviewed Candidates',
+    subtitle: 'Candidates who have been interviewed.',
+  },
+  'offer-accepted': {
+    title: 'Offer Accepted',
+    subtitle: 'Candidates who have accepted a job offer.',
+  },
+  'offer-rejected': {
+    title: 'Offer Rejected',
+    subtitle: 'Candidates who have rejected a job offer.',
+  },
+  'offer-withdrawn': {
+    title: 'Offer Withdrawn',
+    subtitle: 'Candidates whose job offers have been withdrawn.',
+  },
+};
+
+export const enum allowedCandidatePaths{ 
+  'all' = 'all',
+  'applied' = 'applied', 
+  'shortlisted' = 'shortlisted', 
+  'interview-scheduled' = 'interview-scheduled', 
+  'pending-feedback' = 'pending-feedback', 
+  'interviewed' ='interviewed' , 
+  'offer-accepted' = 'offer-accepted', 
+  'offer-rejected' = 'offer-rejected', 
+  'offer-withdrawn' = 'offer-withdrawn'
+}

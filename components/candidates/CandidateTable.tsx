@@ -20,6 +20,15 @@ const CandidateTable = ({candidates}: {candidates: Partial<CandidateProfile>[]})
         setSelectedCandidate(null);
     };
 
+    if(candidates.length == 0){ 
+      return( 
+        <>
+        <Box sx={{height: '50%', textAlign: 'center'}}>
+          No data at this time
+        </Box>
+        </>
+      )
+    }
     return (
         <>
         <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>

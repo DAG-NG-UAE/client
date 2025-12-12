@@ -32,14 +32,17 @@ export const apply = async(applicantData: FormData, slug: string) => {
     }
 }
 
-export const getAllCandidates = async(requisitionId?:string) => { 
+export const getAllCandidates = async(requisitionId?:string, status?:string) => { 
     try{ 
         const queryParams = new URLSearchParams()
         if(requisitionId && requisitionId.trim().toLowerCase() !== 'all'){
             queryParams.append('requisitionId', requisitionId)
         }
+        if(status && status.trim().toLowerCase() !== 'all'){ 
+            queryParams.append('stage', status)
+        }
         const queryString = queryParams.toString()
-        const url = requisitionId ? `candidate?${queryString}` : `candidate`
+        const url = requisitionId || status ? `candidate?${queryString}` : `candidate`
         const response = await axiosInstance.get(url)
         return response.data.data
     }catch(error){ 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Divider } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Collapse } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PeopleIcon from '@mui/icons-material/People';
@@ -8,6 +8,8 @@ import AnalyticsIcon from '@mui/icons-material/Analytics';
 import BusinessIcon from '@mui/icons-material/Business';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HistoricalIcon from '@mui/icons-material/History';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 import { styled, useTheme } from '@mui/material/styles';
 import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
 
@@ -22,16 +24,38 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
   const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname(); // Get current pathname
+  const [isCandidatesOpen, setCandidatesOpen] = useState(false);
+
+  useEffect(() => {
+    if (pathname.startsWith('/candidates')) {
+      setCandidatesOpen(true);
+    }
+  }, [pathname]);
+
+  const handleCandidatesClick = () => {
+    setCandidatesOpen(!isCandidatesOpen);
+  };
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' }, // Changed path to /dashboard
     { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition' },
-    { text: 'Candidates', icon: <PeopleIcon />, path: '/candidates' },
     // { text: 'Interviews', icon: <EventNoteIcon />, path: '/interviews' },
     // { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
     { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history'},
     // { text: 'Departments', icon: <BusinessIcon />, path: '/departments' },
     // { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+  ];
+
+  const candidateSubItems = [
+    { text: 'All', path: '/candidates/all'},
+    { text: 'Applied', path: '/candidates/applied' },
+    { text: 'Shortlisted', path: '/candidates/shortlisted' },
+    { text: 'Interview Scheduled', path: '/candidates/interview-scheduled' },
+    { text: 'Pending Feedback', path: '/candidates/pending-feedback' },
+    { text: 'Interviewed', path: '/candidates/interviewed' },
+    { text: 'Offer Accepted', path: '/candidates/offer-accepted' },
+    { text: 'Offer Rejected', path: '/candidates/offer-rejected' },
+    { text: 'Offer Withdrawn', path: '/candidates/offer-withdrawn' },
   ];
 
   const drawerContent = (
@@ -56,7 +80,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
             selected={pathname === item.path} // Set selected based on current path
             onClick={() => {
               router.push(item.path); 
-              handleDrawerToggle(); // Close drawer on mobile after navigation
+              if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile after navigation
             }}
             sx={{
             margin: theme.spacing(0.5, 1),
@@ -76,6 +100,54 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
             <ListItemText primary={item.text} />
           </ListItemButton>
         ))}
+        {/* Candidates collapsible menu */}
+        <ListItemButton 
+          onClick={handleCandidatesClick}
+          selected={pathname.startsWith('/candidates')}
+          sx={{
+            margin: theme.spacing(0.5, 1),
+            borderRadius: theme.shape.borderRadius,
+            '&.Mui-selected': {
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.main,
+              },
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: 'inherit' }}><PeopleIcon /></ListItemIcon>
+          <ListItemText primary="Candidates" />
+          {isCandidatesOpen ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={isCandidatesOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {candidateSubItems.map((item) => (
+              <ListItemButton
+                key={item.text}
+                selected={pathname === item.path}
+                onClick={() => {
+                  router.push(item.path);
+                  if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile
+                }}
+                sx={{ 
+                  pl: 4,
+                  margin: theme.spacing(0.5, 1),
+                  borderRadius: theme.shape.borderRadius,
+                  '&.Mui-selected': {
+                    backgroundColor: theme.palette.primary.main,
+                    color: theme.palette.primary.contrastText,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.main,
+                    },
+                  },
+                }}
+              >
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Collapse>
       </List>
       <Box sx={{
         padding: theme.spacing(2),
