@@ -8,10 +8,13 @@ import {
   Button,
   FormControl,
   SelectChangeEvent,
+  IconButton,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import { useAppSelector } from '@/store/hooks';
+import AutorenewIcon from '@mui/icons-material/Autorenew'; // Import RefreshIcon
 
 interface MenuItems { 
   text: string; 
@@ -24,13 +27,15 @@ interface FilterProps {
   isCandidate?: boolean;
   allDepartments?: MenuItems[];
   allYears?: MenuItems[];
+  refreshPosition?:() => void;
   filterFunction?: (requisitionId:string) => void;
   onYearChange?: (year: string) => void;
 }
 
-const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYears, filterFunction, onYearChange}: FilterProps) => {
+const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYears, refreshPosition, filterFunction, onYearChange}: FilterProps) => {
   const [role, setRole] = React.useState('all');
   const [year, setYear] = React.useState('all');
+  const positionsStatus = useAppSelector((state) => state.positions.status); // Get positions loading status
 
   const handleRoleChange = (event: SelectChangeEvent) => {
     filterFunction && filterFunction(event.target.value as string)
@@ -83,6 +88,14 @@ const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYe
             ))}
           </Select>
         </FormControl>
+        <IconButton 
+          onClick={refreshPosition} 
+          disabled={positionsStatus === 'loading'} 
+          color="primary"
+          aria-label="refresh positions"
+        >
+          <AutorenewIcon />
+        </IconButton>
         {/* {isCandidate && (
           <FormControl sx={{ minWidth: 150 }}>
           <Select

@@ -11,6 +11,7 @@ import Header from '../components/layout/Header';
 import { Box, Toolbar } from '@mui/material';
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import StoreProvider from "@/store/StoreProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,37 +39,39 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {isLoginPage || isPublicPage ? (
-              <Box sx={{
-                backgroundColor: isLoginPage ? theme.palette.loginBackground : theme.palette.background.default,
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: isLoginPage ? 'center' : 'flex-start',
-                alignItems: isLoginPage ? 'center' : 'stretch',
-              }}>
-                {children}
-              </Box>
-            ) : (
-              <Box sx={{ display: 'flex' }}>
-                <Header handleDrawerToggle={handleDrawerToggle} />
-                <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
-                <Box
-                  component="main"
-                  sx={{
-                    flexGrow: 1,
-                    p: 3,
-                    width: { sm: `calc(100% - ${drawerWidth}px)` },
-                  }}
-                >
-                  <Toolbar /> {/* This is important for content to not be hidden by AppBar */}
+          <StoreProvider>
+            <ThemeProvider theme={theme}>
+              <CssBaseline />
+              {isLoginPage || isPublicPage ? (
+                <Box sx={{
+                  backgroundColor: isLoginPage ? theme.palette.loginBackground : theme.palette.background.default,
+                  minHeight: '100vh',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: isLoginPage ? 'center' : 'flex-start',
+                  alignItems: isLoginPage ? 'center' : 'stretch',
+                }}>
                   {children}
                 </Box>
-              </Box>
-            )}
-          </ThemeProvider>
+              ) : (
+                <Box sx={{ display: 'flex' }}>
+                  <Header handleDrawerToggle={handleDrawerToggle} />
+                  <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
+                  <Box
+                    component="main"
+                    sx={{
+                      flexGrow: 1,
+                      p: 3,
+                      width: { sm: `calc(100% - ${drawerWidth}px)` },
+                    }}
+                  >
+                    <Toolbar /> {/* This is important for content to not be hidden by AppBar */}
+                    {children}
+                  </Box>
+                </Box>
+              )}
+            </ThemeProvider>
+          </StoreProvider>
         </AppRouterCacheProvider>
       </body>
     </html>
