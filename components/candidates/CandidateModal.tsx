@@ -17,6 +17,7 @@ import { getCandidateResume, getSingleCandidate, updateCandidateStatus } from "@
 import { useEffect, useState } from "react";
 import { determineActions } from "@/utils/determineActions";
 import { CandidateActions, CandidateActionButton, CandidateStatus } from "@/interface/candidate";
+import ScheduleInterviewModal from "./ScheduleInterviewModal"; // Import the new modal
 
 interface CandidateModalProps {
     open: boolean;
@@ -47,18 +48,27 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
 
     const [fetchedDetails, setFetchedDetails] = useState<Partial<CandidateProfile> | null>(null);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
+    const [isSchedulingModalOpen, setIsSchedulingModalOpen] = useState(false); // New state for scheduling modal
     const [note, setNote] = useState('');
     const [currentAction, setCurrentAction] = useState<CandidateActionButton | null>(null);
     const [updateCandidate, setUpdateCandidate] = useState(false);
 
     const handleAction = (action: CandidateActionButton) => {
-        if (action.requiresNotes) {
-            setCurrentAction(action);
+        setCurrentAction(action);
+        if (action.triggersWorkflow === 'Scheduling') {
+            setIsSchedulingModalOpen(true);
+        } else if (action.requiresNotes) {
             setNotesModalOpen(true);
         } else {
             // For actions that don't require notes, we could call the API directly.
             console.log("Performing action directly:", action);
         }
+    };
+
+    const handleSchedulingComplete = () => {
+        setIsSchedulingModalOpen(false);
+        onClose(); // Close the main modal
+        setUpdateCandidate(prev => !prev); // Trigger a re-fetch of data in the parent
     };
 
     const handleSubmitNote = async () => {
@@ -81,7 +91,8 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
         setNotesModalOpen(false);
         setNote('');
         setCurrentAction(null);
-        setUpdateCandidate(true); // Trigger re-fetch of candidate details
+        setUpdateCandidate(prev => !prev); // Trigger re-fetch of candidate details
+        onClose(); // Close the main modal
     };
 
     const NotesConfirmationModal = (
@@ -137,209 +148,216 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     };
 
     return (
-        <Dialog 
-            open={open} 
-            onClose={onClose} 
-            maxWidth="md" 
-            fullWidth 
-            scroll="paper"
-            PaperProps={{
-                sx: { borderRadius: 2, height: '90vh' }
-            }}
-        >
-            <DialogTitle sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}`}}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Avatar 
-                            sx={{ 
-                                width: 56, 
-                                height: 56, 
-                                bgcolor: 'primary.main',
-                                fontSize: '1.2rem'
-                            }}
-                        >
-                            {candidate.candidate_name ? getFirstAndLastInitials(candidate.candidate_name) : '---'}
-                        </Avatar>
-                        <Box>
-                            <Typography variant="h6" fontWeight="bold">
-                                {candidate.candidate_name || 'Unknown Candidate'}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {candidate.role_applied_for} • {candidate.department}
-                            </Typography>
-                        </Box>
-                    </Box>
-                    <IconButton onClick={onClose} size="small">
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-            </DialogTitle>
-
-            <DialogContent sx={{ p: 3, mt: 2 }}>
-                {/* Status Section */}
-                <Paper elevation={0} sx={{ p: 2, mb: 3, border: `1px solid ${theme.palette.divider}` }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Box>
-                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                Current Status
-                            </Typography>
-                            {fetchedDetails?.current_status && (
-                                <Chip
-                                    {...getStatusChipProps(fetchedDetails.current_status)}
-                                    size="small"
-                                    sx={{
-                                        borderRadius: '6px',
-                                        fontWeight: 500,
-                                        ...(getStatusChipProps(fetchedDetails.current_status).sx || {})
-                                    }}
-                                />
-                            )}
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            {rejectionAction && (
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    sx={{ textTransform: 'none', borderRadius: 2 }}
-                                    onClick={() => handleAction(rejectionAction)}
-                                >
-                                    {rejectionAction.label}
-                                </Button>
-                            )}
-                            {progressionAction && (
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    sx={{ textTransform: 'none', borderRadius: 2 }}
-                                    onClick={() => handleAction(progressionAction)}
-                                >
-                                    {progressionAction.label}
-                                </Button>
-                            )}
-                        </Box>
-                    </Box>
-                </Paper>
-
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                    {/* Contact Information */}
-                    <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
-                        <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
-                            <SectionTitle>Contact Information</SectionTitle>
-                            <DetailItem 
-                                icon={<EmailIcon fontSize="small" />} 
-                                value={candidate.email} 
-                            />
-                            <DetailItem 
-                                icon={<PhoneIcon fontSize="small" />} 
-                                value={candidate.mobile_number} 
-                            />
-                            <DetailItem 
-                                icon={<AttachMoneyIcon fontSize="small" />} 
-                                value={fetchedDetails?.salary_target_min ? `$${fetchedDetails.salary_target_min}` : undefined} 
-                                label="Expected Salary"
-                            />
-                            <DetailItem 
-                                icon={<CalendarTodayIcon fontSize="small" />} 
-                                value={fetchedDetails?.notice_period} 
-                                label="Notice Period"
-                            />
-                        </Paper>
-                    </Box>
-
-                    {/* Application Details */}
-                    <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
-                        <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
-                            <SectionTitle>Application Details</SectionTitle>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1}}>
-                                    <Typography variant="body2" color="text.secondary">Applied:</Typography>
-                                    <Typography variant="body2">{candidate.submitted_date?.split('T')[0]}</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">Source:</Typography>
-                                    <Typography variant="body2">{candidate.source}</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">Experience:</Typography>
-                                    <Typography variant="body2">{fetchedDetails?.total_experience_years}</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">Education:</Typography>
-                                    <Typography variant="body2">{candidate.qualification}</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">Current Company:</Typography>
-                                    <Typography variant="body2">{candidate.current_place_of_work}</Typography>
-                                </Box>
+        <>
+            <Dialog 
+                open={open} 
+                onClose={onClose} 
+                maxWidth="md" 
+                fullWidth 
+                scroll="paper"
+                PaperProps={{
+                    sx: { borderRadius: 2, height: '90vh' }
+                }}
+            >
+                <DialogTitle sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}`}}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Avatar 
+                                sx={{ 
+                                    width: 56, 
+                                    height: 56, 
+                                    bgcolor: 'primary.main',
+                                    fontSize: '1.2rem'
+                                }}
+                            >
+                                {candidate.candidate_name ? getFirstAndLastInitials(candidate.candidate_name) : '---'}
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h6" fontWeight="bold">
+                                    {candidate.candidate_name || 'Unknown Candidate'}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {candidate.role_applied_for} • {candidate.department}
+                                </Typography>
                             </Box>
-                        </Paper>
+                        </Box>
+                        <IconButton onClick={onClose} size="small">
+                            <CloseIcon />
+                        </IconButton>
                     </Box>
+                </DialogTitle>
 
-                    {/* Resume & Cover Letter */}
-                    <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
-                        <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
-                            <SectionTitle>Resume</SectionTitle>
-                            <Button onClick={() => handleViewResume(candidate.candidate_id!)} startIcon={<OpenInNewIcon />} sx={{ textTransform: 'none' }}>
-                                View Resume
-                            </Button>
-                        </Paper>
-                    </Box>
-                    <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
-                        <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
-                            <SectionTitle>Cover Letter</SectionTitle>
-                            <Typography variant="body2" color="text.secondary" sx={{ 
-                                display: '-webkit-box',
-                                overflow: 'hidden',
-                                WebkitBoxOrient: 'vertical',
-                                WebkitLineClamp: 3,
-                            }}>
-                                {candidate.cover_letter || "No cover letter provided."}
-                            </Typography>
-                        </Paper>
-                    </Box>
+                <DialogContent sx={{ p: 3, mt: 2 }}>
+                    {/* Status Section */}
+                    <Paper elevation={0} sx={{ p: 2, mb: 3, border: `1px solid ${theme.palette.divider}` }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Box>
+                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                    Current Status
+                                </Typography>
+                                {fetchedDetails?.current_status && (
+                                    <Chip
+                                        {...getStatusChipProps(fetchedDetails.current_status)}
+                                        size="small"
+                                        sx={{
+                                            borderRadius: '6px',
+                                            fontWeight: 500,
+                                            ...(getStatusChipProps(fetchedDetails.current_status).sx || {})
+                                        }}
+                                    />
+                                )}
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                {rejectionAction && (
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        sx={{ textTransform: 'none', borderRadius: 2 }}
+                                        onClick={() => handleAction(rejectionAction)}
+                                    >
+                                        {rejectionAction.label}
+                                    </Button>
+                                )}
+                                {progressionAction && (
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        sx={{ textTransform: 'none', borderRadius: 2 }}
+                                        onClick={() => handleAction(progressionAction)}
+                                    >
+                                        {progressionAction.label}
+                                    </Button>
+                                )}
+                            </Box>
+                        </Box>
+                    </Paper>
 
-                    {/* Interview History - Mocked */}
-                    <Box sx={{ width: '100%' }}>
-                        <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
-                            <SectionTitle>Interview History</SectionTitle>
-                            <Box sx={{ pl: 2, borderLeft: `3px solid ${theme.palette.primary.main}` }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                    <Typography variant="subtitle2">Sarah Chen</Typography>
-                                    <Box sx={{ display: 'flex', color: '#ffb400' }}>
-                                        {[1,2,3,4].map(i => <StarIcon key={i} fontSize="small" />)}
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                        {/* Contact Information */}
+                        <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+                            <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
+                                <SectionTitle>Contact Information</SectionTitle>
+                                <DetailItem 
+                                    icon={<EmailIcon fontSize="small" />} 
+                                    value={candidate.email} 
+                                />
+                                <DetailItem 
+                                    icon={<PhoneIcon fontSize="small" />} 
+                                    value={candidate.mobile_number} 
+                                />
+                                <DetailItem 
+                                    icon={<AttachMoneyIcon fontSize="small" />} 
+                                    value={fetchedDetails?.salary_target_min ? `$${fetchedDetails.salary_target_min}` : undefined} 
+                                    label="Expected Salary"
+                                />
+                                <DetailItem 
+                                    icon={<CalendarTodayIcon fontSize="small" />} 
+                                    value={fetchedDetails?.notice_period} 
+                                    label="Notice Period"
+                                />
+                            </Paper>
+                        </Box>
+
+                        {/* Application Details */}
+                        <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+                            <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
+                                <SectionTitle>Application Details</SectionTitle>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1}}>
+                                        <Typography variant="body2" color="text.secondary">Applied:</Typography>
+                                        <Typography variant="body2">{candidate.submitted_date?.split('T')[0]}</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
+                                        <Typography variant="body2" color="text.secondary">Source:</Typography>
+                                        <Typography variant="body2">{candidate.source}</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
+                                        <Typography variant="body2" color="text.secondary">Experience:</Typography>
+                                        <Typography variant="body2">{fetchedDetails?.total_experience_years}</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
+                                        <Typography variant="body2" color="text.secondary">Education:</Typography>
+                                        <Typography variant="body2">{candidate.qualification}</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
+                                        <Typography variant="body2" color="text.secondary">Current Company:</Typography>
+                                        <Typography variant="body2">{candidate.current_place_of_work}</Typography>
                                     </Box>
                                 </Box>
-                                <Typography variant="caption" color="text.secondary" display="block" gutterBottom>Dec 5, 2024</Typography>
-                                <Typography variant="body2">Strong technical skills, good communication.</Typography>
-                            </Box>
-                        </Paper>
-                    </Box>
+                            </Paper>
+                        </Box>
 
-                    {/* Notes */}
-                    <Box sx={{ width: '100%' }}>
-                        <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
-                            <SectionTitle>Notes</SectionTitle>
-                            {candidate.notes && (
-                                <Box sx={{ p: 1.5, bgcolor: '#f5f5f5', borderRadius: 1, mb: 2 }}>
-                                    <Typography variant="body2">{candidate.notes}</Typography>
+                        {/* Resume & Cover Letter */}
+                        <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+                            <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
+                                <SectionTitle>Resume</SectionTitle>
+                                <Button onClick={() => handleViewResume(candidate.candidate_id!)} startIcon={<OpenInNewIcon />} sx={{ textTransform: 'none' }}>
+                                    View Resume
+                                </Button>
+                            </Paper>
+                        </Box>
+                        <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+                            <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
+                                <SectionTitle>Cover Letter</SectionTitle>
+                                <Typography variant="body2" color="text.secondary" sx={{ 
+                                    display: '-webkit-box',
+                                    overflow: 'hidden',
+                                    WebkitBoxOrient: 'vertical',
+                                    WebkitLineClamp: 3,
+                                }}>
+                                    {candidate.cover_letter || "No cover letter provided."}
+                                </Typography>
+                            </Paper>
+                        </Box>
+
+                        {/* Interview History - Mocked */}
+                        <Box sx={{ width: '100%' }}>
+                            <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
+                                <SectionTitle>Interview History</SectionTitle>
+                                <Box sx={{ pl: 2, borderLeft: `3px solid ${theme.palette.primary.main}` }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                        <Typography variant="subtitle2">Sarah Chen</Typography>
+                                        <Box sx={{ display: 'flex', color: '#ffb400' }}>
+                                            {[1,2,3,4].map(i => <StarIcon key={i} fontSize="small" />)}
+                                        </Box>
+                                    </Box>
+                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>Dec 5, 2024</Typography>
+                                    <Typography variant="body2">Strong technical skills, good communication.</Typography>
                                 </Box>
-                            )}
-                            <Stack direction="row" spacing={1}>
-                                <TextField 
-                                    fullWidth 
-                                    placeholder="Add a note..." 
-                                    size="small" 
-                                    variant="outlined"
-                                    sx={{ bgcolor: 'white' }}
-                                />
-                                <Button variant="contained" sx={{ textTransform: 'none' }}>Add Note</Button>
-                            </Stack>
-                        </Paper>
+                            </Paper>
+                        </Box>
+
+                        {/* Notes */}
+                        <Box sx={{ width: '100%' }}>
+                            <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
+                                <SectionTitle>Notes</SectionTitle>
+                                {candidate.notes && (
+                                    <Box sx={{ p: 1.5, bgcolor: '#f5f5f5', borderRadius: 1, mb: 2 }}>
+                                        <Typography variant="body2">{candidate.notes}</Typography>
+                                    </Box>
+                                )}
+                                <Stack direction="row" spacing={1}>
+                                    <TextField 
+                                        fullWidth 
+                                        placeholder="Add a note..." 
+                                        size="small" 
+                                        variant="outlined"
+                                        sx={{ bgcolor: 'white' }}
+                                    />
+                                    <Button variant="contained" sx={{ textTransform: 'none' }}>Add Note</Button>
+                                </Stack>
+                            </Paper>
+                        </Box>
                     </Box>
-                </Box>
-            </DialogContent>
-            {NotesConfirmationModal}
-        </Dialog>
+                </DialogContent>
+                {NotesConfirmationModal}
+            </Dialog>
+            <ScheduleInterviewModal
+                open={isSchedulingModalOpen}
+                onClose={handleSchedulingComplete}
+                candidate={candidate}
+            />
+        </>
     );
 };
 

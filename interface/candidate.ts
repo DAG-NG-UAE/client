@@ -67,5 +67,13 @@ export interface CandidateProfile {
   // candidate status history 
   old_status?: string; 
   new_status?: string;
+  shortlisted_date?:string //this is saved based done on the new_status being equal to 'shortlisted'
   // notes is already above
+
+  
+  // Interview details
+  interview_date?: string;
+  interview_time?: string;
+  interview_location?: string;
+  hiring_manger?: string
 }

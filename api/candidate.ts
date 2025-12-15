@@ -80,3 +80,22 @@ export const updateCandidateStatus = async(updateData:Partial<CandidateProfile>)
         throw error
     }
 }
+
+export const scheduleInterview = async(interviewData: {
+    candidate_id: string, 
+    requisition_id: string, 
+    current_status: string,
+    interview_date: string, 
+    interview_time: string, 
+    interview_type: string,
+    interview_panel: string[]
+}) => {
+    try{
+        console.log('The data to the backend is ', interviewData)
+        const response = await axiosInstance.post('/interview/schedule', interviewData)
+        return response.data.data
+    }catch(error){
+        console.error("Error scheduling interview:", error);
+        throw error;
+    }
+}

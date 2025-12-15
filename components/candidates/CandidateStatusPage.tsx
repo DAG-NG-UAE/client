@@ -94,7 +94,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
 
       {candidates && (
         <Box sx={{ mt: 4 }}>
-          <CandidateTable candidates={candidates} />
+          <CandidateTable candidates={candidates} status={status} />
         </Box>
       )}
      
