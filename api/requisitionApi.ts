@@ -11,7 +11,7 @@ export const getRequisitions = async (status?: string): Promise<Partial<Requisit
     };
 
     // 2. Pass the config object as the second argument to axiosInstance.get()
-    const response = await axiosInstance.get("/requistion", config);
+    const response = await axiosInstance.get("/requisition", config);
     console.log("The response we get is", JSON.stringify(response));
     return response.data.data;
   } catch (error) {
@@ -25,7 +25,7 @@ export const getSingleRequisition = async (
 ): Promise<Partial<Requisition>> => {
   try {
     const response = await axiosInstance.get(
-      `/requistion/single?requisitionId=${id}`
+      `/requisition/single?requisitionId=${id}`
     );
     console.log("The response we get is", JSON.stringify(response));
     return response.data.data;
@@ -37,7 +37,7 @@ export const getSingleRequisition = async (
 
 export const getCareerDetail = async (slug:string): Promise<Partial<Requisition>> => { 
 try{ 
-  const response = await axiosInstance.get(`/requistion/career?slug=${slug}`)
+  const response = await axiosInstance.get(`/requisition/career?slug=${slug}`)
   return response.data.data
 }catch(error){ 
   console.error('Error fetching requisition by slug')
@@ -51,7 +51,7 @@ export const updateRequisition = async (
 ): Promise<Partial<Requisition>> => {
   try {
     const response = await axiosInstance.put(
-      `/requistion?requisitionId=${id}`,
+      `/requisition?requisitionId=${id}`,
       data
     );
     return response.data.data;
@@ -63,7 +63,7 @@ export const updateRequisition = async (
 
 export const publishRequisition = async (requisitionId: string) => { 
   try{ 
-    const response = await axiosInstance.put(`/requistion/publish?requisitionId=${requisitionId}`)
+    const response = await axiosInstance.put(`/requisition/publish?requisitionId=${requisitionId}`)
     return response.data.data
   }catch(error){ 
     console.error("Error publishing the requisition", error)
@@ -73,7 +73,7 @@ export const publishRequisition = async (requisitionId: string) => {
 
 export const getPosition = async() => { 
   try{ 
-    const response = await axiosInstance.get(`requistion/position`)
+    const response = await axiosInstance.get(`requisition/position`)
     return response.data.data
   }catch(error){ 
     console.error("Error getting the position", error)

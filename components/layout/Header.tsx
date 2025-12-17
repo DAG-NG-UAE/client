@@ -1,7 +1,12 @@
-import React from 'react';
-import { AppBar, Toolbar, IconButton, Typography } from '@mui/material';
+"use client"
+
+import React, { useEffect } from 'react';
+import { AppBar, Toolbar, IconButton, Typography, Button, Box } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useTheme } from '@mui/material/styles';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { logoutUser } from '@/store/features/authSlice';
+import { useRouter } from 'next/navigation';
 
 const drawerWidth = 240;
 
@@ -11,6 +16,21 @@ interface HeaderProps {
 
 const Header = ({ handleDrawerToggle }: HeaderProps) => {
   const theme = useTheme();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, router]);
+
+
   return (
     <AppBar
       position="fixed"
@@ -33,10 +53,10 @@ const Header = ({ handleDrawerToggle }: HeaderProps) => {
         >
           <MenuIcon />
         </IconButton>
-        {/* The title will be handled by the specific pages or context */}
-        {/* <Typography variant="h6" noWrap component="div">
-          Page Title
-        </Typography> */}
+        <Box sx={{ flexGrow: 1 }} />
+        <Button color="inherit" onClick={handleLogout}>
+          Logout
+        </Button>
       </Toolbar>
     </AppBar>
   );
