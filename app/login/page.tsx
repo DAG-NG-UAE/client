@@ -68,7 +68,7 @@ const LoginPage = () => {
             sx={{ mb: 2, py: 1.5, borderColor: theme.palette.divider, color: theme.palette.text.primary }}
             onClick={handleMicrosoftSignIn} // Add this handler
           >
-            {loading ? 'Logging in...' : 'Sign In With Microsoft'}
+            Sign In With Microsoft
           </Button>
 
           <Typography variant="body2" color="text.secondary" sx={{ mt: 4, mb: 1, textTransform: 'uppercase' }}>
