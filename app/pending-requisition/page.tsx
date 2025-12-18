@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchRequisitions, selectRequisitions, selectRequisitionsStatus } from '@/store/features/requisitionSlice';
+import { fetchRequisitions, selectRequisitions, selectRequisitionsStatus, setSelectedRequisition, selectSelectedRequisition, clearSelectedRequisition } from '@/store/features/requisitionSlice';
 import withAuth from '@/components/auth/withAuth';
 import { AppRole } from '@/interface/user';
 import { PendingRequisitionColumns } from '@/components/Table/TableColumns';
@@ -14,22 +14,22 @@ const PendingRequisitionPage = () => {
   const dispatch = useAppDispatch();
   const requisitions = useAppSelector(selectRequisitions);
   const status = useAppSelector(selectRequisitionsStatus);
+  const selectedRequisition = useAppSelector(selectSelectedRequisition);
   
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedRequisition, setSelectedRequisition] = useState<Partial<Requisition> | null>(null);
 
   useEffect(() => {
     dispatch(fetchRequisitions('pending'));
   }, [dispatch]);
 
   const handleRowClick = (requisition: Partial<Requisition>) => {
-    setSelectedRequisition(requisition);
+    dispatch(setSelectedRequisition(requisition));
     setDrawerOpen(true);
   };
 
   const handleDrawerClose = () => {
     setDrawerOpen(false);
-    setSelectedRequisition(null);
+    dispatch(clearSelectedRequisition());
   };
 
   const columns = PendingRequisitionColumns;
@@ -45,11 +45,10 @@ const PendingRequisitionPage = () => {
       <TableComponent
         columns={columns}
         data={requisitions}
-        loading={status === 'loading'}
+        loading={status === 'loading' && !drawerOpen}
         onRowClick={handleRowClick}
         keyExtractor={(requisition) => requisition.requisition_id}
       />
-      
       <RequisitionDrawer
         open={drawerOpen}
         onClose={handleDrawerClose}

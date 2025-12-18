@@ -24,6 +24,8 @@ export interface Requisition {
   num_filled?: number;
   proposed_salary?: string;
   expected_start_date?: string;
+  positions_list: {loc: string; qty: string}[];
+  stakeholder_names: {id: string; names: string}[]
   posting_locations?: string[]; //! Delete this later 
   recruiter?: string;
   content?: string;
