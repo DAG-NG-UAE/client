@@ -53,3 +53,12 @@ export const getRelativeTime = (isoString: string): string => {
   
     return "just now";
 }
+
+export const formatRoleName = (role: string): string => {
+  if (!role) return "";
+
+  return role
+    .split(/[_-]/) // Splits by underscore or hyphen
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};

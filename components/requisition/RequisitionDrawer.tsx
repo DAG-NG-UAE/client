@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, Select, MenuItem, FormControl, InputLabel, Divider, Stack, Chip, useTheme, CircularProgress } from '@mui/material';
+import { Drawer, Box, Typography, Button, IconButton, Select, MenuItem, FormControl, InputLabel, Divider, Stack, Chip, useTheme, CircularProgress, Card, CardContent, Grid, Paper } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import BusinessCenterOutlinedIcon from '@mui/icons-material/BusinessCenterOutlined';
@@ -10,8 +10,12 @@ import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import { Requisition, RequisitionPosition } from '@/interface/requisition';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchRequisitionById } from '@/store/features/requisitionSlice';
+import { fetchRecruiters, setRecruiters } from '@/store/features/userSlice';
+import { AppRole } from '@/utils/constants';
+import { formatRoleName } from '@/utils/transform';
+
 
 interface RequisitionDrawerProps {
   open: boolean;
@@ -19,35 +23,37 @@ interface RequisitionDrawerProps {
   requisition: Partial<Requisition> | null;
 }
 
-const recruiters = ['John Smith', 'Sarah Chen', 'David Lee']; // Mock data
+const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
+    <Card variant="outlined" sx={{ mb: 3, borderRadius: 2 }}>
+        <CardContent>
+            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+                {icon}
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{title}</Typography>
+            </Stack>
+            <Stack direction="column" spacing={1.5}>
+                {children}
+            </Stack>
+        </CardContent>
+    </Card>
+);
 
-const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
-    <Box sx={{ mb: 3 }}>
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
-            {icon}
-            <Typography variant="h6" sx={{ fontWeight: 500, fontSize: '1rem' }}>{title}</Typography>
-        </Stack>
-        <Box sx={{ pl: 4.5 }}>
-            {children}
-        </Box>
+const DetailItem  = ({ label, value }: { label: string; value: React.ReactNode | string | number | undefined }) => (
+    <Box>
+        <Typography variant="body2" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>{label}</Typography>
+        <Typography variant="body1" sx={{ fontWeight: 500 }}>{value || 'N/A'}</Typography>
     </Box>
 );
 
-const DetailItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-    <Box sx={{ mb: 1.5 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{label}</Typography>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>{value || 'N/A'}</Typography>
-    </Box>
-);
-
-const RequisitionDrawer: React.FC<RequisitionDrawerProps> = ({ open, onClose, requisition }) => {
+const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProps) => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
+    const recruiters = useAppSelector(setRecruiters)
 
     useEffect(() => {
         if (requisition?.requisition_id && !requisition.stakeholder_names) {
             dispatch(fetchRequisitionById(requisition.requisition_id));
         }
+        dispatch(fetchRecruiters(AppRole.Recruiter))
     }, [dispatch, requisition]);
 
     console.log(`the requisition in the drawer is => ${JSON.stringify(requisition)}`)
@@ -78,52 +84,59 @@ const RequisitionDrawer: React.FC<RequisitionDrawerProps> = ({ open, onClose, re
         return (
             <>
                 <Box sx={{ p: 3, flexGrow: 1, overflowY: 'auto' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6">{requisition.position}</Typography>
-                        <IconButton onClick={onClose}>
-                            <CloseIcon />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h5" color='text.secondary' sx={{ fontWeight: 600 }}>{requisition.position}</Typography>
+                        <IconButton onClick={onClose} size="large">
+                            <CloseIcon fontSize="large" />
                         </IconButton>
                     </Box>
-                    <Divider sx={{ mb: 3 }} />
+                    <Divider sx={{ mb: 4 }} />
 
-                    <Section title="Requester Information" icon={<PersonOutlineIcon color="primary"/>}>
-                    {requisition.requisition_raised_by}
+                    <Section title="Requester Information" icon={<PersonOutlineIcon color="primary" fontSize="small"/>}>
                         <DetailItem label="Requested By" value={requisition.requisition_raised_by} />
-                        <DetailItem label="Designation" value={"Hiring Manager"} />
-                        <DetailItem label="Head of Department" value={"Jane Doe"} />
+                        <DetailItem label="Department" value={requisition.department} /> {/* Mock data for now */}
+                        
                     </Section>
 
-                    <Section title="Position Details & Timeline" icon={<BusinessCenterOutlinedIcon color="primary"/>}>
+                    <Section title="Position Details & Timeline" icon={<BusinessCenterOutlinedIcon color="primary" fontSize="small"/>}>
                         <DetailItem label="Date Submitted" value={new Date(requisition.submitted_date || '').toLocaleDateString()} />
                         <DetailItem label="Expected Start Date" value={requisition.expected_start_date ? new Date(requisition.expected_start_date).toLocaleDateString() : 'N/A'} />
                         <DetailItem label="Number of Positions" value={requisition.num_positions} />
                     </Section>
 
-                    <Section title="Proposed Salary" icon={<AttachMoneyOutlinedIcon color="primary"/>}>
+                    <Section title="Proposed Salary" icon={<AttachMoneyOutlinedIcon color="primary" fontSize="small"/>}>
                         <DetailItem label="Budget" value={requisition.proposed_salary} />
                     </Section>
 
-                    <Section title="Hiring By Location" icon={<LocationOnOutlinedIcon color="primary"/>}>
-                        {requisition.positions_list?.map((pos: any, index: number) => (
-                            <DetailItem key={index} label={pos.loc} value={`${pos.qty} position(s)`} />
-                        )) || (requisition.requisition_positions && requisition.requisition_positions.map((pos: RequisitionPosition) => (
-                            <DetailItem key={pos.position_slot_id} label={pos.location} value={`${pos.slot_number} position(s)`} />
-                        )))}
+                    <Section title="Hiring By Location" icon={<LocationOnOutlinedIcon color="primary" fontSize="small"/>}>
+                        {((requisition.positions_list || requisition.requisition_positions)?.length === 0) && <Typography variant="body2" color="text.secondary">N/A</Typography>}
+                        {(requisition.positions_list || requisition.requisition_positions)?.map((pos: any) => (
+                            <Stack key={pos.position_slot_id || pos.loc} direction="row" justifyContent="space-between" alignItems="center" sx={{ width: '100%', mb: 1.5 }}>
+                                <Typography variant="body2" color="text.primary">
+                                    {pos.loc || pos.location}
+                                </Typography>
+
+                                <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
+                                    {pos.qty || pos.slot_number} position(s)
+                                </Typography>
+                                
+                            </Stack>
+                        ))}
+                      </Section>
+
+                    <Section title="Reason for Recruitment" icon={<AssignmentIndOutlinedIcon color="primary" fontSize="small"/>}>
+                        <Typography variant="body2">{"To backfill the position of a departing employee and support the growing needs of the engineering team for the new 'Phoenix' project."}</Typography> {/* Mock data for now */}
                     </Section>
 
-                    <Section title="Reason for Recruitment" icon={<AssignmentIndOutlinedIcon color="primary"/>}>
-                        <Typography variant="body2">{"To backfill the position of a departing employee and support the growing needs of the engineering team for the new 'Phoenix' project."}</Typography>
-                    </Section>
-
-                    <Section title="Stakeholders" icon={<PeopleOutlineIcon color="primary"/>}>
+                    <Section title="Stakeholders" icon={<PeopleOutlineIcon color="primary" fontSize="small"/>}>
                         {requisition.stakeholder_names ?
-                            requisition.stakeholder_names.map((s: any) => <DetailItem key={s.id} label={s.name} value="Stakeholder" />)
-                            : <CircularProgress size={20}/>
+                            requisition.stakeholder_names.map((s: any) => <DetailItem key={s.id} label={s.name} value={formatRoleName(s.role)} />)
+                            : <Box><CircularProgress size={20}/></Box>
                         }
                     </Section>
                 </Box>
 
-                <Box sx={{ p: 3, backgroundColor: theme.palette.background.default, borderTop: `1px solid ${theme.palette.divider}` }}>
+                <Paper sx={{ p: 3, mt: 'auto', borderTop: `1px solid ${theme.palette.divider}`, borderRadius: '0px !important' }}>
                     <FormControl fullWidth sx={{ mb: 2 }}>
                         <InputLabel id="recruiter-select-label">Assign Recruiter</InputLabel>
                         <Select
@@ -133,21 +146,21 @@ const RequisitionDrawer: React.FC<RequisitionDrawerProps> = ({ open, onClose, re
                             onChange={(e) => handleAssignRecruiter(e.target.value)}
                             sx={{ backgroundColor: theme.palette.background.paper }}
                         >
-                            {recruiters.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                            {recruiters.map(r => <MenuItem key={r.user_id} value={r.user_id}>{r.full_name} - {r.email}</MenuItem>)}
                         </Select>
                     </FormControl>
                     <Stack direction="row" spacing={2}>
-                        <Button variant="contained" fullWidth color="success" onClick={handleApprove}>Approve Requisition</Button>
-                        <Button variant="outlined" fullWidth color="warning" onClick={handleHold}>On Hold</Button>
+                        <Button variant="contained" fullWidth color="primary" onClick={handleApprove}>Approve Requisition</Button>
+                        <Button variant="contained" fullWidth color="error" onClick={handleHold}>On Hold</Button>
                     </Stack>
-                </Box>
+                </Paper>
             </>
         );
     };
 
 
   return (
-    <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { backgroundColor: 'background.paper', width: 480, display: 'flex', flexDirection: 'column' } }}>
+    <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 550 }, display: 'flex', flexDirection: 'column', backgroundColor: theme.palette.background.default } }}>
       {renderContent()}
     </Drawer>
   );

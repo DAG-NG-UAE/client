@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import positionsReducer from './features/positionsSlice';
 import authReducer from './features/authSlice';
 import requisitionReducer from './features/requisitionSlice';
+import userReducer from './features/userSlice'
 
 export const makeStore = () => {
   return configureStore({
@@ -9,6 +10,7 @@ export const makeStore = () => {
       positions: positionsReducer,
       auth: authReducer,
       requisitions: requisitionReducer,
+      users: userReducer
     },
   });
 };
