@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, Select, MenuItem, FormControl, InputLabel, Divider, Stack, Chip, useTheme, CircularProgress, Card, CardContent, Grid, Paper } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Drawer, Box, Typography, Button, IconButton, Select, MenuItem, FormControl, InputLabel, Divider, Stack, Chip, useTheme, CircularProgress, Card, CardContent, Grid, Paper, SelectChangeEvent } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import BusinessCenterOutlinedIcon from '@mui/icons-material/BusinessCenterOutlined';
@@ -9,9 +9,10 @@ import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
-import { Requisition, RequisitionPosition } from '@/interface/requisition';
+import { RecruiterSelection, Requisition, RequisitionPosition } from '@/interface/requisition';
+import { User } from "@/interface/user";
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchRequisitionById } from '@/store/features/requisitionSlice';
+import { callApproveRequisition, fetchRequisitionById } from '@/store/features/requisitionSlice';
 import { fetchRecruiters, setRecruiters } from '@/store/features/userSlice';
 import { AppRole } from '@/utils/constants';
 import { formatRoleName } from '@/utils/transform';
@@ -47,7 +48,9 @@ const DetailItem  = ({ label, value }: { label: string; value: React.ReactNode |
 const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProps) => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
-    const recruiters = useAppSelector(setRecruiters)
+    const allRecruiters = useAppSelector(setRecruiters);
+    
+    const [selectedRecruiters, setSelectedRecruiters] = useState<RecruiterSelection[]>([]);
 
     useEffect(() => {
         if (requisition?.requisition_id && !requisition.stakeholder_names) {
@@ -59,7 +62,8 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
     console.log(`the requisition in the drawer is => ${JSON.stringify(requisition)}`)
 
     const handleApprove = () => {
-        console.log('Approved:', requisition?.requisition_id);
+        console.log('Approved:', requisition?.requisition_id, selectedRecruiters);
+        dispatch(callApproveRequisition({ recruiters: selectedRecruiters, requisitionId: requisition?.requisition_id || "" }));
         onClose();
     };
 
@@ -68,8 +72,19 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
         onClose();
     };
 
-    const handleAssignRecruiter = (recruiter: string) => {
-        console.log(`Assigning ${recruiter} to requisition ${requisition?.requisition_id}`);
+    const handleAssignRecruiter = (recruiters: RecruiterSelection[]) => {
+        console.log(`Assigning ${JSON.stringify(recruiters)} to requisition ${requisition?.requisition_id}`);
+    };
+
+    const handleRecruiterChange = (event: SelectChangeEvent<string[]>) => {
+        const { target: { value } } = event;
+        const selectedIds = typeof value === 'string' ? value.split(',') : value;
+        const selectedRecruiterObjects = selectedIds.map(id => {
+            const recruiter = allRecruiters.find(r => r.user_id === id);
+            return { userId: id, roleId: recruiter?.role_id || "" }; // Assuming role_name exists on recruiter
+        });
+        setSelectedRecruiters(selectedRecruiterObjects);
+        console.log(`selected recruiters => ${JSON.stringify(selectedRecruiterObjects)}`);
     };
 
     const renderContent = () => {
@@ -142,16 +157,25 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
                         <Select
                             labelId="recruiter-select-label"
                             label="Assign Recruiter"
-                            defaultValue=""
-                            onChange={(e) => handleAssignRecruiter(e.target.value)}
+                            multiple
+                            value={selectedRecruiters.map(r => r.userId)}
+                            onChange={handleRecruiterChange}
+                            renderValue={(selected) => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                    {selected.map((value) => {
+                                        const recruiter = allRecruiters.find(r => r.user_id === value);
+                                        return <Chip key={value} label={recruiter?.full_name || value} />;
+                                    })}
+                                </Box>
+                            )}
                             sx={{ backgroundColor: theme.palette.background.paper }}
                         >
-                            {recruiters.map(r => <MenuItem key={r.user_id} value={r.user_id}>{r.full_name} - {r.email}</MenuItem>)}
+                            {allRecruiters.map(r => <MenuItem key={r.user_id} value={r.user_id}>{r.full_name} - {r.email}</MenuItem>)}
                         </Select>
                     </FormControl>
                     <Stack direction="row" spacing={2}>
-                        <Button variant="contained" fullWidth color="primary" onClick={handleApprove}>Approve Requisition</Button>
-                        <Button variant="contained" fullWidth color="error" onClick={handleHold}>On Hold</Button>
+                        <Button variant="contained" fullWidth color="primary" onClick={() => handleApprove()}>Approve Requisition</Button>
+                        <Button variant="contained" fullWidth color="error" onClick={() => handleHold()}>On Hold</Button>
                     </Stack>
                 </Paper>
             </>

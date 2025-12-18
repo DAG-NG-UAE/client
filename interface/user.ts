@@ -13,6 +13,7 @@ export interface User {
     full_name: string;
     email: string;
     role_name: AppRole;
+    role_id: string
     // Add any other user properties here
 }
   

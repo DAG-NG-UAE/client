@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { getRequisitions, getSingleRequisition } from '@/api/requisitionApi';
-import { Requisition } from '@/interface/requisition';
+import { approveRequisition } from '@/api/requisitionApi';
+import { RecruiterSelection, Requisition } from '@/interface/requisition';
 import { RootState } from '../store';
 
 export interface RequisitionState {
@@ -41,6 +42,18 @@ export const fetchRequisitionById = createAsyncThunk(
     }
 )
 
+export const callApproveRequisition = createAsyncThunk(
+  'requisition/approve', 
+  async({ recruiters, requisitionId }: { recruiters: RecruiterSelection[], requisitionId: string }, { rejectWithValue }) => { 
+    try {
+      const response = await approveRequisition(recruiters, requisitionId);
+      return response;
+  } catch (error: any) {
+      return rejectWithValue(error.toString());
+  }
+  }
+)
+
 export const requisitionSlice = createSlice({
   name: 'requisitions',
   initialState,
@@ -73,6 +86,21 @@ export const requisitionSlice = createSlice({
         state.selectedRequisition = { ...state.selectedRequisition, ...action.payload };
       })
       .addCase(fetchRequisitionById.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+
+      //--- everything for approving requisition 
+      .addCase(callApproveRequisition.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(callApproveRequisition.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        // You might want to update the requisition in the list or clear selected requisition
+        // For now, let's just clear the selected requisition.
+        state.selectedRequisition = null;
+      })
+      .addCase(callApproveRequisition.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       });

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import axiosInstance from './axiosInstance';
-import { Requisition } from '@/interface/requisition';
+import { RecruiterSelection, Requisition } from '@/interface/requisition';
 
 
 export const getRequisitions = async (status?: string): Promise<Partial<Requisition>[]> => {
@@ -74,6 +74,16 @@ export const publishRequisition = async (requisitionId: string) => {
 export const getPosition = async() => { 
   try{ 
     const response = await axiosInstance.get(`requisition/position`)
+    return response.data.data
+  }catch(error){ 
+    console.error("Error getting the position", error)
+    throw error
+  }
+}
+
+export const approveRequisition = async (recruiter: RecruiterSelection[], requisitionId: string) => { 
+  try{ 
+    const response = await axiosInstance.post(`requisition/approve?requisitionId=${requisitionId}`,{recruiter})
     return response.data.data
   }catch(error){ 
     console.error("Error getting the position", error)

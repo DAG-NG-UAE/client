@@ -10,6 +10,7 @@ import { getRequisitions } from '@/api/requisitionApi';
 import { Requisition } from '@/interface/requisition';
 import { useState } from 'react';
 import withAuth from '@/components/auth/withAuth';
+import { AppRole } from '@/utils/constants';
 
 const RequisitionPage = () => {
   const [requisitions, setRequisitions] = useState<Partial<Requisition>[]>([]);
@@ -69,4 +70,4 @@ const RequisitionPage = () => {
   );
 };
 
-export default withAuth(RequisitionPage, ['admin', 'hiring_manager']);
+export default withAuth(RequisitionPage, ['admin', 'hiring_manager', AppRole.HeadOfHr]);

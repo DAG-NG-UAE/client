@@ -43,3 +43,5 @@ export interface Requisition {
     date: string;
   }[];
 }
+
+export type RecruiterSelection = { userId: string; roleId: string; };
