@@ -9,6 +9,7 @@ import RequisitionTable from '../../components/requisition/RequisitionTable';
 import { getRequisitions } from '@/api/requisitionApi';
 import { Requisition } from '@/interface/requisition';
 import { useState } from 'react';
+import withAuth from '@/components/auth/withAuth';
 
 const RequisitionPage = () => {
   const [requisitions, setRequisitions] = useState<Partial<Requisition>[]>([]);
@@ -68,4 +69,4 @@ const RequisitionPage = () => {
   );
 };
 
-export default RequisitionPage;
+export default withAuth(RequisitionPage, ['admin', 'hiring_manager']);

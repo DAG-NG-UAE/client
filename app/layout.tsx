@@ -11,7 +11,8 @@ import Header from '../components/layout/Header';
 import { Box, Toolbar } from '@mui/material';
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import StoreProvider from "@/store/StoreProvider";
+import StoreProvider from '../store/StoreProvider'
+import {AuthInitializer} from '../components/auth/AuthInitializer'
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -43,6 +44,7 @@ export default function RootLayout({
             <ThemeProvider theme={theme}>
               <CssBaseline />
               {isLoginPage || isPublicPage ? (
+                // Public layout
                 <Box sx={{
                   backgroundColor: isLoginPage ? theme.palette.loginBackground : theme.palette.background.default,
                   minHeight: '100vh',
@@ -54,21 +56,24 @@ export default function RootLayout({
                   {children}
                 </Box>
               ) : (
-                <Box sx={{ display: 'flex' }}>
-                  <Header handleDrawerToggle={handleDrawerToggle} />
-                  <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
-                  <Box
-                    component="main"
-                    sx={{
-                      flexGrow: 1,
-                      p: 3,
-                      width: { sm: `calc(100% - ${drawerWidth}px)` },
-                    }}
-                  >
-                    <Toolbar /> {/* This is important for content to not be hidden by AppBar */}
-                    {children}
+                // Private layout
+                <AuthInitializer>
+                  <Box sx={{ display: 'flex' }}>
+                    <Header handleDrawerToggle={handleDrawerToggle} />
+                    <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
+                    <Box
+                      component="main"
+                      sx={{
+                        flexGrow: 1,
+                        p: 3,
+                        width: { sm: `calc(100% - ${drawerWidth}px)` },
+                      }}
+                    >
+                      <Toolbar /> {/* This is important for content to not be hidden by AppBar */}
+                      {children}
+                    </Box>
                   </Box>
-                </Box>
+                </AuthInitializer>
               )}
             </ThemeProvider>
           </StoreProvider>

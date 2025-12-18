@@ -1,3 +1,4 @@
+"use client"
 import React, { useState, useEffect } from 'react';
 import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Collapse } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -12,6 +13,7 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { styled, useTheme } from '@mui/material/styles';
 import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
+import { useAppSelector } from '@/store/hooks';
 
 const drawerWidth = 240;
 
@@ -25,6 +27,8 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
   const router = useRouter();
   const pathname = usePathname(); // Get current pathname
   const [isCandidatesOpen, setCandidatesOpen] = useState(false);
+  const { user , isAuthenticated} = useAppSelector((state) => state.auth);
+  console.log(`the user is => ${JSON.stringify(user)} and isAuthenticated is => ${isAuthenticated}`)
 
   useEffect(() => {
     if (pathname.startsWith('/candidates')) {
@@ -36,15 +40,13 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
     setCandidatesOpen(!isCandidatesOpen);
   };
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' }, // Changed path to /dashboard
-    { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition' },
-    // { text: 'Interviews', icon: <EventNoteIcon />, path: '/interviews' },
-    // { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
-    { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history'},
-    // { text: 'Departments', icon: <BusinessIcon />, path: '/departments' },
-    // { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+  const allMenuItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: ['admin', 'hiring_manager'] },
+    { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition', roles: ['admin', 'hiring_manager'] },
+    { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: ['admin'] },
   ];
+
+  const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role_name));
 
   const candidateSubItems = [
     { text: 'All', path: '/candidates/all'},
@@ -149,31 +151,33 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
           </List>
         </Collapse>
       </List>
-      <Box sx={{
-        padding: theme.spacing(2),
-        borderTop: `1px solid ${theme.palette.divider}`,
-        display: 'flex',
-        alignItems: 'center',
-        gap: theme.spacing(1),
-      }}>
+      {user && (
         <Box sx={{
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          backgroundColor: theme.palette.primary.main,
+          padding: theme.spacing(2),
+          borderTop: `1px solid ${theme.palette.divider}`,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          color: theme.palette.primary.contrastText,
-          fontWeight: theme.typography.fontWeightMedium,
+          gap: theme.spacing(1),
         }}>
-          JD
+          <Box sx={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            backgroundColor: theme.palette.primary.main,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: theme.palette.primary.contrastText,
+            fontWeight: theme.typography.fontWeightMedium,
+          }}>
+            {/* {user.full_name.charAt(0).toUpperCase()} */}kk
+          </Box>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: theme.typography.fontWeightMedium }}>{user.full_name}</Typography>
+            <Typography variant="body2" color="text.secondary">{user.role_name}</Typography>
+          </Box>
         </Box>
-        <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: theme.typography.fontWeightMedium }}>John Doe</Typography>
-          <Typography variant="body2" color="text.secondary">HR Manager</Typography>
-        </Box>
-      </Box>
+      )}
     </Box>
   );
 
@@ -214,3 +218,4 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
 };
 
 export default Sidebar;
+

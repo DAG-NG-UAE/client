@@ -12,6 +12,7 @@ import WorkIcon from '@mui/icons-material/Work';
 import GroupIcon from '@mui/icons-material/Group';
 import { useTheme } from '@mui/material/styles';
 import RequisitionCard from '@/components/history/RequisitionCard';
+import withAuth from '@/components/auth/withAuth';
 
 interface Requisition {
   requisition_id: string;
@@ -162,4 +163,4 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage;
+export default withAuth(DashboardPage, ['admin', 'hiring_manager']);
