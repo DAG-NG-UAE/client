@@ -1,0 +1,130 @@
+import React, { useState } from 'react';
+import { TableProps } from "@/interface/table";
+import { Box, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography, Checkbox, CircularProgress } from "@mui/material";
+import TableContainer from "@mui/material/TableContainer";
+
+function TableComponent<T>({
+    columns,
+    data,
+    keyExtractor,
+    onRowClick,
+    actions,
+    loading,
+    emptyMessage = 'No Data Available at this time'
+}: TableProps<T>) {
+    const [selected, setSelected] = useState<readonly any[]>([]);
+
+    const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            const newSelecteds = data.map((n) => keyExtractor(n));
+            setSelected(newSelecteds);
+            return;
+        }
+        setSelected([]);
+    };
+
+    const handleClick = (event: React.MouseEvent<unknown>, id: any) => {
+        const selectedIndex = selected.indexOf(id);
+        let newSelected: readonly any[] = [];
+
+        if (selectedIndex === -1) {
+            newSelected = newSelected.concat(selected, id);
+        } else if (selectedIndex === 0) {
+            newSelected = newSelected.concat(selected.slice(1));
+        } else if (selectedIndex === selected.length - 1) {
+            newSelected = newSelected.concat(selected.slice(0, -1));
+        } else if (selectedIndex > 0) {
+            newSelected = newSelected.concat(
+                selected.slice(0, selectedIndex),
+                selected.slice(selectedIndex + 1),
+            );
+        }
+        setSelected(newSelected);
+    };
+
+    const isSelected = (id: any) => selected.indexOf(id) !== -1;
+
+    return (
+        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+            <Table sx={{ minWidth: 650 }} aria-label="data table">
+                <TableHead>
+                    <TableRow sx={{ backgroundColor: 'background.default' }}>
+                        <TableCell padding="checkbox">
+                            <Checkbox
+                                color="primary"
+                                indeterminate={selected.length > 0 && selected.length < data.length}
+                                checked={data.length > 0 && selected.length === data.length}
+                                onChange={handleSelectAllClick}
+                                inputProps={{
+                                    'aria-label': 'select all items',
+                                }}
+                            />
+                        </TableCell>
+                        {columns.map(col => (
+                            <TableCell key={col.label} sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>{col.label}</TableCell>
+                        ))}
+                        {actions && <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>ACTION</TableCell>}
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {loading ? (
+                        <TableRow>
+                            <TableCell colSpan={columns.length + 2} align="center">
+                                <CircularProgress />
+                            </TableCell>
+                        </TableRow>
+                    ) : data.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={columns.length + 2} align="center">
+                                <Typography>{emptyMessage}</Typography>
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        data.map((row, index) => {
+                            const rowKey = keyExtractor(row);
+                            const isItemSelected = isSelected(rowKey);
+                            return (
+                                <TableRow
+                                    hover
+                                    onClick={() => onRowClick && onRowClick(row)}
+                                    role="checkbox"
+                                    aria-checked={isItemSelected}
+                                    tabIndex={-1}
+                                    key={rowKey}
+                                    selected={isItemSelected}
+                                    sx={{ cursor: 'pointer' }}
+                                >
+                                    <TableCell padding="checkbox">
+                                        <Checkbox
+                                            color="primary"
+                                            checked={isItemSelected}
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                handleClick(event, rowKey);
+                                            }}
+                                            inputProps={{
+                                                'aria-labelledby': `table-checkbox-${index}`,
+                                            }}
+                                        />
+                                    </TableCell>
+                                    {columns.map((col) => (
+                                        <TableCell key={col.key as string}>
+                                            {col.render ? col.render(row) : String(row[col.key as keyof T] ?? '')}
+                                        </TableCell>
+                                    ))}
+                                    {actions && (
+                                        <TableCell>
+                                            {actions(row)}
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            );
+                        })
+                    )}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    );
+};
+
+export default TableComponent;

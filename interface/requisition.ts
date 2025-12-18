@@ -21,11 +21,13 @@ export interface Requisition {
 
   // Extended fields for detailed view
   num_positions?: number;
+  num_filled?: number;
   proposed_salary?: string;
-  posting_locations?: string[];
+  expected_start_date?: string;
+  posting_locations?: string[]; //! Delete this later 
   recruiter?: string;
   content?: string;
-  requisition_positions?: RequisitionPosition[];
+  requisition_positions?: RequisitionPosition[];//! Delete this later 
   published?: boolean; 
   public_share_link?:string;
   activity_log?: {

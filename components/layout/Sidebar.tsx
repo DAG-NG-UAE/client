@@ -11,9 +11,11 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import HistoricalIcon from '@mui/icons-material/History';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import WarningIcon from '@mui/icons-material/Warning'
 import { styled, useTheme } from '@mui/material/styles';
 import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
 import { useAppSelector } from '@/store/hooks';
+import { AppRole } from '@/interface/user';
 
 const drawerWidth = 240;
 
@@ -41,9 +43,10 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
   };
 
   const allMenuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: ['admin', 'hiring_manager'] },
-    { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition', roles: ['admin', 'hiring_manager'] },
-    { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: ['admin'] },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
+    { text: 'Pending Requisitions', icon: <WarningIcon/> , path:'/pending-requisition', roles: [AppRole.HeadOfHr, AppRole.HrManager]},
+    { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
+    { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: [AppRole.HrManager] },
   ];
 
   const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role_name));

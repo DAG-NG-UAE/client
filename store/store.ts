@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import positionsReducer from './features/positionsSlice';
 import authReducer from './features/authSlice';
+import requisitionReducer from './features/requisitionSlice';
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       positions: positionsReducer,
       auth: authReducer,
+      requisitions: requisitionReducer,
     },
   });
 };

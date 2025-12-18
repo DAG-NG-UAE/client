@@ -131,3 +131,15 @@ export const enum allowedCandidatePaths{
   'offer-rejected' = 'offer-rejected', 
   'offer-withdrawn' = 'offer-withdrawn'
 }
+
+export const enum AppRole { 
+  Admin = 'admin',
+  HR = 'hr',
+  Recruiter = 'recruiter',
+  HiringManager = 'hiring_manager',
+  StandardEmployee = 'standard_employee',
+
+  // 
+  HeadOfHr = 'head_of_hr', 
+  HrManager = 'hr_manager'
+}

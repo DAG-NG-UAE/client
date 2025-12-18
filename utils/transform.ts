@@ -21,3 +21,35 @@ export const getFirstAndLastInitials = (fullName: string): string => {
     // 4. Concatenate and return the initials
     return firstInitial + lastInitial;
 }
+
+/**
+ * Converts an ISO date string into a human-readable relative time string.
+ * e.g., "3 days ago", "2 weeks ago", "1 month from now"
+ */
+export const getRelativeTime = (isoString: string): string => {
+    const targetDate = new Date(isoString).getTime();
+    const now = new Date().getTime();
+    const diffInSeconds = Math.floor((now - targetDate) / 1000);
+    const isPast = diffInSeconds >= 0;
+    const absSeconds = Math.abs(diffInSeconds);
+  
+    // Define time scales in seconds
+    const units: { label: string; seconds: number }[] = [
+      { label: 'year', seconds: 31536000 },
+      { label: 'month', seconds: 2592000 },
+      { label: 'week', seconds: 604800 },
+      { label: 'day', seconds: 86400 },
+      { label: 'hour', seconds: 3600 },
+      { label: 'minute', seconds: 60 },
+    ];
+  
+    for (const unit of units) {
+      const interval = Math.floor(absSeconds / unit.seconds);
+      
+      if (interval >= 1) {
+        return `${interval} ${unit.label}${interval > 1 ? 's' : ''} ${isPast ? 'ago' : 'from now'}`;
+      }
+    }
+  
+    return "just now";
+}
