@@ -10,10 +10,10 @@ import RequisitionDrawer from '@/components/requisition/RequisitionDrawer';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { clearSelectedRequisition, fetchRequisitions, setSelectedRequisition } from '@/redux/slices/requisition';
+import { dispatch } from '@/redux/dispatchHandle';
 
 const PendingRequisitionPage = () => {
   const {requisitions, selectedRequisition, loading} = useSelector((state: RootState) => state.requisitions)
-  const dispatch = useDispatch();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const status = loading
 
@@ -23,7 +23,8 @@ const PendingRequisitionPage = () => {
   }, [drawerOpen]);
 
   const handleRowClick = (requisition: Partial<Requisition>) => {
-    setSelectedRequisition(requisition);
+    console.log(`the requisition clicked on => ${JSON.stringify(requisition)}`)
+    dispatch(setSelectedRequisition(requisition));
     setDrawerOpen(true);
   };
 

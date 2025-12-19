@@ -90,6 +90,7 @@ export const putRequisitionOnHold = async(requisitionId: string) => {
     dispatch(startLoading());
     await holdRequisition(requisitionId);
     // Optionally refetch requisitions or update state directly
+    await fetchRequisitions('pending')
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   }

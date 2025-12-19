@@ -70,4 +70,4 @@ const RequisitionPage = () => {
   );
 };
 
-export default withAuth(RequisitionPage, ['admin', 'hiring_manager', AppRole.HeadOfHr]);
+export default withAuth(RequisitionPage, ['admin', 'hiring_manager', AppRole.HeadOfHr, AppRole.Recruiter]);

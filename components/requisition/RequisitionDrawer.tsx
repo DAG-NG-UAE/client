@@ -17,6 +17,7 @@ import { useSelector } from 'react-redux';
 import {  RootState } from '@/redux/store';
 import { fetchRequisitionById, handleApproveRequisition } from '@/redux/slices/requisition';
 import { fetchRecruiters } from '@/redux/slices/user';
+import { holdRequisition } from '@/api/requisitionApi';
 
 
 interface RequisitionDrawerProps {
@@ -60,16 +61,21 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
         fetchRecruiters(AppRole.Recruiter)
     }, [ requisition]);
 
-    console.log(`the requisition in the drawer is => ${JSON.stringify(requisition)}`)
-
     const handleApprove = () => {
+        if(selectedRecruiters.length == 0){ 
+            
+        }
         console.log('Approved:', requisition?.requisition_id, selectedRecruiters);
-        handleApproveRequisition({ recruiters: selectedRecruiters, requisitionId: requisition?.requisition_id || "" });
+        if(requisition?.requisition_id){ 
+            handleApproveRequisition({ recruiters: selectedRecruiters, requisitionId: requisition?.requisition_id});
+        }
         onClose();
     };
 
     const handleHold = () => {
-        console.log('On Hold:', requisition?.requisition_id);
+        if(requisition?.requisition_id){ 
+            holdRequisition(requisition?.requisition_id)
+        }
         onClose();
     };
 

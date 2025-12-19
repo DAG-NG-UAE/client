@@ -22,6 +22,7 @@ import { EditDocument, MoreVert, Visibility, Edit } from '@mui/icons-material';
 import { useState } from 'react';
 import { Requisition } from '@/interface/requisition';
 import Link from 'next/link';
+import { getRelativeTime } from '@/utils/transform';
 
 
 
@@ -104,9 +105,10 @@ const RequisitionTable = ({requisitions}: {requisitions: Partial<Requisition>[]}
             <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>POSITION</TableCell>
             <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>DEPARTMENT</TableCell>
             <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>REQUESTER</TableCell>
-            <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>REQUEST DATE</TableCell>
+            <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>LOCATION</TableCell>
+            <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>DAYS OPEN</TableCell>
+            <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>FILLED</TableCell>
             <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>STATUS</TableCell>
-            <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>APPLICANTS</TableCell>
             <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>PUBLISH</TableCell>
             <TableCell sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>ACTION</TableCell>
           </TableRow>
@@ -126,7 +128,9 @@ const RequisitionTable = ({requisitions}: {requisitions: Partial<Requisition>[]}
               </TableCell>
               <TableCell>{row.department}</TableCell>
               <TableCell>{row.requisition_raised_by}</TableCell>
-              <TableCell sx={{ color: 'text.secondary' }}>{row?.submitted_date?.split('T')[0]}</TableCell>
+              <TableCell>{row.locations}</TableCell>
+              <TableCell>{getRelativeTime( row.submitted_date!, 'days')}</TableCell>
+              <TableCell sx={{ color: 'text.secondary' }}>{row.num_filled}/{row.num_positions}</TableCell>
               <TableCell>
               <Chip 
                   {...getStatusChipProps(row.status)} 
@@ -138,7 +142,6 @@ const RequisitionTable = ({requisitions}: {requisitions: Partial<Requisition>[]}
                   }}
                 />
               </TableCell>
-              <TableCell>{row.applicants}</TableCell>
               <TableCell>
                 <Button 
                   variant="outlined"

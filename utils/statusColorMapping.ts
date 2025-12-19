@@ -30,10 +30,10 @@ export const getStatusChipProps = (status: string | undefined) => {
         color: "error" as "error",
         variant: "outlined" as "outlined",
       };
-    case "hold":
+    case "on_hold":
       return {
         label: "On Hold",
-        color: "warning" as "warning",
+        color: "error" as "error",
         variant: "outlined" as "outlined",
       };
     case "progress":

@@ -26,12 +26,17 @@ export const getFirstAndLastInitials = (fullName: string): string => {
  * Converts an ISO date string into a human-readable relative time string.
  * e.g., "3 days ago", "2 weeks ago", "1 month from now"
  */
-export const getRelativeTime = (isoString: string): string => {
+export const getRelativeTime = (isoString: string, unitOfTime?: 'days'): string => {
     const targetDate = new Date(isoString).getTime();
     const now = new Date().getTime();
     const diffInSeconds = Math.floor((now - targetDate) / 1000);
     const isPast = diffInSeconds >= 0;
     const absSeconds = Math.abs(diffInSeconds);
+
+    if (unitOfTime === 'days') {
+      const diffInDays = Math.floor(absSeconds / 86400); // 86400 seconds in a day
+      return `${diffInDays}`;
+    }
   
     // Define time scales in seconds
     const units: { label: string; seconds: number }[] = [

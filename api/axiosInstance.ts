@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { logoutUser } from '@/store/features/authSlice';
+import { setUserLogout } from "@/redux/slices/auth";
+import { dispatch } from '@/redux/dispatchHandle';
 
 // Base URL for your API (can be configured via environment variables)
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'; // Backend url - Base URL should not include specific endpoints like /api or /requisition
@@ -30,6 +31,10 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
+      if (error.response.status === 401 || error.message === 'Authentication required. Please log in.') {
+        dispatch(setUserLogout({}));
+        window.location.href = '/login';
+      }
       console.log(`the error response is => ${error}`)
     
     }  else {
