@@ -3,7 +3,7 @@ import React from 'react';
 import { Box, Typography, Card, CardContent, Button, SvgIcon, Link } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import WorkIcon from '@mui/icons-material/Work'; // Using WorkIcon as a placeholder for the logo
-import { useAppSelector } from '@/store/hooks';
+
 
 // Custom icon for Microsoft
 const MicrosoftIcon = (props: any) => (
@@ -17,7 +17,6 @@ const MicrosoftIcon = (props: any) => (
 
 const LoginPage = () => {
   const theme = useTheme();
-  const { loading } = useAppSelector((state) => state.auth);
 
   const handleMicrosoftSignIn = () => {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';

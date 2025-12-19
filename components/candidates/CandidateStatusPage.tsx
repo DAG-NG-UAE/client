@@ -9,8 +9,8 @@ import { statusDetails } from '@/utils/constants';
 import { CandidateProfile } from '@/interface/candidate';
 import { getAllCandidates } from '@/api/candidate';
 import Filters from '../Filters';
-import { useAppDispatch, useAppSelector } from '@/store/hooks'; // Import useAppDispatch
-import { selectAllPositions, fetchPositions } from '@/store/features/positionsSlice'; // Import fetchPositions
+import { RootState, useSelector } from '@/redux/store';
+import { fetchPositions } from '@/redux/slices/positions';
 
 
 interface CandidateStatusPageProps {
@@ -27,8 +27,9 @@ const summaryData = [
 const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   const details = statusDetails[status] || { title: 'Candidates', subtitle: 'Manage all candidates.' };
   const [candidates, setCandidates] = useState<Partial<CandidateProfile>[]>([]);
-  const dispatch = useAppDispatch(); // Initialize dispatch
-  const positions = useAppSelector(selectAllPositions);
+
+  const {positions} = useSelector((state: RootState) => state.positions)
+
   
 
   const allRoles = [
@@ -59,7 +60,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   }
 
   const handleRefreshPositions = () => {
-    dispatch(fetchPositions());
+    fetchPositions()
   };
 
   useEffect(() => { 

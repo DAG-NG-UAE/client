@@ -13,8 +13,9 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import { useAppSelector } from '@/store/hooks';
 import AutorenewIcon from '@mui/icons-material/Autorenew'; // Import RefreshIcon
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 interface MenuItems { 
   text: string; 
@@ -35,8 +36,8 @@ interface FilterProps {
 const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYears, refreshPosition, filterFunction, onYearChange}: FilterProps) => {
   const [role, setRole] = React.useState('all');
   const [year, setYear] = React.useState('all');
-  const positionsStatus = useAppSelector((state) => state.positions.status); // Get positions loading status
-
+  const {positions, loading} = useSelector((state: RootState) => state.positions)
+ 
   const handleRoleChange = (event: SelectChangeEvent) => {
     filterFunction && filterFunction(event.target.value as string)
     setRole(event.target.value as string);
@@ -90,7 +91,7 @@ const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYe
         </FormControl>
         <IconButton 
           onClick={refreshPosition} 
-          disabled={positionsStatus === 'loading'} 
+          disabled={loading} 
           color="primary"
           aria-label="refresh positions"
         >

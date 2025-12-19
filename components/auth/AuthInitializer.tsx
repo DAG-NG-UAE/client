@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchUser } from '@/store/features/authSlice';
 import { usePathname, useRouter } from 'next/navigation';
+import { RootState } from '@/redux/store';
+import { useSelector } from 'react-redux';
+import { fetchUsers } from '@/redux/slices/auth';
+import { dispatch } from '@/redux/dispatchHandle';
 
 export const AuthInitializer = ({children}: {children: React.ReactNode}) => { 
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, loading } = useAppSelector((state) => state.auth);
+  const {isAuthenticated, loading} = useSelector((state: RootState) => state.auth)
   const pathname = usePathname();
   const router = useRouter();
 
@@ -16,7 +17,7 @@ export const AuthInitializer = ({children}: {children: React.ReactNode}) => {
   useEffect(() => {
     // Only fetch the user if it's not a public page and we haven't authenticated yet.
     if (!isPublicPage && !isAuthenticated) {
-      dispatch(fetchUser());
+      fetchUsers()
     }
   }, [dispatch, isAuthenticated, isPublicPage]);
 

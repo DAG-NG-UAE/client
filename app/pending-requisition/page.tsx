@@ -1,35 +1,35 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchRequisitions, selectRequisitions, selectRequisitionsStatus, setSelectedRequisition, selectSelectedRequisition, clearSelectedRequisition } from '@/store/features/requisitionSlice';
 import withAuth from '@/components/auth/withAuth';
 import { AppRole } from '@/interface/user';
 import { PendingRequisitionColumns } from '@/components/Table/TableColumns';
 import TableComponent from '@/components/Table/Table';
 import { Requisition } from '@/interface/requisition';
 import RequisitionDrawer from '@/components/requisition/RequisitionDrawer';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { clearSelectedRequisition, fetchRequisitions, setSelectedRequisition } from '@/redux/slices/requisition';
 
 const PendingRequisitionPage = () => {
-  const dispatch = useAppDispatch();
-  const requisitions = useAppSelector(selectRequisitions);
-  const status = useAppSelector(selectRequisitionsStatus);
-  const selectedRequisition = useAppSelector(selectSelectedRequisition);
-  
+  const {requisitions, selectedRequisition, loading} = useSelector((state: RootState) => state.requisitions)
+  const dispatch = useDispatch();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const status = loading
 
   useEffect(() => {
-    dispatch(fetchRequisitions('pending'));
-  }, [dispatch]);
+    fetchRequisitions('pending')
+    
+  }, [drawerOpen]);
 
   const handleRowClick = (requisition: Partial<Requisition>) => {
-    dispatch(setSelectedRequisition(requisition));
+    setSelectedRequisition(requisition);
     setDrawerOpen(true);
   };
 
   const handleDrawerClose = () => {
     setDrawerOpen(false);
-    dispatch(clearSelectedRequisition());
+    clearSelectedRequisition();
   };
 
   const columns = PendingRequisitionColumns;
@@ -45,7 +45,7 @@ const PendingRequisitionPage = () => {
       <TableComponent
         columns={columns}
         data={requisitions}
-        loading={status === 'loading' && !drawerOpen}
+        loading={status == true && !drawerOpen}
         onRowClick={handleRowClick}
         keyExtractor={(requisition) => requisition.requisition_id}
       />

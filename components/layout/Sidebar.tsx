@@ -14,8 +14,9 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import WarningIcon from '@mui/icons-material/Warning'
 import { styled, useTheme } from '@mui/material/styles';
 import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
-import { useAppSelector } from '@/store/hooks';
 import { AppRole } from '@/interface/user';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 const drawerWidth = 240;
 
@@ -29,7 +30,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
   const router = useRouter();
   const pathname = usePathname(); // Get current pathname
   const [isCandidatesOpen, setCandidatesOpen] = useState(false);
-  const { user , isAuthenticated} = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   console.log(`the user is => ${JSON.stringify(user)} and isAuthenticated is => ${isAuthenticated}`)
 
   useEffect(() => {

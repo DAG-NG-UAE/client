@@ -11,11 +11,12 @@ import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import { RecruiterSelection, Requisition, RequisitionPosition } from '@/interface/requisition';
 import { User } from "@/interface/user";
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { callApproveRequisition, fetchRequisitionById } from '@/store/features/requisitionSlice';
-import { fetchRecruiters, setRecruiters } from '@/store/features/userSlice';
 import { AppRole } from '@/utils/constants';
 import { formatRoleName } from '@/utils/transform';
+import { useSelector } from 'react-redux';
+import {  RootState } from '@/redux/store';
+import { fetchRequisitionById, handleApproveRequisition } from '@/redux/slices/requisition';
+import { fetchRecruiters } from '@/redux/slices/user';
 
 
 interface RequisitionDrawerProps {
@@ -47,23 +48,23 @@ const DetailItem  = ({ label, value }: { label: string; value: React.ReactNode |
 
 const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProps) => {
     const theme = useTheme();
-    const dispatch = useAppDispatch();
-    const allRecruiters = useAppSelector(setRecruiters);
+    const {recruiters} = useSelector((state: RootState) => state.users)
+    const allRecruiters = recruiters;
     
     const [selectedRecruiters, setSelectedRecruiters] = useState<RecruiterSelection[]>([]);
 
     useEffect(() => {
         if (requisition?.requisition_id && !requisition.stakeholder_names) {
-            dispatch(fetchRequisitionById(requisition.requisition_id));
+            fetchRequisitionById(requisition.requisition_id);
         }
-        dispatch(fetchRecruiters(AppRole.Recruiter))
-    }, [dispatch, requisition]);
+        fetchRecruiters(AppRole.Recruiter)
+    }, [ requisition]);
 
     console.log(`the requisition in the drawer is => ${JSON.stringify(requisition)}`)
 
     const handleApprove = () => {
         console.log('Approved:', requisition?.requisition_id, selectedRecruiters);
-        dispatch(callApproveRequisition({ recruiters: selectedRecruiters, requisitionId: requisition?.requisition_id || "" }));
+        handleApproveRequisition({ recruiters: selectedRecruiters, requisitionId: requisition?.requisition_id || "" });
         onClose();
     };
 

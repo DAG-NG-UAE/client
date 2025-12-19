@@ -90,3 +90,13 @@ export const approveRequisition = async (recruiter: RecruiterSelection[], requis
     throw error
   }
 }
+
+export const holdRequisition = async(requisitionId: string) => { 
+  try{ 
+    const response = await axiosInstance.put(`requisition/hold?requisitionId=${requisitionId}`)
+    return response.data.data
+  }catch(error){ 
+    console.error("Error getting the position", error)
+    throw error
+  }
+}
