@@ -12,9 +12,11 @@ import JobDescriptionHistory from '@/components/requisition/JobDescriptionHistor
 import TotalApplicants from '@/components/requisition/TotalApplicants';
 import { Requisition } from '@/interface/requisition';
 import { getSingleRequisition } from '@/api/requisitionApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 // // Mock data generator
-// const getMockRequisition = (id: string): Requisition => ({
+// const getMockRequisition = (id: string): Requisition => ({`
 //   requisition_id: id,
 //   requisition_raised_by: 'Sarah Chen',
 //   position: 'Senior Frontend Developer',
@@ -65,23 +67,11 @@ import { getSingleRequisition } from '@/api/requisitionApi';
 
 const RequisitionViewPage = () => {
   const params = useParams();
-  const [requisition, setRequisition] = useState<Partial<Requisition> | null>(null);
-
-   useEffect(() => {
-      const fetchSingleRequisition = async () => {
-        try {
-          const response = await getSingleRequisition(params.id as string);
-          setRequisition(response);
-          console.log('Requisition fetched:', response);
-        } catch (error) {
-          console.error('Error fetching requisition:', error);
-        }
-      };
-      fetchSingleRequisition();
-    }, [params.id]);
+  const {loading, selectedRequisition} = useSelector((state:RootState) => state.requisitions)
+ 
   
 
-  if (!requisition) {
+  if (!selectedRequisition) {
     return <Box sx={{ p: 3 }}>Loading...</Box>;
   }
 
@@ -89,17 +79,17 @@ const RequisitionViewPage = () => {
     <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: 'background.default' }}>
       <Container maxWidth="xl">
         <RequisitionHeader 
-          title={requisition.position!} 
-          requisitionId={requisition.requisition_id} 
+          title={selectedRequisition.position!} 
+          requisitionId={selectedRequisition.requisition_id} 
         />
 
-        <CoreDetails requisition={requisition} />
+        <CoreDetails requisition={selectedRequisition} />
 
-        <JobPostingDetails requisition={requisition} />
+        <JobPostingDetails requisition={selectedRequisition} />
 
         <Grid spacing={3}>
           <Grid size={{ xs: 12, md: 8, }} >
-            <JobDescription requisition={requisition} />
+            <JobDescription requisition={selectedRequisition} />
           </Grid>
         </Grid>
 
@@ -109,10 +99,10 @@ const RequisitionViewPage = () => {
              <JobDescriptionHistory />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-             <TotalApplicants requisition={requisition} />
+             <TotalApplicants requisition={selectedRequisition} />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-             <ActivityLog requisition={requisition} />
+             <ActivityLog requisition={selectedRequisition} />
           </Grid>
         </Grid>
 

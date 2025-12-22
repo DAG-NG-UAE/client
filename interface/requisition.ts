@@ -18,19 +18,20 @@ export interface Requisition {
   status: "In Progress" | "Approved" | "Pending" | "Closed";
   applicants: number;
   current_job_description_id: string | null;
+  sanity_job_list_key: string 
 
   // Extended fields for detailed view
   num_positions?: number;
   num_filled?: number;
   proposed_salary?: string;
   expected_start_date?: string;
-  positions_list: {loc: string; qty: string}[];
+  positions_list: {position_slot_id: string; loc: string; qty: number}[];
   stakeholder_names: {id: string; names: string; role: string}[]; 
   locations: string;
-  posting_locations?: string[]; //! Delete this later 
+  
   recruiter?: string;
   content?: string;
-  requisition_positions?: RequisitionPosition[];//! Delete this later 
+
   published?: boolean; 
   public_share_link?:string;
   activity_log?: {
@@ -43,6 +44,9 @@ export interface Requisition {
     status: string;
     date: string;
   }[];
+
+  posting_locations?: string[]; //! Delete this later 
+  requisition_positions?: RequisitionPosition[];//! Delete this later 
 }
 
 export type RecruiterSelection = { userId: string; roleId: string; };

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, use } from 'react';
 import {
   Box,
   Container,
@@ -79,8 +79,9 @@ const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
   </Typography>
 );
 
-export default function ApplyPage({ params }: { params: { id: string } }) {
+export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
   const theme = useTheme();
+  const { id } = use(props.params);
   const [availability, setAvailability] = useState('');
   const [experience, setExperience] = useState('');
   const [location, setLocation] = useState(''); 
@@ -134,8 +135,8 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
   };
 
   useEffect(() => { 
-    fetchJobDetails('340ff80e-eede-45a8-a0c9-55b3435e73c4')
-  }, [])
+    fetchJobDetails(id)
+  }, [id])
 
   const isFormValid = 
     fullName !== '' &&
@@ -200,7 +201,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
 
     // submit the form 
     try{
-      const response = await apply(formData,'340ff80e-eede-45a8-a0c9-55b3435e73c4' )
+      const response = await apply(formData,id )
     }catch(error){ 
       console.error('Error submitting form:', error);
       alert('An error occurred during submission.');

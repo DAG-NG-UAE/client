@@ -18,6 +18,7 @@ import {  RootState } from '@/redux/store';
 import { fetchRequisitionById, handleApproveRequisition } from '@/redux/slices/requisition';
 import { fetchRecruiters } from '@/redux/slices/user';
 import { holdRequisition } from '@/api/requisitionApi';
+import { enqueueSnackbar } from '@/components/NotistackProvider';
 
 
 interface RequisitionDrawerProps {
@@ -62,8 +63,9 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
     }, [ requisition]);
 
     const handleApprove = () => {
-        if(selectedRecruiters.length == 0){ 
-            
+        if(selectedRecruiters.length === 0){ 
+            enqueueSnackbar('Recruiters are needed to approve a requisition', { variant: 'error' });
+            return;
         }
         console.log('Approved:', requisition?.requisition_id, selectedRecruiters);
         if(requisition?.requisition_id){ 
@@ -177,7 +179,7 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
                             )}
                             sx={{ backgroundColor: theme.palette.background.paper }}
                         >
-                            {allRecruiters.map(r => <MenuItem key={r.user_id} value={r.user_id}>{r.full_name} - {r.email}</MenuItem>)}
+                            {allRecruiters?.map(r => <MenuItem key={r.user_id} value={r.user_id}>{r.full_name} - {r.email}</MenuItem>)}
                         </Select>
                     </FormControl>
                     <Stack direction="row" spacing={2}>

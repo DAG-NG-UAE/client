@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Chip, TextField, Stack, IconButton, MenuItem, Select, Button, useTheme } from '@mui/material';
+import { Box, Typography, Paper, Chip, TextField, Stack, IconButton, MenuItem, Select, Button, useTheme, Tooltip } from '@mui/material';
 import { Requisition, RequisitionPosition } from '@/interface/requisition';
 import { Add, Close } from '@mui/icons-material';
 import { useState } from 'react';
@@ -8,16 +8,17 @@ interface JobPostingDetailsProps {
   requisition: Partial<Requisition>;
   isEditMode?: boolean;
   handlePublishRequisition?:(requisitionId:string) => void
+  handleUnpublishRequisition?: (requisitionId: string, jobListKey: string) => void
 }
 
-const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequisition}: JobPostingDetailsProps) => {
-  console.log('JobPostingDetails requisition:', requisition.requisition_positions);
+const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequisition, handleUnpublishRequisition}: JobPostingDetailsProps) => {
+  console.log('JobPostingDetails requisition:', requisition.positions_list);
   const theme = useTheme();
-  const [locations, setLocations] = useState<RequisitionPosition[]>(requisition.requisition_positions || []);
+  const [locations, setLocations] = useState<{position_slot_id:string; loc: string; qty:number}[]>(requisition.positions_list || []);
   const [newLocation, setNewLocation] = useState('');
 
   const handleAddLocation = () => {
-     setLocations([...locations, { position_slot_id: '', slot_number: 0, location: newLocation }]);
+     setLocations([...locations, { position_slot_id: '', qty: 0, loc: newLocation }]);
     };
 
   const handleRemoveLocation = (locToRemove: RequisitionPosition) => {
@@ -66,8 +67,8 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
             </Box>
           ) : (
             <Stack direction="row" spacing={1}>
-              {requisition.requisition_positions?.map((loc) => (
-                <Chip key={loc.position_slot_id} label={loc.location} size="small" color="primary" variant="outlined" sx={{ bgcolor: 'action.hover' }} />
+              {requisition.positions_list?.map((loc) => (
+                <Chip key={loc.position_slot_id} label={loc.loc} size="small" color="primary" variant="outlined" sx={{ bgcolor: 'action.hover' }} />
               )) || <Typography variant="body2" color="text.secondary">No locations set</Typography>}
             </Stack>
           )}
@@ -105,14 +106,43 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
         </Typography>
 
         <Box display="flex" alignItems="center" gap={3}>
-          <Button //TODO change the color of the button from being blue idk why it is blue
-            variant="contained" 
-            size="small" 
-            sx={{color: requisition.current_job_description_id == null ? theme.palette.success.main : theme.palette.error.main}}
-            onClick={() => requisition.requisition_id && handlePublishRequisition?.(requisition.requisition_id)}
-          >
-            {requisition.published == false ? 'Publish' : 'Unpublish'}
-          </Button>
+          {
+            requisition.sanity_job_list_key ? (
+              <Button
+                variant="contained"
+                size="small"
+                sx={{ backgroundColor: 'red', color: 'white', '&:hover': { backgroundColor: 'darkred' } }}
+                onClick={() => {
+                console.log('Unpublish button clicked. Requisition ID:', requisition.requisition_id, 'Job List Key:', requisition.sanity_job_list_key);
+                requisition.requisition_id && handleUnpublishRequisition?.(requisition.requisition_id, requisition.sanity_job_list_key!);
+              }}
+              >
+                Unpublish
+              </Button>
+            ) : requisition.current_job_description_id ? (
+              <Button
+                variant="contained"
+                size="small"
+                sx={{ backgroundColor: 'green', color: 'white', '&:hover': { backgroundColor: 'darkgreen' } }}
+                onClick={() => requisition.requisition_id && handlePublishRequisition?.(requisition.requisition_id)}
+              >
+                Publish
+              </Button>
+            ) : (
+              <Tooltip title="Please include job description">
+                <span>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    sx={{ backgroundColor: 'grey', color: 'white', '&:hover': { backgroundColor: 'darkgrey' } }}
+                    disabled
+                  >
+                    Publish
+                  </Button>
+                </span>
+              </Tooltip>
+            )
+          }
           <Typography variant="body2" color="text.secondary">
             {requisition.current_job_description_id == null ? 'Write job description first' : ''}
           </Typography>

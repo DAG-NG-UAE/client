@@ -9,35 +9,34 @@ import JobPostingDetails from '@/components/requisition/JobPostingDetails';
 import JobDescription from '@/components/requisition/JobDescription';
 import { Requisition } from '@/interface/requisition';
 import { Save } from '@mui/icons-material';
-import { getSingleRequisition, publishRequisition, updateRequisition } from '@/api/requisitionApi';
+import { getSingleRequisition, updateRequisition } from '@/api/requisitionApi';
+import {  useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { callUnPublishRequisition, fetchRequisitions, callPublishRequisition } from '@/redux/slices/requisition';
+import { dispatch } from '@/redux/dispatchHandle';
+import { enqueueSnackbar } from 'notistack';
 
 
 
 const RequisitionEditPage = () => {
+  const {loading, selectedRequisition} = useSelector((state:RootState) => state.requisitions)
+ 
+  
+
+  if (!selectedRequisition) {
+    return <Box sx={{ p: 3 }}>Loading...</Box>;
+  }
   const params = useParams();
   const router = useRouter();
-  const [requisition, setRequisition] = useState<Partial<Requisition>>({});
   const [jobDescriptionMarkdown, setJobDescriptionMarkdown] = useState<string>('');
 
-  const fetchSingleRequisition = async () => {
-    try {
-      const response = await getSingleRequisition(params.id as string);
-      setRequisition(response);
-    } catch (error) {
-      console.error('Error fetching requisition:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchSingleRequisition();
-  }, [params.id]);
 
   const handleSave = async () => {
     console.log('Saving markdown...', jobDescriptionMarkdown);
     
     // Update requisition with markdown
     const updatedRequisition = {
-      ...requisition,
+      ...selectedRequisition,
       job_description: jobDescriptionMarkdown,
     };
     console.log('Saving requisition...', updatedRequisition);
@@ -48,12 +47,17 @@ const RequisitionEditPage = () => {
   };
 
   const handlePublishRequisition = async(requisitionId: string) => { 
-    await publishRequisition(requisitionId);
-    // Re-fetch the single requisition after publishing/unpublishing
-    fetchSingleRequisition();
+    await callPublishRequisition(requisitionId);
   }
 
-  if (!requisition) {
+  const handleUnpublishRequisition = async(requisitionId:string, jobListKey: string) => { 
+    console.log('clicked on the unpublish')
+    await callUnPublishRequisition(requisitionId, jobListKey)
+    enqueueSnackbar('Requisition Unpublished', {variant: 'success'})
+    await fetchRequisitions()
+  }
+
+  if (!selectedRequisition) {
     return <Box sx={{ p: 3 }}><CircularProgress /></Box>;
   }
 
@@ -62,15 +66,20 @@ const RequisitionEditPage = () => {
       <Container maxWidth="xl">
         <RequisitionHeader 
           title="Edit Requisition" 
-          requisitionId={requisition.requisition_id} 
+          requisitionId={selectedRequisition.requisition_id} 
           isEditMode 
         />
-        <CoreDetails requisition={requisition} />
+        <CoreDetails requisition={selectedRequisition} />
 
-        <JobPostingDetails requisition={requisition} isEditMode handlePublishRequisition={handlePublishRequisition} />
+        <JobPostingDetails 
+          requisition={selectedRequisition} 
+          isEditMode 
+          handlePublishRequisition={handlePublishRequisition}
+          handleUnpublishRequisition={handleUnpublishRequisition}
+        />
 
         <JobDescription 
-          requisition={requisition} 
+          requisition={selectedRequisition} 
           isEditMode 
           onContentChange={setJobDescriptionMarkdown}
         />

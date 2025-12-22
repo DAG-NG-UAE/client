@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { getRequisitions, getSingleRequisition, holdRequisition, approveRequisition } from '@/api/requisitionApi';
+import { getRequisitions, getSingleRequisition, holdRequisition, approveRequisition, unPublishRequisition, publishRequisition } from '@/api/requisitionApi';
 import { RecruiterSelection, Requisition } from '@/interface/requisition';
 import { dispatch } from "../dispatchHandle";
+import { enqueueSnackbar } from 'notistack';
 
 
 export interface RequisitionState {
@@ -79,6 +80,8 @@ export const handleApproveRequisition = async({ recruiters, requisitionId }: { r
   try {
     dispatch(startLoading());
     await approveRequisition(recruiters, requisitionId);
+    await fetchRequisitions('pending')
+    enqueueSnackbar('Requisition has been approved', { variant: 'success' });
     // Optionally refetch requisitions or update state directly
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
@@ -89,11 +92,33 @@ export const putRequisitionOnHold = async(requisitionId: string) => {
   try {
     dispatch(startLoading());
     await holdRequisition(requisitionId);
+    enqueueSnackbar('Requisition put on hold', { variant: 'success' });
     // Optionally refetch requisitions or update state directly
     await fetchRequisitions('pending')
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   }
 };
+
+export const callPublishRequisition = async(requisitionId:string) => { 
+  try{ 
+    dispatch(startLoading())
+    await publishRequisition(requisitionId)
+    enqueueSnackbar('Requisition Published', {variant: 'success'})
+    await fetchRequisitions()
+  }catch(error:any){ 
+    dispatch(hasError(error?.response?.data || error));
+  }
+}
+
+export const callUnPublishRequisition = async(requisitionId: string, jobListKey:string) => { 
+  try{ 
+    dispatch(startLoading())
+    await unPublishRequisition(requisitionId, jobListKey)
+    
+  }catch(error:any){ 
+    dispatch(hasError(error?.response?.data || error));
+  }
+}
 
 export default requisitionSlice.reducer;

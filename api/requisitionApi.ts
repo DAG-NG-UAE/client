@@ -71,6 +71,16 @@ export const publishRequisition = async (requisitionId: string) => {
   }
 }
 
+export const unPublishRequisition = async(requisitionId: string, jobListKey: string) => {
+  try{ 
+    const response = await axiosInstance.put(`/requisition/unpublish?requisitionId=${requisitionId}&jobListKey=${jobListKey}`)
+    return response.data.data
+  }catch(error){ 
+    console.error("Error publishing the requisition", error)
+    throw error
+  }
+}
+
 export const getPosition = async() => { 
   try{ 
     const response = await axiosInstance.get(`requisition/position`)

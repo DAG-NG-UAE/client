@@ -2,18 +2,31 @@
 
 import React, { useEffect } from 'react';
 import { Box, Typography, Button, Container, Stack } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import SummaryStats from '../../components/SummaryStats';
 import Filters from '../../components/Filters';
-import RequisitionTable from '../../components/requisition/RequisitionTable';
-import { getRequisitions } from '@/api/requisitionApi';
-import { Requisition } from '@/interface/requisition';
-import { useState } from 'react';
 import withAuth from '@/components/auth/withAuth';
 import { AppRole } from '@/utils/constants';
+import { fetchRequisitions, setSelectedRequisition } from '@/redux/slices/requisition';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import TableComponent from '@/components/Table/Table';
+import { RequisitionColumns } from '@/components/Table/TableColumns';
+import { Requisition } from '@/interface/requisition';
+import { dispatch } from '@/redux/dispatchHandle';
+import { RequisitionRowActions } from '@/components/requisition/requisitionAction';
+
 
 const RequisitionPage = () => {
-  const [requisitions, setRequisitions] = useState<Partial<Requisition>[]>([]);
+  const {requisitions, loading} = useSelector((state:RootState) => state.requisitions)
+ 
+  const columns = RequisitionColumns
+  const status = loading
+
+  const handleRowClick = (requisition: Partial<Requisition>) => {
+    console.log(`the requisition clicked on => ${JSON.stringify(requisition)}`)
+    dispatch(setSelectedRequisition(requisition));
+  };
+ 
   const menuItems = [
     { text: 'All', value: 'all' },
     { text: 'Pending', value: 'pending' },
@@ -22,17 +35,12 @@ const RequisitionPage = () => {
   ];
 
   useEffect(() => {
-    const fetchRequisitions = async () => {
-      try {
-        const requisitions = await getRequisitions();
-        console.log('Fetched requisitions:', requisitions);
-        setRequisitions(requisitions);
-      } catch (error) {
-        console.error('Error fetching requisitions:', error);
-      }
+    const fetchData = async () => {
+      await fetchRequisitions();
     };
-    fetchRequisitions();
+    fetchData();
   }, []);
+  
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
       <Container maxWidth="xl">
@@ -63,8 +71,16 @@ const RequisitionPage = () => {
         isCandidate={false} 
         />
 
-        {/* Table */}
-        <RequisitionTable requisitions={requisitions}/>
+        {/* Table component */}
+        <TableComponent
+        columns={columns}
+        data={requisitions}
+        actions={(requisition) => <RequisitionRowActions requisition={requisition} />}
+        loading={status == true}
+        onRowClick={handleRowClick}
+        keyExtractor={(requisitions) => requisitions.requisition_id}
+        >
+        </TableComponent>
       </Container>
     </Box>
   );

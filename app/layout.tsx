@@ -15,6 +15,7 @@ import {AuthInitializer} from '../components/auth/AuthInitializer'
 import { Provider as ReduxProvider } from 'react-redux';
 import {store, persistor} from '../redux/store'
 import { PersistGate } from 'redux-persist/integration/react';
+import { NotistackProvider } from "@/components/NotistackProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,6 +47,7 @@ export default function RootLayout({
             <PersistGate loading={null} persistor={persistor}>
               <ThemeProvider theme={theme}>
                 <CssBaseline />
+                <NotistackProvider>
                 {isLoginPage || isPublicPage ? (
                   // Public layout
                   <Box sx={{
@@ -78,6 +80,7 @@ export default function RootLayout({
                     </Box>
                   </AuthInitializer>
                 )}
+                </NotistackProvider>
               </ThemeProvider>
               </PersistGate>
           </ReduxProvider>
