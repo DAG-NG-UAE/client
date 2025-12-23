@@ -44,6 +44,9 @@ export const requisitionSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+    stopLoading(state) {
+      state.loading = false;
+    }
   },
 });
 
@@ -53,7 +56,8 @@ export const {
   setRequisitions,
   setSelectedRequisition,
   clearSelectedRequisition,
-  clearError
+  clearError,
+  stopLoading
 } = requisitionSlice.actions;
 
 export const fetchRequisitions = async(status?: string) => {
@@ -104,10 +108,13 @@ export const callPublishRequisition = async(requisitionId:string) => {
   try{ 
     dispatch(startLoading())
     await publishRequisition(requisitionId)
-    enqueueSnackbar('Requisition Published', {variant: 'success'})
-    await fetchRequisitions()
+    await fetchRequisitionById(requisitionId)
+    enqueueSnackbar('Job Posted on Careers page', {variant: 'success'})
   }catch(error:any){ 
     dispatch(hasError(error?.response?.data || error));
+  }finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
   }
 }
 
@@ -115,9 +122,13 @@ export const callUnPublishRequisition = async(requisitionId: string, jobListKey:
   try{ 
     dispatch(startLoading())
     await unPublishRequisition(requisitionId, jobListKey)
-    
+    await fetchRequisitionById(requisitionId)
+    enqueueSnackbar('Job Taken down from Careers page', {variant: 'success'})
   }catch(error:any){ 
     dispatch(hasError(error?.response?.data || error));
+  }finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
   }
 }
 

@@ -1,4 +1,4 @@
-import { Box, Typography, Paper, Chip, TextField, Stack, IconButton, MenuItem, Select, Button, useTheme, Tooltip } from '@mui/material';
+import { Box, Typography, Paper, Chip, TextField, Stack, IconButton, MenuItem, Select, Button, useTheme, Tooltip, CircularProgress } from '@mui/material';
 import { Requisition, RequisitionPosition } from '@/interface/requisition';
 import { Add, Close } from '@mui/icons-material';
 import { useState } from 'react';
@@ -16,6 +16,8 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
   const theme = useTheme();
   const [locations, setLocations] = useState<{position_slot_id:string; loc: string; qty:number}[]>(requisition.positions_list || []);
   const [newLocation, setNewLocation] = useState('');
+  const [publishing, setPublishing] = useState(false);
+  const [unpublishing, setUnpublishing] = useState(false);
 
   const handleAddLocation = () => {
      setLocations([...locations, { position_slot_id: '', qty: 0, loc: newLocation }]);
@@ -108,26 +110,40 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
         <Box display="flex" alignItems="center" gap={3}>
           {
             requisition.sanity_job_list_key ? (
-              <Button
-                variant="contained"
-                size="small"
-                sx={{ backgroundColor: 'red', color: 'white', '&:hover': { backgroundColor: 'darkred' } }}
-                onClick={() => {
-                console.log('Unpublish button clicked. Requisition ID:', requisition.requisition_id, 'Job List Key:', requisition.sanity_job_list_key);
-                requisition.requisition_id && handleUnpublishRequisition?.(requisition.requisition_id, requisition.sanity_job_list_key!);
-              }}
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{ backgroundColor: 'red', color: 'white', '&:hover': { backgroundColor: 'darkred' } }}
+                  onClick={async () => {
+                    setUnpublishing(true);
+                    try {
+                      console.log('Unpublish button clicked. Requisition ID:', requisition.requisition_id, 'Job List Key:', requisition.sanity_job_list_key);
+                      requisition.requisition_id && await handleUnpublishRequisition?.(requisition.requisition_id, requisition.sanity_job_list_key!);
+                    } finally {
+                      setUnpublishing(false);
+                    }
+                  }}
+                  disabled={unpublishing}
               >
-                Unpublish
+                {unpublishing ? <CircularProgress size={24} color="inherit" /> : 'Unpublish'}
               </Button>
             ) : requisition.current_job_description_id ? (
-              <Button
-                variant="contained"
-                size="small"
-                sx={{ backgroundColor: 'green', color: 'white', '&:hover': { backgroundColor: 'darkgreen' } }}
-                onClick={() => requisition.requisition_id && handlePublishRequisition?.(requisition.requisition_id)}
-              >
-                Publish
-              </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{ backgroundColor: 'green', color: 'white', '&:hover': { backgroundColor: 'darkgreen' } }}
+                  onClick={async () => {
+                    setPublishing(true);
+                    try {
+                      requisition.requisition_id && await handlePublishRequisition?.(requisition.requisition_id);
+                    } finally {
+                      setPublishing(false);
+                    }
+                  }}
+                  disabled={publishing}
+                >
+                  {publishing ? <CircularProgress size={24} color="inherit" /> : 'Publish'}
+                </Button>
             ) : (
               <Tooltip title="Please include job description">
                 <span>
@@ -153,7 +169,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
             Public Application Link
           </Typography>
           <p>
-            {requisition.public_share_link == null ? '' : `${requisition.public_share_link}` }
+            {requisition.sanity_job_list_key == null ? '' : `${requisition.public_share_link}` }
           </p>
         </Box>
       </Box>

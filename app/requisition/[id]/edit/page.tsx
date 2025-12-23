@@ -48,12 +48,14 @@ const RequisitionEditPage = () => {
 
   const handlePublishRequisition = async(requisitionId: string) => { 
     await callPublishRequisition(requisitionId);
+    await fetchRequisitions()
   }
 
   const handleUnpublishRequisition = async(requisitionId:string, jobListKey: string) => { 
     console.log('clicked on the unpublish')
     await callUnPublishRequisition(requisitionId, jobListKey)
-    enqueueSnackbar('Requisition Unpublished', {variant: 'success'})
+    
+    // since this is the edit page, what we want to do is set the selected requisition again cos they are not going back to the requisition table after publishing or unpublish a requisition 
     await fetchRequisitions()
   }
 

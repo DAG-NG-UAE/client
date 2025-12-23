@@ -13,7 +13,7 @@ import TableComponent from '@/components/Table/Table';
 import { RequisitionColumns } from '@/components/Table/TableColumns';
 import { Requisition } from '@/interface/requisition';
 import { dispatch } from '@/redux/dispatchHandle';
-import { RequisitionRowActions } from '@/components/requisition/requisitionAction';
+import { RequisitionRowActions } from '@/components/requisition/RequisitionAction';
 
 
 const RequisitionPage = () => {
