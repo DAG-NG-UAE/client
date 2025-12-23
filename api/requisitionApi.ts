@@ -1,11 +1,12 @@
-import axios from 'axios';
-import axiosInstance from './axiosInstance';
-import { RecruiterSelection, Requisition } from '@/interface/requisition';
+import axios from "axios";
+import axiosInstance from "./axiosInstance";
+import { RecruiterSelection, Requisition } from "@/interface/requisition";
 
-
-export const getRequisitions = async (status?: string): Promise<Partial<Requisition>[]> => {
+export const getRequisitions = async (
+  status?: string
+): Promise<Partial<Requisition>[]> => {
   try {
-    console.log(`the params being passed ${status}`)
+    console.log(`the params being passed ${status}`);
     const config = {
       params: status ? { status } : {},
     };
@@ -35,15 +36,19 @@ export const getSingleRequisition = async (
   }
 };
 
-export const getCareerDetail = async (slug:string): Promise<Partial<Requisition>> => { 
-try{ 
-  const response = await axiosInstance.get(`/requisition/career?slug=${slug}`)
-  return response.data.data
-}catch(error){ 
-  console.error('Error fetching requisition by slug')
-  throw error 
-}
-}
+export const getCareerDetail = async (
+  slug: string
+): Promise<Partial<Requisition>> => {
+  try {
+    const response = await axiosInstance.get(
+      `/requisition/career?slug=${slug}`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching requisition by slug");
+    throw error;
+  }
+};
 
 export const updateRequisition = async (
   id: string,
@@ -61,52 +66,83 @@ export const updateRequisition = async (
   }
 };
 
-export const publishRequisition = async (requisitionId: string) => { 
-  try{ 
-    const response = await axiosInstance.put(`/requisition/publish?requisitionId=${requisitionId}`)
-    return response.data.data
-  }catch(error){ 
-    console.error("Error publishing the requisition", error)
-    throw error
+export const publishRequisition = async (requisitionId: string) => {
+  try {
+    const response = await axiosInstance.put(
+      `/requisition/publish?requisitionId=${requisitionId}`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error publishing the requisition", error);
+    throw error;
   }
-}
+};
 
-export const unPublishRequisition = async(requisitionId: string, jobListKey: string) => {
-  try{ 
-    const response = await axiosInstance.put(`/requisition/unpublish?requisitionId=${requisitionId}&jobListKey=${jobListKey}`)
-    return response.data.data
-  }catch(error){ 
-    console.error("Error publishing the requisition", error)
-    throw error
+export const unPublishRequisition = async (
+  requisitionId: string,
+  jobListKey: string
+) => {
+  try {
+    const response = await axiosInstance.put(
+      `/requisition/unpublish?requisitionId=${requisitionId}&jobListKey=${jobListKey}`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error publishing the requisition", error);
+    throw error;
   }
-}
+};
 
-export const getPosition = async() => { 
-  try{ 
-    const response = await axiosInstance.get(`requisition/position`)
-    return response.data.data
-  }catch(error){ 
-    console.error("Error getting the position", error)
-    throw error
+export const getPosition = async () => {
+  try {
+    const response = await axiosInstance.get(`requisition/position`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error getting the position", error);
+    throw error;
   }
-}
+};
 
-export const approveRequisition = async (recruiter: RecruiterSelection[], requisitionId: string) => { 
-  try{ 
-    const response = await axiosInstance.post(`requisition/approve?requisitionId=${requisitionId}`,{recruiter})
-    return response.data.data
-  }catch(error){ 
-    console.error("Error getting the position", error)
-    throw error
+export const approveRequisition = async (
+  recruiter: RecruiterSelection[],
+  requisitionId: string
+) => {
+  try {
+    const response = await axiosInstance.post(
+      `requisition/approve?requisitionId=${requisitionId}`,
+      { recruiter }
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error getting the position", error);
+    throw error;
   }
-}
+};
 
-export const holdRequisition = async(requisitionId: string) => { 
-  try{ 
-    const response = await axiosInstance.put(`requisition/hold?requisitionId=${requisitionId}`)
-    return response.data.data
-  }catch(error){ 
-    console.error("Error getting the position", error)
-    throw error
+export const holdRequisition = async (requisitionId: string) => {
+  try {
+    const response = await axiosInstance.put(
+      `requisition/hold?requisitionId=${requisitionId}`
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error getting the position", error);
+    throw error;
   }
-}
+};
+
+export const assignRecruiters = async (
+  requisitionId: string,
+  recruiters: any[]
+) => {
+  try {
+    const response = await axiosInstance.put(
+      `/requisition/assign-recruiters?requisitionId=${requisitionId}`,
+      { recruiters }
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error assigning recruiters:", error);
+    throw error;
+  }
+};
