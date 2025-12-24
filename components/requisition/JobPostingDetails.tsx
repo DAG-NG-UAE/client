@@ -32,20 +32,22 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
   }, [])
   
   // Recruiter Assignment State
-  const [assignedRecruiters, setAssignedRecruiters] = useState<typeof recruiters>(() => {
-    if (requisition.stakeholder_names) {
+  const [assignedRecruiters, setAssignedRecruiters] = useState<typeof recruiters>([]);
+
+  useEffect(() => {
+    if (requisition.stakeholder_names && recruiters) {
       const assigned = requisition.stakeholder_names
-        .filter(stakeholder => stakeholder.role == AppRole.Recruiter)
+        .filter(stakeholder => stakeholder.role === AppRole.Recruiter)
         .map(stakeholder => {
-          const foundRecruiter = recruiters?.find(r => r.user_id === stakeholder.id);
-          console.log(`we say that the recruiter found is ${JSON.stringify(foundRecruiter)}`)
+          const foundRecruiter = recruiters.find(r => r.user_id === stakeholder.id);
           return foundRecruiter ? foundRecruiter : null;
         })
         .filter(recruiter => recruiter !== null) as typeof recruiters;
-      return assigned;
+      setAssignedRecruiters(assigned);
+    } else {
+      setAssignedRecruiters([]);
     }
-    return [];
-  });
+  }, [requisition.stakeholder_names, recruiters]);
   const [recruiterAnchorEl, setRecruiterAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [recruiterSearch, setRecruiterSearch] = useState('');
   const [tempSelectedRecruiters, setTempSelectedRecruiters] = useState<string[]>([]);
@@ -62,7 +64,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
 
   // Recruiter Handlers
   const handleRecruiterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setTempSelectedRecruiters(assignedRecruiters.map(r => r.user_id));
+    setTempSelectedRecruiters(assignedRecruiters.map(r => r.user_id).filter((id): id is string => id !== undefined));
     setRecruiterAnchorEl(event.currentTarget);
   };
 
@@ -82,12 +84,11 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
   const handleAssignRecruitersAction = async () => {
     setAssigningRecruiters(true);
     try {
-      const selectedObjs = recruiters.filter(r => tempSelectedRecruiters.includes(r.user_id));
+      const selectedObjs = recruiters.filter(r => r.user_id !== undefined && tempSelectedRecruiters.includes(r.user_id));
       console.log(`The selected recruiters are => ${JSON.stringify(selectedObjs)}`)
       if (requisition.requisition_id) {
-        await callAssignRecruiters(requisition.requisition_id, selectedObjs.map(r => ({userId: r.user_id, roleId: r.role_id})))
+        await callAssignRecruiters(requisition.requisition_id, selectedObjs.filter((r): r is {user_id: string, role_id: string, full_name: string} => r.user_id !== undefined && r.role_id !== undefined).map(r => ({userId: r.user_id, roleId: r.role_id})))
       }
-      setAssignedRecruiters(selectedObjs);
       handleCloseRecruiterPopover();
     } catch (error) {
       console.error("Failed to assign recruiters", error);
@@ -105,7 +106,6 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
 
       console.log(`this is the updated assigned recruiter => ${JSON.stringify(updatedAssignedRecruiters)}`)
        await callRemoveRecruiters(requisition.requisition_id, recruiterIdToRemove);
-      setAssignedRecruiters(updatedAssignedRecruiters);
     } catch (error) {
       console.error("Failed to remove recruiter", error);
     } finally {
@@ -120,7 +120,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
  
 
   const filteredRecruiters = recruiters?.filter(r => 
-   r.full_name.toLowerCase().includes(recruiterSearch.toLowerCase())
+    r.full_name && r.full_name.toLowerCase().includes(recruiterSearch.toLowerCase())
   );
 
   const openRecruiterPopover = Boolean(recruiterAnchorEl);
@@ -286,7 +286,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                             width: 20,
                             height: 20,
                           }}
-                          onClick={() => handleRemoveRecruiter(recruiter.user_id)}
+                          onClick={() => { if (recruiter.user_id) handleRemoveRecruiter(recruiter.user_id); }}
                           disabled={assigningRecruiters || removingRecruiterId === recruiter.user_id}
                         >
                           {removingRecruiterId === recruiter.user_id ? <CircularProgress size={12} color="inherit" /> : <Close fontSize="inherit" />}
@@ -345,11 +345,11 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                     const labelId = `checkbox-list-label-${recruiter.user_id}`;
                     return (
                       <ListItem key={recruiter.user_id} dense disablePadding>
-                        <ListItemButton onClick={() => handleToggleRecruiter(recruiter.user_id)}>
+                        <ListItemButton onClick={() => { if (recruiter.user_id) handleToggleRecruiter(recruiter.user_id); }}>
                           <ListItemAvatar>
                             <Checkbox
                               edge="start"
-                              checked={tempSelectedRecruiters.indexOf(recruiter.user_id) !== -1}
+                              checked={recruiter.user_id ? tempSelectedRecruiters.indexOf(recruiter.user_id) !== -1 : false}
                               tabIndex={-1}
                               disableRipple
                               inputProps={{ 'aria-labelledby': labelId }}
