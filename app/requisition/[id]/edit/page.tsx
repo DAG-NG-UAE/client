@@ -12,7 +12,7 @@ import { Save } from '@mui/icons-material';
 import { getSingleRequisition, updateRequisition } from '@/api/requisitionApi';
 import {  useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { callUnPublishRequisition, fetchRequisitions, callPublishRequisition } from '@/redux/slices/requisition';
+import { callUnPublishRequisition, fetchRequisitions, callPublishRequisition, fetchRequisitionById } from '@/redux/slices/requisition';
 import { dispatch } from '@/redux/dispatchHandle';
 import { enqueueSnackbar } from 'notistack';
 
@@ -21,7 +21,12 @@ import { enqueueSnackbar } from 'notistack';
 const RequisitionEditPage = () => {
   const {loading, selectedRequisition} = useSelector((state:RootState) => state.requisitions)
  
-  
+  useEffect(() => { 
+    if(selectedRequisition && selectedRequisition.requisition_id){ 
+      fetchRequisitionById(selectedRequisition?.requisition_id)
+    }
+
+  },[])
 
   if (!selectedRequisition) {
     return <Box sx={{ p: 3 }}>Loading...</Box>;

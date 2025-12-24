@@ -9,6 +9,12 @@ export interface RequisitionPosition {
   location: string;
 }
 
+export interface RequisitionPositionLists { 
+  position_slot_id: string; 
+  loc: string; 
+  qty: number
+}[]
+
 export interface Requisition {
   requisition_id: string;
   requisition_raised_by: string;

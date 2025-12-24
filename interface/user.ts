@@ -13,7 +13,8 @@ export interface User {
     full_name: string;
     email: string;
     role_name: AppRole;
-    role_id: string
+    role_id: string; 
+    color?: string;
     // Add any other user properties here
 }
   

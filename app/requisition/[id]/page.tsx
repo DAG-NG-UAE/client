@@ -14,6 +14,7 @@ import { Requisition } from '@/interface/requisition';
 import { getSingleRequisition } from '@/api/requisitionApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import { fetchRequisitionById } from '@/redux/slices/requisition';
 
 // // Mock data generator
 // const getMockRequisition = (id: string): Requisition => ({`
@@ -69,7 +70,12 @@ const RequisitionViewPage = () => {
   const params = useParams();
   const {loading, selectedRequisition} = useSelector((state:RootState) => state.requisitions)
  
-  
+  useEffect(() => { 
+    if(selectedRequisition && selectedRequisition.requisition_id){ 
+      fetchRequisitionById(selectedRequisition?.requisition_id)
+    }
+
+  },[])
 
   if (!selectedRequisition) {
     return <Box sx={{ p: 3 }}>Loading...</Box>;

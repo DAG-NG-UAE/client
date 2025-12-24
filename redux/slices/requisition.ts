@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { getRequisitions, getSingleRequisition, holdRequisition, approveRequisition, unPublishRequisition, publishRequisition } from '@/api/requisitionApi';
+import { getRequisitions, getSingleRequisition, holdRequisition, approveRequisition, unPublishRequisition, publishRequisition, assignRecruiters, removeRecruiters } from '@/api/requisitionApi';
 import { RecruiterSelection, Requisition } from '@/interface/requisition';
 import { dispatch } from "../dispatchHandle";
 import { enqueueSnackbar } from 'notistack';
@@ -124,6 +124,35 @@ export const callUnPublishRequisition = async(requisitionId: string, jobListKey:
     await unPublishRequisition(requisitionId, jobListKey)
     await fetchRequisitionById(requisitionId)
     enqueueSnackbar('Job Taken down from Careers page', {variant: 'success'})
+  }catch(error:any){ 
+    dispatch(hasError(error?.response?.data || error));
+  }finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
+  }
+}
+
+export const callAssignRecruiters = async(requisitionId:string, recruiters:{userId: string, roleId: string}[]) => { 
+  try{ 
+    dispatch(startLoading())
+    await assignRecruiters(requisitionId, recruiters)
+    await fetchRequisitionById(requisitionId) 
+    enqueueSnackbar('Recruiters assigned', {variant: 'success'})
+  }catch(error:any){ 
+    dispatch(hasError(error?.response?.data || error));
+  }finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
+  }
+}
+
+export const callRemoveRecruiters = async(requisitionId:string, userId: string) => { 
+  try{ 
+    dispatch(startLoading())
+    await removeRecruiters(requisitionId, userId)
+    // we want to fetch the requisition and then we want to update the selected requisition 
+    await fetchRequisitionById(requisitionId) 
+    enqueueSnackbar('Recruiter removed ', {variant: 'success'})
   }catch(error:any){ 
     dispatch(hasError(error?.response?.data || error));
   }finally {

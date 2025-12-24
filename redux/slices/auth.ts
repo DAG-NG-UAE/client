@@ -2,6 +2,7 @@ import { AuthState } from "@/interface/user";
 import { createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "@/api/axiosInstance";
 import { dispatch } from "../dispatchHandle";
+import { clearSelectedRequisition } from "./requisition";
 
 
 // Define the initial state
@@ -67,6 +68,7 @@ export const logoutUser = async () => {
         dispatch(startLoading())
         const response = await axiosInstance.post('/auth/logout');
         dispatch(setUserLogout({}))
+        dispatch(clearSelectedRequisition())
     }catch(error: any){ 
         dispatch(hasError(error?.response?.data || error));
     }

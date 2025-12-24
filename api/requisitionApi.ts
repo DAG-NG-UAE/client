@@ -133,7 +133,7 @@ export const holdRequisition = async (requisitionId: string) => {
 
 export const assignRecruiters = async (
   requisitionId: string,
-  recruiters: any[]
+  recruiters: {userId: string; roleId: string}[]
 ) => {
   try {
     const response = await axiosInstance.put(
@@ -146,3 +146,16 @@ export const assignRecruiters = async (
     throw error;
   }
 };
+
+export const removeRecruiters = async(requisitionId: string, userId: string) => { 
+  try {
+    const response = await axiosInstance.put(
+      `/requisition/remove-recruiters?requisitionId=${requisitionId}`,
+      { userId }
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error assigning recruiters:", error);
+    throw error;
+  }
+}
