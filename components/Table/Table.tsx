@@ -12,6 +12,7 @@ function TableComponent<T>({
     loading,
     emptyMessage = 'No Data Available at this time'
 }: TableProps<T>) {
+    console.log(`the data is => ${JSON.stringify(data)}`)
     const [selected, setSelected] = useState<readonly any[]>([]);
 
     const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {

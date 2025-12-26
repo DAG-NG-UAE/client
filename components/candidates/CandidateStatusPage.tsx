@@ -4,13 +4,16 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, IconButton } from '@mui/material'; // Import IconButton
 
 import SummaryStats from '@/components/SummaryStats';
-import CandidateTable from '@/components/candidates/CandidateTable';
-import { statusDetails } from '@/utils/constants';
-import { CandidateProfile } from '@/interface/candidate';
-import { getAllCandidates } from '@/api/candidate';
-import Filters from '../Filters';
+import { AppRole, statusDetails } from '@/utils/constants';
 import { RootState, useSelector } from '@/redux/store';
 import { fetchPositions } from '@/redux/slices/positions';
+import { fetchAllCandidates, setSelectedCandidate, clearSelectedCandidate } from '@/redux/slices/candidates';
+import TableComponent from '../Table/Table';
+import { CandidateColumns } from '../Table/TableColumns';
+import { CandidateProfile } from '@/interface/candidate';
+import { dispatch } from '@/redux/dispatchHandle';
+import CandidateModal from './CandidateModal';
+import { FillInterviewFormButton, PingHiringManagersButton } from './CandidateRowActions';
 
 
 interface CandidateStatusPageProps {
@@ -26,11 +29,26 @@ const summaryData = [
 
 const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   const details = statusDetails[status] || { title: 'Candidates', subtitle: 'Manage all candidates.' };
-  const [candidates, setCandidates] = useState<Partial<CandidateProfile>[]>([]);
 
   const {positions} = useSelector((state: RootState) => state.positions)
+  const {candidates, selectedCandidate} = useSelector((state:RootState) => state.candidates)
+  const {user} = useSelector((state:RootState) => state.auth)
 
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    dispatch(clearSelectedCandidate()); // Clear selected candidate on modal close
+  };
+
+  console.log(`the candidates are => ${JSON.stringify(candidates)}`)
+  useEffect(() => { 
+    if (status) {
+      console.log('on landing to this page are you called?')
+      console.log('the status for the candidate is =>', status)
+      fetchAllCandidates(undefined, status)
+    }
+  }, [status])
 
   const allRoles = [
     { text: 'All Roles', value: 'all' },
@@ -45,13 +63,9 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
     { text: '2025', value: '2025'}
   ]
 
-  const fetchCandidates = async(requisitionId?: string) => { 
-    try{ 
-      const response  = await getAllCandidates(requisitionId, status)
-      setCandidates(response.mainResult)
-    }catch(error){ 
-      console.log('there was an error fetching the candidate for the stage ')
-    }
+  const handleRowClick = (candidate:Partial<CandidateProfile>) =>{
+    dispatch(setSelectedCandidate(candidate))
+    setIsModalOpen(true);
   }
 
   const handleYearChange = async(year: string) => {
@@ -63,43 +77,55 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
     fetchPositions()
   };
 
-  useEffect(() => { 
-    if (status) {
-      fetchCandidates();
-    }
-  }, [status])
+
+  
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        {details.title}
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        {details.subtitle}
-      </Typography>
+    <>
+      <Box>
+        <Typography variant="h4" gutterBottom>
+          {details.title}
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+          {details.subtitle}
+        </Typography>
 
-      <SummaryStats stats={summaryData} />
+        <SummaryStats stats={summaryData} />
 
+{/*       
+          <Filters 
+              menuItems={allRoles} 
+              textPlaceholder="Search candidate..." 
+              isCandidate={true} 
+              allYears={allYears}
+              refreshPosition={handleRefreshPositions}
+              filterFunction={fetchCandidates}
+              onYearChange={handleYearChange}
+          />
+           */}
+
+
+        {candidates && (
+          <Box sx={{ mt: 4 }}>
+            <TableComponent
+              columns={CandidateColumns}
+              data={candidates}
+              onRowClick={handleRowClick}
+              actions={(candidate) => user?.role_name === AppRole.Recruiter ? <PingHiringManagersButton candidate={candidate}/> : <FillInterviewFormButton candidate={candidate}/>}
+              keyExtractor={(candidates) => candidates.candidate_id}
+            >
+            </TableComponent>
+            {/* <CandidateTable candidates={candidates} status={status} /> */}
+          </Box>
+        )}
       
-        <Filters 
-            menuItems={allRoles} 
-            textPlaceholder="Search candidate..." 
-            isCandidate={true} 
-            allYears={allYears}
-            refreshPosition={handleRefreshPositions}
-            filterFunction={fetchCandidates}
-            onYearChange={handleYearChange}
+      </Box>
+      <CandidateModal
+          open={isModalOpen}
+          onClose={handleCloseModal}
+          candidate={selectedCandidate}
         />
-        
-   
-
-      {candidates && (
-        <Box sx={{ mt: 4 }}>
-          <CandidateTable candidates={candidates} status={status} />
-        </Box>
-      )}
-     
-    </Box>
+    </>
   );
 };
 

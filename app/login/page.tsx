@@ -3,7 +3,8 @@ import React from 'react';
 import { Box, Typography, Card, CardContent, Button, SvgIcon, Link } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import WorkIcon from '@mui/icons-material/Work'; // Using WorkIcon as a placeholder for the logo
-
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 // Custom icon for Microsoft
 const MicrosoftIcon = (props: any) => (
@@ -17,6 +18,10 @@ const MicrosoftIcon = (props: any) => (
 
 const LoginPage = () => {
   const theme = useTheme();
+  const {candidates} = useSelector((state:RootState) => state.candidates)
+
+  console.log(`the candidates are => ${JSON.stringify(candidates)}`)
+
 
   const handleMicrosoftSignIn = () => {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';

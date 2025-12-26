@@ -3,6 +3,8 @@ import { createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "@/api/axiosInstance";
 import { dispatch } from "../dispatchHandle";
 import { clearSelectedRequisition } from "./requisition";
+import { clearSelectedCandidate, clearCandidates, clearError } from "./candidates";
+import { clearInterviewState } from "./interview";
 
 
 // Define the initial state
@@ -67,8 +69,12 @@ export const logoutUser = async () => {
     try{ 
         dispatch(startLoading())
         const response = await axiosInstance.post('/auth/logout');
-        dispatch(setUserLogout({}))
         dispatch(clearSelectedRequisition())
+        dispatch(clearSelectedCandidate())
+        dispatch(clearCandidates())
+        dispatch(setUserLogout({}))
+        dispatch(clearInterviewState())
+        dispatch(clearError())
     }catch(error: any){ 
         dispatch(hasError(error?.response?.data || error));
     }

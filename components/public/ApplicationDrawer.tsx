@@ -102,6 +102,8 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
   const [availability, setAvailability] = useState('');
   const [experience, setExperience] = useState('');
   const [location, setLocation] = useState('');
+  const [source, setSource] = useState('');
+  const [otherSource, setOtherSource] = useState('');
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -127,7 +129,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
     }
   };
 
-  const isFormValid = 
+  const isFormValid =
     fullName !== '' &&
     emailAddress !== '' &&
     phoneNumber !== '' &&
@@ -136,7 +138,9 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
     location !== '' &&
     expectedSalary !== '' &&
     cvFile !== null &&
-    privacyConsent;
+    privacyConsent &&
+    source !== '' &&
+    (source === 'Other' ? otherSource !== '' : true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,6 +161,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
     formData.append('expectedSalary', expectedSalary);
     formData.append('coverLetter', coverLetter);
     formData.append('privacyConsent', String(privacyConsent));
+    formData.append('source', source === 'Other' ? otherSource : source);
     if (careerDetails.position) {
       formData.append('position', careerDetails.position);
     }
@@ -181,6 +186,8 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       setPrivacyConsent(false);
       setCvFile(null); // Clear the file state
       setLocation('');
+      setSource('');
+      setOtherSource('');
       onClose(); // Close drawer on success
       // Reset form could be here
     } catch (error) {
@@ -364,6 +371,45 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                     ))}
                   </Select>
               </Box>
+
+              <Box mb={3}>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
+                      How did you hear about us? <span style={{ color: '#d32f2f' }}>*</span>
+                  </Typography>
+                  <Select
+                    fullWidth
+                    displayEmpty
+                    value={source}
+                    onChange={(e) => setSource(e.target.value)}
+                    sx={{ 
+                      borderRadius: 2, 
+                      bgcolor: '#ffffff',
+                      color: '#101828',
+                      '& .MuiOutlinedInput-notchedOutline': {
+                       borderColor: 'rgba(0,0,0,0.2)'
+                      }
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      <Typography color="#888">Select Source</Typography>
+                    </MenuItem>
+                    <MenuItem value="Career Website">Career Website</MenuItem>
+                    <MenuItem value="LinkedIn">LinkedIn</MenuItem>
+                    <MenuItem value="Job Mag">Job Mag</MenuItem>
+                    <MenuItem value="Indeed">Indeed</MenuItem>
+                    <MenuItem value="Other">Other</MenuItem>
+                  </Select>
+              </Box>
+
+              {source === 'Other' && (
+                <FormInput 
+                  label="Please specify" 
+                  required 
+                  placeholder="e.g., Friend, Google Search"
+                  value={otherSource}
+                  onChange={(e) => setOtherSource(e.target.value)}
+                />
+              )}
 
               <FormInput 
                 label="Cover Letter (Optional)" 

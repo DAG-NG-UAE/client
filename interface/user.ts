@@ -1,12 +1,5 @@
-// Define a type for the user data
-export enum AppRole {
-  Admin = "admin",
-  Recruiter = "recruiter",
-  HiringManager = "hiring_manager",
-  StandardEmployee = "standard_employee",
-  HeadOfHr = 'head_of_hr', 
-  HrManager = 'hr_manager'
-}
+import { AppRole } from "@/utils/constants";
+
 
 export interface User {
     user_id: string;

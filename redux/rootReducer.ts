@@ -5,6 +5,8 @@ import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 import authReducer from './slices/auth';
 import positionsReducer from './slices/positions';
 import requisitionReducer from './slices/requisition';
+import candidateReducer from './slices/candidates';
+import interviewReducer from './slices/interview';
 import userReducer from './slices/user';
 
 // ----------------------------------------------------------------------
@@ -37,6 +39,8 @@ const rootReducer = combineReducers({
   auth: authReducer,
   positions: positionsReducer,
   requisitions: requisitionReducer,
+  candidates: candidateReducer,
+  interviews: interviewReducer,
   users: userReducer,
 });
 

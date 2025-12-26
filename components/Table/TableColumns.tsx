@@ -1,7 +1,9 @@
+import { CandidateProfile } from "@/interface/candidate";
 import { Requisition } from "@/interface/requisition";
 import { TableColumn } from "@/interface/table";
+import { getStatusChipProps } from "@/utils/statusColorMapping";
 import { getRelativeTime } from "@/utils/transform";
-import { Button, Tooltip } from "@mui/material";
+import { Button, Chip, Tooltip } from "@mui/material";
 
 // Table colmun for Pending Requisitions 
 export const PendingRequisitionColumns: TableColumn<Partial<Requisition>>[] = [
@@ -79,3 +81,49 @@ export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
         }
     }
 ] 
+
+export const CandidateColumns: TableColumn<Partial<CandidateProfile>>[] = [ 
+    { 
+        key: 'candidate_name', label: 'Name'
+    }, 
+    { 
+        key: 'email', 
+        label: 'Email' 
+    },
+    { 
+        key: 'mobile_number', 
+        label: 'Phone' 
+    },
+    { 
+        key: 'role_applied_for', 
+        label: 'Position'
+    },
+    { 
+        key: 'current_status', 
+        label: 'Status',
+        render: (row) => (
+            <Chip 
+                {...getStatusChipProps(row.current_status)} 
+                size="small" 
+                sx={{ 
+                borderRadius: '6px', 
+                fontWeight: 500,
+                ...(getStatusChipProps(row.current_status).sx || {})
+                }}
+            />
+        )
+    },
+    { 
+        key: 'submitted_date', 
+        label: 'Applied',
+        render: (row) => getRelativeTime(row.submitted_date!)
+    },
+    { 
+        key: 'source', 
+        label: 'Source'
+    },
+    // { 
+    //     key: 'applied_date', 
+    //     label: 'Last Update'
+    // },
+]

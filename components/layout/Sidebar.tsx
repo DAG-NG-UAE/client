@@ -14,9 +14,9 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import WarningIcon from '@mui/icons-material/Warning'
 import { styled, useTheme } from '@mui/material/styles';
 import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
-import { AppRole } from '@/interface/user';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import { AppRole } from '@/utils/constants';
 
 const drawerWidth = 240;
 
@@ -56,8 +56,8 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
     { text: 'All', path: '/candidates/all'},
     { text: 'Applied', path: '/candidates/applied' },
     { text: 'Shortlisted', path: '/candidates/shortlisted' },
-    { text: 'Interview Scheduled', path: '/candidates/interview-scheduled' },
-    { text: 'Pending Feedback', path: '/candidates/pending-feedback' },
+    { text: 'Interview Scheduled', path: '/candidates/interview_scheduled' },
+    { text: 'Pending Feedback', path: '/candidates/pending_feedback' },
     { text: 'Interviewed', path: '/candidates/interviewed' },
     { text: 'Offer Accepted', path: '/candidates/offer-accepted' },
     { text: 'Offer Rejected', path: '/candidates/offer-rejected' },

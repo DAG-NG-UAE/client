@@ -44,6 +44,7 @@ export const getAllCandidates = async(requisitionId?:string, status?:string) => 
         const queryString = queryParams.toString()
         const url = requisitionId || status ? `candidate?${queryString}` : `candidate`
         const response = await axiosInstance.get(url)
+        console.log(`the response from get all candidate => ${JSON.stringify(response.data.data)}`)
         return response.data.data
     }catch(error){ 
         console.error('Error fetching all candidates:', error);
@@ -88,7 +89,6 @@ export const scheduleInterview = async(interviewData: {
     interview_date: string, 
     interview_time: string, 
     interview_type: string,
-    interview_panel: string[]
 }) => {
     try{
         console.log('The data to the backend is ', interviewData)

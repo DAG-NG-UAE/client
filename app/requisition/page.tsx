@@ -73,12 +73,12 @@ const RequisitionPage = () => {
 
         {/* Table component */}
         <TableComponent
-        columns={columns}
-        data={requisitions}
-        actions={(requisition) => <RequisitionRowActions requisition={requisition} />}
-        loading={status == true}
-        onRowClick={handleRowClick}
-        keyExtractor={(requisitions) => requisitions.requisition_id}
+          columns={columns}
+          data={requisitions}
+          actions={(requisition) => <RequisitionRowActions requisition={requisition} />}
+          loading={status == true}
+          onRowClick={handleRowClick}
+          keyExtractor={(requisitions) => requisitions.requisition_id}
         >
         </TableComponent>
       </Container>

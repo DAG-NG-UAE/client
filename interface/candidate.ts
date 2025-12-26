@@ -67,6 +67,7 @@ export interface CandidateProfile {
   // candidate status history 
   old_status?: string; 
   new_status?: string;
+  changed_by?: string;
   shortlisted_date?:string //this is saved based done on the new_status being equal to 'shortlisted'
   // notes is already above
 
