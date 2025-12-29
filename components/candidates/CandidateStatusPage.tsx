@@ -9,11 +9,11 @@ import { RootState, useSelector } from '@/redux/store';
 import { fetchPositions } from '@/redux/slices/positions';
 import { fetchAllCandidates, setSelectedCandidate, clearSelectedCandidate } from '@/redux/slices/candidates';
 import TableComponent from '../Table/Table';
-import { CandidateColumns } from '../Table/TableColumns';
+import { getColumnsForStatus } from '@/utils/candidateColumnConfig';
 import { CandidateProfile } from '@/interface/candidate';
 import { dispatch } from '@/redux/dispatchHandle';
 import CandidateModal from './CandidateModal';
-import { FillInterviewFormButton, PingHiringManagersButton } from './CandidateRowActions';
+import { FillInterviewFormButton, PingHiringManagersButton, GenerateOfferLetterButton } from './CandidateRowActions';
 
 
 interface CandidateStatusPageProps {
@@ -58,6 +58,12 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
     })),
   ];
 
+  const hasActions = React.useMemo(() => {
+    if (status === 'pending_feedback') return true;
+    if (status === 'approved_for_offer' && user?.role_name === AppRole.HeadOfHr) return true;
+    return false;
+  }, [status, user?.role_name]);
+
   const allYears = [
     { text: 'All years', value: 'all'}, 
     { text: '2025', value: '2025'}
@@ -67,6 +73,24 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
     dispatch(setSelectedCandidate(candidate))
     setIsModalOpen(true);
   }
+
+  const renderActions = (candidate: Partial<CandidateProfile>) => {
+    // Status: Pending Feedback
+    if (status === 'pending_feedback') {
+      if (user?.role_name === AppRole.Recruiter) {
+        return <PingHiringManagersButton candidate={candidate}/>;
+      } else {
+        return <FillInterviewFormButton candidate={candidate}/>; 
+      }
+    }
+
+    // Status: Approved for Offer (Head of HR only)
+    if (status === 'approved_for_offer' && user?.role_name === AppRole.HeadOfHr) {
+       return <GenerateOfferLetterButton candidate={candidate} />;
+    }
+
+    return null;
+  };
 
   const handleYearChange = async(year: string) => {
     console.log(`Filtering by year => ${year}`);
@@ -108,10 +132,10 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
         {candidates && (
           <Box sx={{ mt: 4 }}>
             <TableComponent
-              columns={CandidateColumns}
+              columns={getColumnsForStatus(status)}
               data={candidates}
               onRowClick={handleRowClick}
-              actions={(candidate) => user?.role_name === AppRole.Recruiter ? <PingHiringManagersButton candidate={candidate}/> : <FillInterviewFormButton candidate={candidate}/>}
+              actions={hasActions ? renderActions : undefined}
               keyExtractor={(candidates) => candidates.candidate_id}
             >
             </TableComponent>

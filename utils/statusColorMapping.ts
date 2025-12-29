@@ -87,6 +87,15 @@ export const getStatusChipProps = (status: string | undefined) => {
         },
         variant: "filled" as "filled",
       };
+      case "approved_for_offer":
+      return {
+        label: "Approved for Offer",
+        sx: {
+          bgcolor: "#dbfce7",
+          color: "#83c09d"
+        },
+        variant: "filled" as "filled",
+      };
     case "reject":
       return {
         label: "Rejected",

@@ -1,6 +1,6 @@
 import { CandidateProfile } from "@/interface/candidate";
 import { Button } from "@mui/material";
-import { Email, Assignment } from "@mui/icons-material";
+import { Email, Assignment, Description } from "@mui/icons-material";
 import React from "react";
 import Link from 'next/link';
 import { fetchSingleCandidate } from "@/redux/slices/candidates";
@@ -41,3 +41,25 @@ export const FillInterviewFormButton = ({ candidate }: { candidate: Partial<Cand
         </Button>
     );
 };
+
+export const GenerateOfferLetterButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
+    const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        console.log(`Generating offer letter for candidate: ${candidate.candidate_id}`);
+        alert(`Generating offer letter for ${candidate.candidate_name}`);
+    };
+
+    return (
+        <Button
+            variant="outlined"
+            color="success"
+            size="small"
+            startIcon={<Description fontSize="small" />}
+            onClick={handleClick}
+            sx={{ textTransform: 'none' }}
+        >
+            Generate Offer Letter
+        </Button>
+    );
+};
+
