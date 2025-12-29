@@ -1,5 +1,6 @@
 import { CandidateProfile } from "@/interface/candidate";
 import axiosInstance, { API_BASE_URL } from "./axiosInstance";
+import { CandidateEvaluationPayload } from "@/interface/interview";
 
 // get the candidates for a requisition 
 export const getCandidatesForRequisition = async (requisitionId: string) => {
@@ -97,5 +98,15 @@ export const scheduleInterview = async(interviewData: {
     }catch(error){
         console.error("Error scheduling interview:", error);
         throw error;
+    }
+}
+
+export const evaluateCandidate = async(evaluationData: CandidateEvaluationPayload) => { 
+    try{ 
+        const response = await axiosInstance.post('/interview/evaluate-candidate', evaluationData)
+        return response.data.data
+    }catch(error){ 
+        console.error("Error inserting candidate evaluation")
+        throw error
     }
 }

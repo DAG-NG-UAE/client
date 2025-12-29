@@ -1,8 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { EvaluationForm } from "@/interface/interview";
+import { CandidateEvaluationPayload, EvaluationForm } from "@/interface/interview";
 import { dispatch } from '../dispatchHandle';
 import { getEvaluationForm } from '@/api/interview';
 import { enqueueSnackbar } from 'notistack';
+import { evaluateCandidate } from '@/api/candidate';
+import { fetchAllCandidates } from './candidates';
 
 export interface InterviewState {
     evaluationForm: EvaluationForm[];
@@ -58,7 +60,6 @@ export const fetchEvaluationForm = async (department: string) => {
         dispatch(startLoading());
         const response = await getEvaluationForm(department);
         dispatch(setEvaluationForm(response));
-        enqueueSnackbar('Evaluation form loaded', { variant: 'success' });
     } catch (error: any) {
         const errorMessage = error?.response?.data?.message || 'Failed to fetch evaluation form';
         dispatch(hasError(errorMessage));
@@ -68,4 +69,19 @@ export const fetchEvaluationForm = async (department: string) => {
     }
 };
 
+export const callInsertCandidateEvaluation = async (evaluation: CandidateEvaluationPayload) => {
+    try {
+        dispatch(startLoading());
+        const response = await evaluateCandidate(evaluation);
+        // we want to dispacth the fetch all candidates where the status is pending_feedback
+        await fetchAllCandidates(undefined,'pending_feedback');
+        enqueueSnackbar('Candidate evaluated successfully', { variant: 'success' });
+    } catch (error: any) {
+        const errorMessage = error?.response?.data?.message || 'Failed to insert candidate evaluation';
+        dispatch(hasError(errorMessage));
+        enqueueSnackbar(errorMessage, { variant: 'error' });
+    } finally {
+        dispatch(stopLoading());
+    }
+};
 export default interviewSlice.reducer;

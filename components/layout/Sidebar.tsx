@@ -59,6 +59,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
     { text: 'Interview Scheduled', path: '/candidates/interview_scheduled' },
     { text: 'Pending Feedback', path: '/candidates/pending_feedback' },
     { text: 'Interviewed', path: '/candidates/interviewed' },
+    { text: 'Approved for Offer', path: '/candidates/approved_for_offer' },
     { text: 'Offer Accepted', path: '/candidates/offer-accepted' },
     { text: 'Offer Rejected', path: '/candidates/offer-rejected' },
     { text: 'Offer Withdrawn', path: '/candidates/offer-withdrawn' },

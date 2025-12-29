@@ -17,6 +17,11 @@ import {
   Stack,
   useTheme,
   IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from '@mui/material';
 import { 
   Assignment as AssignmentIcon,
@@ -24,13 +29,15 @@ import {
   Save as SaveIcon,
   LocationOn,
   AttachMoney,
-  Close as CloseIcon
+  Close as CloseIcon,
+  OpenInNew as OpenInNewIcon
 } from '@mui/icons-material';
 import { RootState, useSelector } from '@/redux/store';
-import { fetchEvaluationForm } from '@/redux/slices/interview';
+import { callInsertCandidateEvaluation, fetchEvaluationForm } from '@/redux/slices/interview';
 import { fetchSingleCandidate } from '@/redux/slices/candidates';
 import { useParams, useRouter } from 'next/navigation';
 import { AppRole } from '@/utils/constants';
+import axiosInstance from '@/api/axiosInstance'; // Import axios instance for blob fetching
 
 const EvaluationPage = () => {
   const params = useParams();
@@ -43,22 +50,30 @@ const EvaluationPage = () => {
   const { selectedCandidate, loading: candidateLoading, error: candidateError } = useSelector((state: RootState) => state.candidates);
   const { user } = useSelector((state: RootState) => state.auth);
 
+  console.log(`the form is ${JSON.stringify(evaluationForm)}`)
   const [ratings, setRatings] = useState<Record<string, { rating: number | null, comment: string }>>({});
+  const [recommendation, setRecommendation] = useState<string>('');
   const [submitted, setSubmitted] = useState(false);
+  
+  // State for the Blob URL
+  const [cvBlobUrl, setCvBlobUrl] = useState<string | null>(null);
+  const [cvLoading, setCvLoading] = useState(false);
 
   // Derivations
   const isRecruiter = user?.role_name === AppRole.Recruiter;
   
   // NOTE: REPLACE THIS HARDCODED 'Digital' WITH ACTUAL LOGIC WHEN READY
-  // const candidateDepartment = selectedCandidate?.department;
-  const candidateDepartment = 'Digital'; 
+  const candidateDepartment = selectedCandidate?.department;
+//   const candidateDepartment = 'Digital'; 
 
-  // Initial Fetch
+  // Initial Fetch Candidate
   useEffect(() => {
     if (candidateId) {
         fetchSingleCandidate(candidateId);
     }
   }, [candidateId]);
+
+  console.log(`the candidate data is => ${JSON.stringify(selectedCandidate)}`)
 
   // Form Fetch
   useEffect(() => {
@@ -68,40 +83,117 @@ const EvaluationPage = () => {
     }
   }, [candidateDepartment]);
 
-  const handleRatingChange = (parameter: string, newValue: number | null) => {
+  // CV Fetching Logic (Blob approach to bypass CSP frame-ancestors 'self')
+  useEffect(() => {
+    let active = true; 
+
+    const fetchCvBlob = async () => {
+        if (!selectedCandidate?.candidate_id) return;
+        
+        setCvLoading(true);
+        try {
+            // We use the same endpoint path but request a blob.
+            // The backend returns the file stream.
+            const response = await axiosInstance.get('/candidate/resume', {
+                params: { candidateId: selectedCandidate.candidate_id },
+                responseType: 'blob' 
+            });
+
+            if (active) {
+                // Create a local object URL for the blob
+                // This 'blob:http://localhost:3000/...' URL is considered same-origin(ish) or at least trusted by the browser
+                // significantly more than a cross-origin iframe src.
+                const newBlobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+                setCvBlobUrl(newBlobUrl);
+            }
+        } catch (error) {
+            console.error("Failed to fetch CV blob:", error);
+            // On failure, we might fallback to null or try something else, 
+            // but for now we just stop loading.
+        } finally {
+            if (active) setCvLoading(false);
+        }
+    };
+
+    fetchCvBlob();
+
+    return () => {
+        active = false;
+        // Clean up the object URL to avoid memory leaks
+        if (cvBlobUrl) {
+            URL.revokeObjectURL(cvBlobUrl);
+        }
+    };
+    // We only want to re-run this if the candidate ID changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCandidate?.candidate_id]);
+
+  const handleRatingChange = (criteriaId: string | number, newValue: number | null) => {
     setRatings(prev => ({ 
         ...prev, 
-        [parameter]: { ...prev[parameter], rating: newValue } 
+        [criteriaId]: { ...prev[criteriaId], rating: newValue } 
     }));
   };
 
-  const handleCommentChange = (parameter: string, comment: string) => {
+  const handleCommentChange = (criteriaId: string | number, comment: string) => {
     setRatings(prev => ({ 
         ...prev, 
-        [parameter]: { ...prev[parameter], comment: comment } 
+        [criteriaId]: { ...prev[criteriaId], comment: comment } 
     }));
   };
 
-  const handleSubmit = () => {
+  const isFormValid = useMemo(() => {
+      if (!evaluationForm || evaluationForm.length === 0) return false;
+      const allCriteriaRated = evaluationForm.every(item => {
+          const r = ratings[item.evaluation_criteria_id];
+          return r && typeof r.rating === 'number' && r.rating > 0 && r.comment && r.comment.trim().length > 0;
+      });
+      return allCriteriaRated && recommendation !== '';
+  }, [evaluationForm, ratings, recommendation]);
+
+  const handleSubmit = async() => {
+    if (!selectedCandidate?.candidate_id || !user?.user_id || !selectedCandidate.requisition_id) {
+        console.error('Missing candidate ID or User ID');
+        return;
+    }
+
+    if (!isFormValid) {
+        console.error('Form is invalid');
+        return;
+    }
+
+    // Since isFormValid is true, we know every item in ratings (corresponding to form) is valid.
+    // However, ratings might have extra keys (unlikely) or TS doesn't know for sure.
+    // We cast it to the expected type for the API call.
+    const finalEvaluation = ratings as Record<string, { rating: number, comment: string }>;
+
     console.log({
-      candidateId: selectedCandidate?.candidate_id,
-      evaluatorId: user?.user_id,
-      evaluation: ratings,
+      candidateId: selectedCandidate.candidate_id,
+      evaluatorId: user.user_id,
+      evaluation: finalEvaluation,
+      recommendation,
+    });
+    
+    await callInsertCandidateEvaluation({
+      candidateId: selectedCandidate.candidate_id,
+      evaluatorId: user.user_id,
+      evaluation: finalEvaluation,
+      recommendation,
+      requisitionId: selectedCandidate.requisition_id
     });
     setSubmitted(true);
     setTimeout(() => {
-        router.push('/candidates');
+        router.push('/candidates/pending_feedback');
     }, 2000);
   };
 
   const loading = interviewLoading || candidateLoading;
   const error = interviewError || candidateError;
 
-  // Use the API pattern provided by the user for CV retrieval
-  const cvUrl = useMemo(() => {
+  // Direct URL for the "Open in New Tab" button (Standard link)
+  const directCvUrl = useMemo(() => {
       if(!selectedCandidate?.candidate_id) return null;
-      // Using process.env.NEXT_PUBLIC_API_URL if available, otherwise fallback (though normally it should be set)
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const baseUrl = 'http://localhost:5000';
       return `${baseUrl}/candidate/resume?candidateId=${selectedCandidate.candidate_id}`;
   }, [selectedCandidate?.candidate_id]);
 
@@ -183,7 +275,7 @@ const EvaluationPage = () => {
                     startIcon={<SaveIcon />}
                     onClick={handleSubmit} 
                     color="primary"
-                    disabled={evaluationForm.length === 0}
+                    disabled={!isFormValid}
                     sx={{ borderRadius: 2 }}
                 >
                     Save & Submit
@@ -198,22 +290,49 @@ const EvaluationPage = () => {
         <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden', gap: 2, p: 2 }}>
             
             {/* LEFT PANEL: CV VIEWER (60%) */}
-            <Box sx={{ flex: '0 0 60%', height: '100%', bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden', boxShadow: theme.shadows[1] }}>
-                {cvUrl ? (
-                    <iframe 
-                        src={cvUrl} 
-                        width="100%" 
-                        height="100%" 
-                        style={{ border: 'none' }}
-                        title="Candidate CV"
-                    />
-                ) : (
-                    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column',  justifyContent: 'center', alignItems: 'center', p: 4, color: 'text.secondary' }}>
-                        <AssignmentIcon sx={{ fontSize: 64, mb: 2, opacity: 0.2 }} />
-                        <Typography variant="h6">No CV Available</Typography>
-                        <Typography variant="body2">Unable to load CV for this candidate.</Typography>
-                    </Box>
-                )}
+            <Box sx={{ flex: '0 0 60%', height: '100%', bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden', boxShadow: theme.shadows[1], display: 'flex', flexDirection: 'column' }}>
+                {/* CV Handler Header */}
+                <Box sx={{ p: 1, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'grey.50' }}>
+                    <Typography variant="subtitle2" sx={{ ml: 1, color: 'text.secondary', fontWeight: 'bold' }}>
+                        Candidate Document
+                    </Typography>
+                    {directCvUrl && (
+                        <Button 
+                            size="small" 
+                            endIcon={<OpenInNewIcon fontSize="small" />} 
+                            component="a" 
+                            href={directCvUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            sx={{ textTransform: 'none' }}
+                        >
+                            Open in New Tab
+                        </Button>
+                    )}
+                </Box>
+                
+                {/* CV Content */}
+                <Box sx={{ flexGrow: 1, position: 'relative', bgcolor: 'grey.100' }}>
+                    {cvLoading ? (
+                        <Box sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : cvBlobUrl ? (
+                         <iframe 
+                            src={cvBlobUrl} 
+                            width="100%" 
+                            height="100%" 
+                            style={{ border: 'none', display: 'block' }}
+                            title="Candidate CV"
+                        />
+                    ) : (
+                        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column',  justifyContent: 'center', alignItems: 'center', p: 4, color: 'text.secondary' }}>
+                            <AssignmentIcon sx={{ fontSize: 64, mb: 2, opacity: 0.2 }} />
+                            <Typography variant="h6">No CV Available</Typography>
+                            <Typography variant="body2">Unable to load CV for this candidate.</Typography>
+                        </Box>
+                    )}
+                </Box>
             </Box>
 
             {/* RIGHT PANEL: EVALUATION FORM (Remaining space ~40%) */}
@@ -247,10 +366,10 @@ const EvaluationPage = () => {
                                             {item.parameter_name}
                                         </Typography>
                                         <Rating
-                                            name={`rating-${item.parameter_name}`}
-                                            value={ratings[item.parameter_name]?.rating || 0}
+                                            name={`rating-${item.evaluation_criteria_id}`}
+                                            value={ratings[item.evaluation_criteria_id]?.rating || 0}
                                             onChange={(event, newValue) => {
-                                                handleRatingChange(item.parameter_name, newValue);
+                                                handleRatingChange(item.evaluation_criteria_id, newValue);
                                             }}
                                             size="small"
                                         />
@@ -268,8 +387,8 @@ const EvaluationPage = () => {
                                         multiline
                                         minRows={2}
                                         maxRows={4}
-                                        value={ratings[item.parameter_name]?.comment || ''}
-                                        onChange={(e) => handleCommentChange(item.parameter_name, e.target.value)}
+                                        value={ratings[item.evaluation_criteria_id]?.comment || ''}
+                                        onChange={(e) => handleCommentChange(item.evaluation_criteria_id, e.target.value)}
                                         variant="outlined"
                                         fullWidth
                                         size="small"
@@ -277,6 +396,27 @@ const EvaluationPage = () => {
                                     />
                                 </Paper>
                             ))}
+                            
+                            <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, mt: 2, borderColor: 'primary.main', bgcolor: 'primary.50' }}>
+                                <Typography variant="subtitle2" fontWeight="bold" gutterBottom color="primary.main">
+                                    Final Recommendation
+                                </Typography>
+                                <FormControl fullWidth size="small" sx={{ mt: 1, bgcolor: 'background.paper' }}>
+                                    <InputLabel id="recommendation-select-label">Recommendation</InputLabel>
+                                    <Select
+                                        labelId="recommendation-select-label"
+                                        id="recommendation-select"
+                                        value={recommendation}
+                                        label="Recommendation"
+                                        onChange={(e: SelectChangeEvent) => setRecommendation(e.target.value)}
+                                    >
+                                        <MenuItem value="approved_for_offer">Proceed to Offer</MenuItem>
+                                        <MenuItem value="shortlisted">Needs Another Round</MenuItem>
+                                        <MenuItem value="Hold">Hold</MenuItem>
+                                        <MenuItem value="rejected">Reject</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Paper>
                         </Stack>
                     )}
                     

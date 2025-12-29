@@ -5,6 +5,8 @@ import { useTheme } from '@mui/material/styles';
 import WorkIcon from '@mui/icons-material/Work'; // Using WorkIcon as a placeholder for the logo
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import { dispatch } from '@/redux/dispatchHandle';
+import { clearError, clearInterviewState } from '@/redux/slices/interview';
 
 // Custom icon for Microsoft
 const MicrosoftIcon = (props: any) => (
@@ -24,6 +26,7 @@ const LoginPage = () => {
 
 
   const handleMicrosoftSignIn = () => {
+    dispatch(clearInterviewState())
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     window.location.href = `${backendUrl}/auth/login`;
   };

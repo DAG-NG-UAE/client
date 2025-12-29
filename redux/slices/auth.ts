@@ -75,6 +75,7 @@ export const logoutUser = async () => {
         dispatch(setUserLogout({}))
         dispatch(clearInterviewState())
         dispatch(clearError())
+        dispatch(clearInterviewState())
     }catch(error: any){ 
         dispatch(hasError(error?.response?.data || error));
     }
