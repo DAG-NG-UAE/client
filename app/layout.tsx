@@ -27,6 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(true); // State for desktop sidebar
   const [isDarkMode, setIsDarkMode] = useState(false); // State for dark mode
   const pathname = usePathname();
 
@@ -61,17 +62,28 @@ export default function RootLayout({
                     {children}
                   </Box>
                 ) : (
-                  // Private layout
                   <AuthInitializer>
                     <Box sx={{ display: 'flex' }}>
-                      <Header handleDrawerToggle={handleDrawerToggle} />
-                      <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
+                      <Header 
+                        handleDrawerToggle={handleDrawerToggle} 
+                        desktopOpen={desktopOpen}
+                        handleDesktopToggle={() => setDesktopOpen(!desktopOpen)}
+                      />
+                      <Sidebar 
+                        mobileOpen={mobileOpen} 
+                        handleDrawerToggle={handleDrawerToggle} 
+                        desktopOpen={desktopOpen}
+                      />
                       <Box
                         component="main"
                         sx={{
                           flexGrow: 1,
                           p: 3,
-                          width: { sm: `calc(100% - ${drawerWidth}px)` },
+                          width: { sm: desktopOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
+                          transition: theme.transitions.create(['width', 'margin'], {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.leavingScreen,
+                          }),
                         }}
                       >
                         <Toolbar /> {/* This is important for content to not be hidden by AppBar */}

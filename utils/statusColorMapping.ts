@@ -91,8 +91,8 @@ export const getStatusChipProps = (status: string | undefined) => {
       return {
         label: "Approved for Offer",
         sx: {
-          bgcolor: "#dbfce7",
-          color: "#83c09d"
+          bgcolor: "#FEF3C7",
+          color: "#D97706"
         },
         variant: "filled" as "filled",
       };

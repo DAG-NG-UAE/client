@@ -23,15 +23,16 @@ const drawerWidth = 240;
 interface SidebarProps {
   mobileOpen: boolean;
   handleDrawerToggle: () => void;
+  desktopOpen?: boolean;
 }
 
-const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
+const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: SidebarProps) => {
   const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname(); // Get current pathname
   const [isCandidatesOpen, setCandidatesOpen] = useState(false);
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  console.log(`the user is => ${JSON.stringify(user)} and isAuthenticated is => ${isAuthenticated}`)
+  // console.log(`the user is => ${JSON.stringify(user)} and isAuthenticated is => ${isAuthenticated}`)
 
   useEffect(() => {
     if (pathname.startsWith('/candidates')) {
@@ -189,7 +190,11 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
   return (
     <Box
       component="nav"
-      sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+      sx={{ width: { sm: desktopOpen ? drawerWidth : 0 }, flexShrink: { sm: 0 }, transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+      })
+      }}
       aria-label="mailbox folders"
     >
       {/* Mobile drawer */}
@@ -209,12 +214,12 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
       </Drawer>
       {/* Desktop drawer */}
       <Drawer
-        variant="permanent"
+        variant="persistent"
         sx={{
           display: { xs: 'none', sm: 'block' },
           '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
         }}
-        open
+        open={desktopOpen}
       >
         {drawerContent}
       </Drawer>
@@ -223,4 +228,3 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }: SidebarProps) => {
 };
 
 export default Sidebar;
-

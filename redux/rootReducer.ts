@@ -8,6 +8,7 @@ import requisitionReducer from './slices/requisition';
 import candidateReducer from './slices/candidates';
 import interviewReducer from './slices/interview';
 import userReducer from './slices/user';
+import offerReducer from './slices/offer'
 
 // ----------------------------------------------------------------------
 
@@ -42,6 +43,7 @@ const rootReducer = combineReducers({
   candidates: candidateReducer,
   interviews: interviewReducer,
   users: userReducer,
+  offers: offerReducer
 });
 
 export { rootPersistConfig, rootReducer };
