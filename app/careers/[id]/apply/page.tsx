@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, use } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Box,
   Container,
@@ -11,7 +12,7 @@ import {
   useTheme,
   alpha
 } from '@mui/material';
-import { DirectionsCar, LocalShipping, TwoWheeler, Flight, DirectionsBus, Commute, ArrowForward } from '@mui/icons-material';
+import { DirectionsCar, LocalShipping, TwoWheeler, Flight, DirectionsBus, Commute, ArrowForward, SentimentVeryDissatisfied } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import { getCareerDetail } from '@/api/requisitionApi';
 import { Requisition } from '@/interface/requisition';
@@ -32,22 +33,102 @@ const HeroVehiclePattern = () => {
 
 export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
   const theme = useTheme();
+  const searchParams = useSearchParams();
   const { id } = use(props.params);
   const [careerDetails, setCareerDetails] = useState<Partial<Requisition>>({});
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   const fetchJobDetails = async (slug: string) => { 
     try { 
       const result = await getCareerDetail(slug);
-      setCareerDetails(result);
+      if (!result || Object.keys(result).length === 0) {
+        setNotFound(true);
+      } else {
+        setCareerDetails(result);
+      }
     } catch (error) { 
       console.log("Error fetching career details");
+      setNotFound(true);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => { 
     fetchJobDetails(id);
   }, [id]);
+
+  console.log(`the career details are => ${JSON.stringify(careerDetails)}`)
+  if (!loading && (notFound || !careerDetails?.position)) {
+    return (
+      <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ 
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'primary.main',
+          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden',
+          p: 4
+        }}>
+          <HeroVehiclePattern />
+          <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+            <Box 
+              sx={{ 
+                bgcolor: 'rgba(255,255,255,0.1)', 
+                backdropFilter: 'blur(10px)',
+                borderRadius: '50%',
+                width: 120,
+                height: 120,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+                mb: 4,
+                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)'
+              }}
+            >
+              <SentimentVeryDissatisfied sx={{ fontSize: 60, color: 'white' }} />
+            </Box>
+            
+            <Typography variant="h3" fontWeight="800" gutterBottom>
+              Job No Longer Available
+            </Typography>
+            
+            <Typography variant="h6" sx={{ opacity: 0.9, mb: 6, fontWeight: 400 }}>
+              The position you are looking for has been filled or removed. 
+            </Typography>
+
+            <Button 
+              variant="contained" 
+              size="large" 
+              href="https://dagindustries.com/about-us/careers" 
+              sx={{ 
+                px: 5, 
+                py: 1.5,
+                fontSize: '1.1rem',
+                borderRadius: 50,
+                bgcolor: 'white',
+                color: 'primary.main',
+                fontWeight: 'bold',
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.9)',
+                }
+              }}
+            >
+              Browse Open Positions
+            </Button>
+          </Container>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -74,16 +155,18 @@ export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
               fontSize: { xs: '1.5rem', md: '2rem' },
               textShadow: '0px 4px 20px rgba(0,0,0,0.1)' 
             }}>
-              {careerDetails.position || 'Loading Position...'}
+              {careerDetails?.position || searchParams.get('position') || 'Loading Position...'}
             </Typography>
             
             <Stack direction="row" spacing={2} divider={<Box sx={{ width: 4, height: 4, bgcolor: 'white', borderRadius: '50%', alignSelf: 'center' }} />} sx={{ opacity: 0.9 }}>
                <Typography variant="h6">
-                 {careerDetails.department}
+                 {careerDetails?.department || searchParams.get('department')}
                </Typography>
-               {careerDetails.requisition_positions && (
+               {(careerDetails?.requisition_positions?.length || searchParams.get('location')) && (
                  <Typography variant="h6">
-                   {careerDetails.requisition_positions.map(p => p.location).join(', ')}
+                   {careerDetails?.requisition_positions 
+                     ? careerDetails?.requisition_positions.map(p => p.location).join(', ') 
+                     : searchParams.get('location')?.split(',').join(', ')}
                  </Typography>
                )}
             </Stack>
@@ -151,7 +234,7 @@ export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
             '& strong': { color: 'text.primary' }
            }}>
             <ReactMarkdown>
-              {careerDetails.content || ''}
+              {careerDetails?.content || ''}
             </ReactMarkdown>
           </Box>
 

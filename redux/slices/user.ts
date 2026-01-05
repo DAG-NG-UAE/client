@@ -1,7 +1,8 @@
-import { AppRole, User } from "@/interface/user";
+
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { getRecruiters } from "@/api/user";
 import { dispatch } from "../dispatchHandle";
+import { User } from "@/interface/user";
 
 export interface UserState { 
     recruiters: Partial<User>[]; 

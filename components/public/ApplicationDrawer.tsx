@@ -215,7 +215,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Header */}
         <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: '#e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#ffffff' }}>
-          <Typography variant="h6" fontWeight="bold" color="#101828">Apply for {careerDetails.position}</Typography>
+          <Typography variant="h6" fontWeight="bold" color="#101828">Apply for {careerDetails?.position}</Typography>
           <IconButton onClick={onClose} sx={{ color: '#666' }}>
             <CloseIcon />
           </IconButton>
@@ -230,7 +230,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                 <FormInput label="Full Name" required placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                 <FormInput label="Email Address" required placeholder="john.doe@email.com" type="email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
                 <FormInput label="Phone Number" required placeholder="(555) 123-4567" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
-                <FormInput label="Position Applied For" required disabled={true} value={careerDetails.position || ''} />
+                <FormInput label="Position Applied For" required disabled={true} value={careerDetails?.position || ''} />
             </Box>
 
             <Divider sx={{ my: 4, borderColor: '#e0e0e0' }} />
@@ -366,7 +366,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                     <MenuItem value="" disabled>
                       <Typography color="#888">Select Location</Typography>
                     </MenuItem>
-                    {careerDetails.requisition_positions?.map((loc) => (
+                    {careerDetails?.requisition_positions?.map((loc) => (
                       <MenuItem key={loc.position_slot_id} value={loc.position_slot_id}>{loc.location}</MenuItem>
                     ))}
                   </Select>

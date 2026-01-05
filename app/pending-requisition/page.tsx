@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import withAuth from '@/components/auth/withAuth';
-import { AppRole } from '@/interface/user';
 import { PendingRequisitionColumns } from '@/components/Table/TableColumns';
 import TableComponent from '@/components/Table/Table';
 import { Requisition } from '@/interface/requisition';
@@ -11,6 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { clearSelectedRequisition, fetchRequisitions, setSelectedRequisition } from '@/redux/slices/requisition';
 import { dispatch } from '@/redux/dispatchHandle';
+import { AppRole } from '@/utils/constants';
 
 const PendingRequisitionPage = () => {
   const {requisitions, selectedRequisition, loading} = useSelector((state: RootState) => state.requisitions)

@@ -24,12 +24,13 @@ import {
   Business,
   DragIndicator
 } from '@mui/icons-material';
+import { Checkbox, FormControlLabel, Radio, RadioGroup, FormControl, FormLabel } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useParams, useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { fetchSingleCandidate } from '@/redux/slices/candidates';
-import { fetchMasterClauses } from '@/redux/slices/offer';
+import { fetchMasterClauses, addSelectedClause, removeSelectedClause, setSelectedClauses } from '@/redux/slices/offer';
 import { ClauseItem } from '@/components/offers/ClauseItem';
 import { Highlight } from '@/components/offers/Highlight';
 import { getStatusChipProps } from '@/utils/statusColorMapping';
@@ -57,7 +58,7 @@ import { formatOfferDate } from '@/utils/transform';
 
 
 
-function SortableClause({ id, title, content, onRemove }: { id: string, title: string, content: React.ReactNode, onRemove?: () => void }) {
+function SortableClause({ id, title, content, onRemove, isPreviewMode }: { id: string, title: string, content: React.ReactNode, onRemove?: () => void, isPreviewMode?: boolean }) {
     const {
       attributes,
       listeners,
@@ -70,7 +71,7 @@ function SortableClause({ id, title, content, onRemove }: { id: string, title: s
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      cursor: 'grab', 
+      cursor: isPreviewMode ? 'default' : 'grab', 
       marginBottom: '16px',
       position: 'relative' as 'relative',
       border: isDragging ? '2px solid #2563EB' : '1px solid transparent',
@@ -81,17 +82,20 @@ function SortableClause({ id, title, content, onRemove }: { id: string, title: s
     };
   
     return (
-      <Box ref={setNodeRef} style={style} sx={{ '&:hover .remove-btn': { opacity: 1 } }}>
+      <Box ref={setNodeRef} style={style} sx={{ ...(isPreviewMode ? {} : {'&:hover .remove-btn': { opacity: 1 }}) }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
           {/* This is the handle for dragging */}
+          {!isPreviewMode && (
           <Box {...attributes} {...listeners} sx={{ cursor: 'grab', display: 'flex', mr: 1 }}>
             <DragIndicator fontSize="small" sx={{ color: 'text.disabled' }} />
           </Box>
+          )}
           
           <Typography variant="subtitle1" sx={{ fontSize: '0.95rem', fontWeight: 'bold', flexGrow: 1 }}>
             {title}
           </Typography>
 
+          {!isPreviewMode && (
           <IconButton 
             className="remove-btn" 
             size="small" 
@@ -100,9 +104,10 @@ function SortableClause({ id, title, content, onRemove }: { id: string, title: s
           >
             <Box sx={{ fontSize: '1.2rem' }}>×</Box>
           </IconButton>
+          )}
         </Box>
         
-        <Typography component="div" sx={{ lineHeight: 1.6, fontSize: '0.85rem', color: 'text.secondary', ml: 4 }}> 
+        <Typography component="div" sx={{ lineHeight: 1.6, fontSize: '0.85rem', color: 'text.secondary', ml: isPreviewMode ? 0 : 4 }}> 
             {content}
         </Typography>
       </Box>
@@ -112,30 +117,61 @@ function SortableClause({ id, title, content, onRemove }: { id: string, title: s
 export default function OfferPage() {
   const theme = useTheme();
   const params = useParams();
+  const dispatch = useDispatch();
   
   const candidateId = params.id as string;
 
   const {selectedCandidate} = useSelector((state:RootState) => state.candidates)
-  const {masterClauses, loading} = useSelector((state:RootState) => state.offers)
+  const {masterClauses, selectedClauses, loading} = useSelector((state:RootState) => state.offers)
+
+  //mock signature data
+  const signatories = [
+  { 
+    signatory_id: '1', 
+    full_name: 'Avinash Singh', 
+    designation: 'Head, Human Resources', 
+    signature_url: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Jon_Kirsch%27s_Signature.png' 
+  },
+  { 
+    signatory_id: '2', 
+    full_name: 'Sunday Ayimoro', 
+    designation: 'Senior HR Manager', 
+    signature_url: '' // No image, just a line
+  }
+];
 
   // State for form fields
   const [salary, setSalary] = useState('145,000');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [probation, setProbation] = useState('6 months');
   const [noticePeriod, setNoticePeriod] = useState(4);
-  const [noticeUnit, setNoticeUnit] = useState('Weeks');
+  const [noticeUnit, setNoticeUnit] = useState('Days');
+
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   
   // Company Details 
   const [companyName, setCompanyName] = useState('Dubai Auto Gallery'); 
-  //Employment Details template literal prefill 
+  // Employment Details template literal prefill 
   const [position, setPosition] = useState(selectedCandidate?.role_applied_for || '');
-  const [location, setLocation] = useState('Ikeja-Lagos-Onsite (No Remote / Flex time)');
-  const [workDays, setWorkDays] = useState('Monday-Saturday');
-  const [workTime, setWorkTime] = useState('8:30 am-6:00 pm, Saturday-HalfDay 8.30 A.M to 1.30 P.M');
+  const [location, setLocation] = useState('Ikeja-Lagos-Onsite');
+  const [isRemote, setIsRemote] = useState(false);
+  
+  // Work Days & Hours
+  const [weekdayStart, setWeekdayStart] = useState('Monday');
+  const [weekdayEnd, setWeekdayEnd] = useState('Friday');
+  const [weekdayStartTime, setWeekdayStartTime] = useState('08:00');
+  const [weekdayEndTime, setWeekdayEndTime] = useState('17:00');
+  
+  const [weekendIncluded, setWeekendIncluded] = useState(false);
+  const [weekendDays, setWeekendDays] = useState<string[]>(['Saturday']); // Default Sat
+  const [weekendStartTime, setWeekendStartTime] = useState('09:00');
+  const [weekendEndTime, setWeekendEndTime] = useState('14:00');
 
-  // Lists
-  const [selectedClauses, setSelectedClauses] = useState<ExtendedClause[]>([]);
+  const [leaveDays, setLeaveDays] = useState('20');
+
+  // Authroized Personnels to sign
+  const [selectedSignatory, setSelectedSignatory] = useState<any>(signatories[0]);
 
   // Sensors for DnD
   const sensors = useSensors(
@@ -151,6 +187,7 @@ export default function OfferPage() {
 
   useEffect(() => {
     if (candidateId) {
+      console.log('let us see if you are working continously ')
         fetchSingleCandidate(candidateId);
         fetchMasterClauses()
     }
@@ -158,10 +195,10 @@ export default function OfferPage() {
 
   // populate default mandatories
   useEffect(() => {
-    if(masterClauses && masterClauses.length > 0 && selectedClauses.length === 0) {
+    if(masterClauses && masterClauses?.length > 0 && selectedClauses?.length === 0) {
         const mandatory = masterClauses.filter(c => c.is_mandatory)
-            .map(c => ({...c, instanceId: `mandatory-${c.master_clauses_id}`})) as ExtendedClause[];
-        if(mandatory.length > 0) setSelectedClauses(mandatory);
+            .map(c => ({...c, instanceId: `mandatory-${c.master_clauses_id}`, sort_order: 0})) as ExtendedClause[];
+        if(mandatory.length > 0) dispatch(setSelectedClauses(mandatory));
     }
   }, [masterClauses]);
 
@@ -172,33 +209,76 @@ export default function OfferPage() {
     const {active, over} = event;
     
     if (active.id !== over?.id) {
-      setSelectedClauses((items) => {
+        const items = selectedClauses;
         const oldIndex = items.findIndex((item) => item.instanceId === active.id);
         const newIndex = items.findIndex((item) => item.instanceId === over?.id);
         
         const newArray = arrayMove(items, oldIndex, newIndex);
       
         // Update the sort_order property for every item based on its new index
-        return newArray.map((item, index) => ({
+        const updated = newArray.map((item, index) => ({
           ...item,
           sort_order: index // This keeps the DB and UI in sync
         }));
-      });
+        
+        dispatch(setSelectedClauses(updated));
     }
   };
 
-  const handleAddClause = (clause: Partial<Clauses>) => {
-      const newClause: ExtendedClause = {
-          ...clause as Clauses,
-          instanceId: `${clause.master_clauses_id}-${Date.now()}`,
-          sort_order: selectedClauses.length // Put it at the end
-      };
-      setSelectedClauses(prev => [...prev, newClause]);
+  const handleToggleClause = (clause: Partial<Clauses>) => {
+      const existing = selectedClauses?.find(c => c.master_clauses_id === clause.master_clauses_id);
+      if (existing) {
+          dispatch(removeSelectedClause(existing.instanceId));
+      } else {
+          const newClause: ExtendedClause = {
+              ...clause as Clauses,
+              instanceId: `${clause.master_clauses_id}-${Date.now()}`,
+              sort_order: selectedClauses?.length || 0
+          };
+          dispatch(addSelectedClause(newClause));
+      }
   }
 
   const handleRemoveClause = (instanceId: string) => {
-      setSelectedClauses(prev => prev.filter(c => c.instanceId !== instanceId));
+      dispatch(removeSelectedClause(instanceId));
   };
+
+  const handleSendOffer = () => {
+      // 1. Prepare Offer Details (replacements)
+      const offerDetails = {
+          candidate_id: candidateId,
+          requisition_id: selectedCandidate?.requisition_id,
+          position: position,
+          location: location,
+          remote: isRemote ? "Remote" : "No Remote / Flex Time",
+          commencement_date: startDate,
+          company_name: companyName,
+          weekday_work_start: weekdayStart,
+          weekday_work_end: weekdayEnd, 
+          weekday_working_hour_start: weekdayStartTime, 
+          weekday_working_hour_end: weekdayEndTime,
+          weekend_included: weekendIncluded,
+          weekend_working_hour_start: weekendIncluded ? weekendStartTime : "", 
+          weekend_working_hour_end: weekendIncluded ? weekendEndTime : "",
+          probation_period: probation,
+          notice_period: noticePeriod,
+          notice_unit: noticeUnit,
+          leave_days: leaveDays,
+          signatory_id: selectedSignatory?.signatory_id
+      };
+
+      // 2. Prepare Clauses Mapping
+      const clausesPayload = selectedClauses?.map((clause, index) => ({
+          master_clause_id: clause.master_clauses_id,
+          instance_id: clause.instanceId,
+          sort_order: index // Explicitly taking the index as sort_order
+      })) || [];
+
+      console.log("----- SENDING OFFER -----");
+      console.log("Offer Details (for 'offers' table):", offerDetails);
+      console.log("Clauses Mapping (for 'offer_clauses_mapping' table):", clausesPayload);
+      console.log("-------------------------");
+  }
 
   const interpolateContent = (text: string) => {
       if(!text) return "";
@@ -208,11 +288,12 @@ export default function OfferPage() {
       const replacements: Record<string, string | JSX.Element> = {
           '{{company_name}}': <Highlight text={companyName} />,
           '{{position}}': <Highlight text={position} />,
-          '{{location}}': <Highlight text={location} />,
-          '{{work_days}}': <Highlight text={workDays} />,
-          '{{work_time}}': <Highlight text={workTime} />,
+          '{{location}}': <Highlight text={`${location} (${isRemote ? 'Remote' : 'No Remote / Flex Time'})`} />,
+          '{{work_days}}': <Highlight text={`${weekdayStart} to ${weekdayEnd}${weekendIncluded && weekendDays.length > 0 ? (' & ' + weekendDays.join(', ')) : ''}`} />,
+          '{{work_time}}': <Highlight text={`${weekdayStartTime} - ${weekdayEndTime}${weekendIncluded ? ` (${weekendDays.length > 0 ? 'Weekends: ' + weekendDays.join(', ') : ''}: ${weekendStartTime} - ${weekendEndTime})` : ''}`} />,
+          '{{leave_days}}': <Highlight text={leaveDays} />,
 
-          '{{salary}}': <Highlight text={`$${salary}`} />,
+          '{{salary_net}}': <Highlight text={`N${salary}`} />,
           '{{start_date}}': <Highlight text={formatOfferDate(startDate)} />,
           '{{probation_period}}': <Highlight text={probation} />,
           '{{notice_period}}': <Highlight text={`${noticePeriod} ${noticeUnit}`} />,
@@ -285,11 +366,17 @@ export default function OfferPage() {
           <Button variant="outlined" color="inherit" size='small'>
             Save Draft
           </Button>
-          <Button variant="outlined" startIcon={<Visibility />} color="inherit" size='small'>
-            Preview as Candidate
+          <Button 
+            variant="outlined" 
+            startIcon={<Visibility />} 
+            color={isPreviewMode ? "secondary" : "inherit"} 
+            size='small'
+            onClick={() => setIsPreviewMode(!isPreviewMode)}
+          >
+            {isPreviewMode ? "Exit Preview" : "Preview as Candidate"}
           </Button>
-          <Button variant="contained" startIcon={<Send />} color="primary" size='small'>
-            Send Offer
+          <Button variant="contained" startIcon={<Send />} color="primary" size='small' onClick={handleSendOffer}>
+            Finalize & Send Offer
           </Button>
         </Box>
       </Paper>
@@ -303,6 +390,8 @@ export default function OfferPage() {
         minHeight: 0 // Crucial for scrolling inside flex items
       }}>
         {/* Left Sidebar - Controls */}
+
+        {!isPreviewMode && (
         <Box sx={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -333,31 +422,114 @@ export default function OfferPage() {
 
                 {/* Location, work days, work time  */}
                 <Box>
-                  <Typography variant="caption" fontWeight="bold" color="text.secondary">LOCATION & TERMS</Typography>
-                  <TextField 
-                    fullWidth 
-                    size="small" 
-                    value={location} 
-                    onChange={(e) => setLocation(e.target.value)} 
-                    sx={{ mb: 2 }}
-                  />
+                  <Typography variant="caption" fontWeight="bold" color="text.secondary">LOCATION & REMOTE</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <TextField 
+                        fullWidth 
+                        size="small" 
+                        value={location} 
+                        onChange={(e) => setLocation(e.target.value)} 
+                    />
+                    <FormControlLabel
+                        control={<Checkbox checked={isRemote} onChange={(e) => setIsRemote(e.target.checked)} size="small" />}
+                        label={<Typography variant="caption">Remote</Typography>}
+                        sx={{ mr: 0 }}
+                    />
+                  </Box>
                   
-                  <Typography variant="caption" fontWeight="bold" color="text.secondary">WORK HOURS/DAYS</Typography>
-                  <TextField 
-                    fullWidth 
-                    size="small" 
-                    placeholder="e.g. Monday-Friday"
-                    value={workDays} 
-                    onChange={(e) => setWorkDays(e.target.value)}
-                    sx={{ mb: 1 }}
-                  />
-                  <TextField 
-                    fullWidth 
-                    size="small" 
-                    placeholder="e.g. 9:00 AM - 5:00 PM"
-                    value={workTime} 
-                    onChange={(e) => setWorkTime(e.target.value)}
-                  />
+                  <Typography variant="caption" fontWeight="bold" color="text.secondary">WORK DAYS</Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                     <TextField 
+                        select 
+                        fullWidth 
+                        size="small"
+                        value={weekdayStart}
+                        onChange={(e) => setWeekdayStart(e.target.value)}
+                     >
+                         {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+                     </TextField>
+                     <TextField 
+                        select 
+                        fullWidth 
+                        size="small"
+                        value={weekdayEnd}
+                        onChange={(e) => setWeekdayEnd(e.target.value)}
+                     >
+                         {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+                     </TextField>
+                  </Box>
+
+                  <FormControlLabel
+                        control={<Checkbox checked={weekendIncluded} onChange={(e) => setWeekendIncluded(e.target.checked)} size="small" />}
+                        label={<Typography variant="caption">Include Weekend?</Typography>}
+                        sx={{ mb: 1 }}
+                    />
+
+                  {weekendIncluded && (
+                    <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
+                        {['Saturday', 'Sunday'].map(day => (
+                            <FormControlLabel
+                                key={day}
+                                control={
+                                    <Checkbox 
+                                        checked={weekendDays.includes(day)} 
+                                        onChange={(e) => {
+                                            if(e.target.checked) setWeekendDays(prev => [...prev, day]);
+                                            else setWeekendDays(prev => prev.filter(d => d !== day));
+                                        }} 
+                                        size="small" 
+                                        sx={{ p: 0.5 }}
+                                    />
+                                }
+                                label={<Typography variant="caption">{day}</Typography>}
+                            />
+                        ))}
+                    </Box>
+                  )}
+                  
+                  <Typography variant="caption" fontWeight="bold" color="text.secondary">WORK TIMES</Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                        <TextField 
+                            type="time"
+                            size="small"
+                            fullWidth
+                            value={weekdayStartTime}
+                            onChange={(e) => setWeekdayStartTime(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                         <TextField 
+                            type="time"
+                            size="small"
+                            fullWidth
+                            value={weekdayEndTime}
+                            onChange={(e) => setWeekdayEndTime(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                        />
+                  </Box>
+
+                  {weekendIncluded && (
+                      <Box sx={{ mt: 1, p: 1, bgcolor: '#f0f9ff', borderRadius: 1 }}>
+                          <Typography variant="caption" color="primary" fontWeight="bold">WEEKEND HOURS</Typography>
+                           <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                                <TextField 
+                                    type="time"
+                                    size="small"
+                                    fullWidth
+                                    value={weekendStartTime}
+                                    onChange={(e) => setWeekendStartTime(e.target.value)}
+                                    // InputLabelProps={{ shrink: true }}
+                                />
+                                <TextField 
+                                    type="time"
+                                    size="small"
+                                    fullWidth
+                                    value={weekendEndTime}
+                                    onChange={(e) => setWeekendEndTime(e.target.value)}
+                                    // InputLabelProps={{ shrink: true }}
+                                />
+                        </Box>
+                      </Box>
+                  )}
                 </Box>
                 <Box>
                   <Typography variant="caption" fontWeight="bold" color="text.secondary">
@@ -370,6 +542,18 @@ export default function OfferPage() {
                     InputProps={{
                       startAdornment: <InputAdornment position="start">N</InputAdornment>,
                     }}
+                    size="small"
+                  />
+                </Box>
+
+                <Box>
+                  <Typography variant="caption" fontWeight="bold" color="text.secondary">
+                    LEAVE DAYS
+                  </Typography>
+                  <TextField 
+                    fullWidth 
+                    value={leaveDays} 
+                    onChange={(e) => setLeaveDays(e.target.value)}
                     size="small"
                   />
                 </Box>
@@ -419,7 +603,7 @@ export default function OfferPage() {
                                 size="small"
                               />
                         </Box>
-                        <Box sx={{ flex: 1 }}>
+                        {/* <Box sx={{ flex: 1 }}>
                              <TextField 
                                 select 
                                 fullWidth 
@@ -430,9 +614,35 @@ export default function OfferPage() {
                                   <MenuItem value="Weeks">Weeks</MenuItem>
                                   <MenuItem value="Months">Months</MenuItem>
                               </TextField>
-                        </Box>
+                        </Box> */}
                     </Box>
                 </Box>
+
+                <Box>
+                    <Typography variant="caption" fontWeight="bold" color="text.secondary">
+                      AUTHORIZED SIGNATORY
+                    </Typography>
+
+                    <TextField
+                      select
+                      value={selectedSignatory?.signatory_id}
+                      onChange={(e) => {
+                          const sig = signatories.find(s => s.signatory_id === e.target.value);
+                          setSelectedSignatory(sig);
+                      }}
+                      fullWidth
+                      size="small"
+                    >
+                    {signatories.map((sig) => (
+                      <MenuItem key={sig.signatory_id} value={sig.signatory_id}>
+                        {sig.full_name} ({sig.designation})
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Box>
+
+                
+
               </Box>
             </Paper>
 
@@ -462,19 +672,24 @@ export default function OfferPage() {
               </Paper>
 
               <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
-                {masterClauses && masterClauses.map((clause) => (
-                  <Box key={clause.master_clauses_id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
-                      <ClauseItem 
-                        title={clause.title!} 
-                        description={clause.content ? (clause.content.substring(0, 60) + '...') : ''}
-                        onAdd={() => handleAddClause(clause)}
-                      />
-                  </Box>
-                ))}
+                {masterClauses && masterClauses.map((clause) => {
+                  const isSelected = selectedClauses?.some(c => c.master_clauses_id === clause.master_clauses_id);
+                  return (
+                    <Box key={clause.master_clauses_id} sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+                        <ClauseItem 
+                          title={clause.title!} 
+                          description={clause.content ? (clause.content.substring(0, 60) + '...') : ''}
+                          onAdd={() => handleToggleClause(clause)}
+                          isSelected={isSelected}
+                        />
+                    </Box>
+                  );
+                })}
               </Box>
 
             </Paper>
         </Box>
+        )}
 
         {/* Right Panel - Live Preview */}
         <Box sx={{ 
@@ -496,14 +711,15 @@ export default function OfferPage() {
            
            <Box sx={{ 
                flexGrow: 1, 
-               bgcolor: '#F3F4F6',
+               bgcolor: isPreviewMode ? '#1e293b' : '#F3F4F6', // Dark background in preview mode
                borderRadius: 2,
                overflow: 'auto',
                display: 'flex',
                justifyContent: 'center',
                alignItems: 'flex-start',
                p: 4,
-               border: `1px solid ${theme.palette.divider}`
+               border: `1px solid ${theme.palette.divider}`,
+               transition: 'background-color 0.3s ease'
            }}>
              <Paper 
               elevation={3} 
@@ -524,14 +740,14 @@ export default function OfferPage() {
                         <Box sx={{ width: 40, height: 40, bgcolor: '#2563EB', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Business sx={{ color: 'white' }} />
                         </Box>
-                        <Typography variant="h5" fontWeight="bold">Acme Corp.</Typography>
+                        <Typography variant="h5" fontWeight="bold">{companyName}</Typography>
                     </Box>
-                    <Box sx={{ textAlign: 'right' }}>
+                    {/* <Box sx={{ textAlign: 'right' }}>
                         <Typography variant="caption" display="block" color="text.secondary">123 Innovation Drive</Typography>
                         <Typography variant="caption" display="block" color="text.secondary">San Francisco, CA 94103</Typography>
                         <Typography variant="caption" display="block" color="text.secondary">+1 (555) 123-4567</Typography>
                         <Typography variant="caption" display="block" color="text.secondary">hr@acmecorp.com</Typography>
-                    </Box>
+                    </Box> */}
                 </Box>
               
                 <Divider sx={{ mb: 6 }} />
@@ -540,11 +756,11 @@ export default function OfferPage() {
                    {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </Typography>
 
-                <Box sx={{ mb: 4 }}>
+                {/* <Box sx={{ mb: 4 }}>
                     <Typography fontWeight="bold">{selectedCandidate?.candidate_name}</Typography>
                     <Typography color="text.secondary" sx={{ fontSize: '0.85rem' }}>42 Design Avenue</Typography>
                     <Typography color="text.secondary" sx={{ fontSize: '0.85rem' }}>Brooklyn, NY 11201</Typography>
-                </Box>
+                </Box> */}
 
                 <Typography paragraph sx={{ mb: 2, fontSize: '0.85rem' }}>
                     Dear {selectedCandidate?.candidate_name?.split(' ')[0]},
@@ -561,26 +777,75 @@ export default function OfferPage() {
                     onDragEnd={handleDragEnd}
                 >
                     <SortableContext 
-                        items={selectedClauses.map(c => c.instanceId)}
+                        items={selectedClauses?.map(c => c.instanceId) || []}
                         strategy={verticalListSortingStrategy}
                     >
-                        {selectedClauses.map((clause) => (
+                        {selectedClauses?.map((clause) => (
                             <SortableClause 
                                 key={clause.instanceId} 
                                 id={clause.instanceId} 
                                 title={clause.title} 
                                 content={interpolateContent(clause.content)} 
                                 onRemove={() => handleRemoveClause(clause.instanceId)}
+                                isPreviewMode={isPreviewMode}
                             />
                         ))}
                     </SortableContext>
                 </DndContext>
 
-                {selectedClauses.length === 0 && (
+                {selectedClauses?.length === 0 && (
                     <Box sx={{ p: 4, border: '1px dashed #ccc', borderRadius: 2, textAlign: 'center', color: 'text.secondary' }}>
                         <Typography variant="body2">No clauses selected. Add clauses from the library on the left.</Typography>
                     </Box>
                 )}
+
+                <Box sx={{ mt: 6 }}>
+                  <Typography variant="body1">Yours Sincerely,</Typography>
+                  <Typography variant="body1" sx={{ mt: 1, fontWeight: 'bold' }}>
+                    For: {companyName.toUpperCase()}
+                  </Typography>
+                  
+                  {/* The Signature Image */}
+                 <Box sx={{ position: 'relative', width: 'fit-content' }}>
+                    {/* The Signature Image */}
+                    <img 
+                      src={selectedSignatory?.signature_url} 
+                      style={{ 
+                        height: '70px', 
+                        display: 'block',
+                        filter: 'contrast(1.1)' // Makes it pop
+                      }} 
+                      alt="signature"
+                    />
+
+                    {/* The Overlapping Watermark */}
+                    <Box 
+                      sx={{ 
+                        position: 'absolute', 
+                        top: '10px', 
+                        left: '20px', 
+                        width: '80px', 
+                        height: '80px',
+                        opacity: 0.2, // Keep it faint but visible
+                        pointerEvents: 'none', // Can't right-click the watermark instead of sig
+                        backgroundImage: 'url(/Company-Seal.png)',
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        zIndex: 2,
+                        transform: 'rotate(-15deg)'
+                      }} 
+                    />
+                  </Box>
+
+                  <Box sx={{ mt: selectedSignatory?.signature_url ? 0 : 4 }}>
+                    <Typography variant="body1" fontWeight="bold">
+                      {selectedSignatory?.full_name || "____________________"}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedSignatory?.designation || "Authorized Signatory"}
+                    </Typography>
+                  </Box>
+                </Box>
 
              </Paper>
            </Box>
