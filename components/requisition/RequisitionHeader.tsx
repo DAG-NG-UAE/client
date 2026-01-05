@@ -30,7 +30,7 @@ const RequisitionHeader = ({ title, requisitionId, isEditMode = false }: Requisi
             {title}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Requisition #{requisitionId}
+            Requisition No: {requisitionId}
           </Typography>
         </Box>
         

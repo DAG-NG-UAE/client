@@ -133,7 +133,7 @@ export const holdRequisition = async (requisitionId: string) => {
 
 export const assignRecruiters = async (
   requisitionId: string,
-  recruiters: {userId: string; roleId: string}[]
+  recruiters: { userId: string; roleId: string }[]
 ) => {
   try {
     const response = await axiosInstance.put(
@@ -147,7 +147,10 @@ export const assignRecruiters = async (
   }
 };
 
-export const removeRecruiters = async(requisitionId: string, userId: string) => { 
+export const removeRecruiters = async (
+  requisitionId: string,
+  userId: string
+) => {
   try {
     const response = await axiosInstance.put(
       `/requisition/remove-recruiters?requisitionId=${requisitionId}`,
@@ -155,7 +158,60 @@ export const removeRecruiters = async(requisitionId: string, userId: string) => 
     );
     return response.data.data;
   } catch (error) {
-    console.error("Error assigning recruiters:", error);
+    console.error("Error signing recruiters:", error);
     throw error;
   }
-}
+};
+
+export const addRequisitionLocation = async (
+  requisitionId: string,
+  location: string,
+  headCount: number
+) => {
+  try {
+    const response = await axiosInstance.patch(
+      `/requisition/locations?requisitionId=${requisitionId}`,
+      {locations: {loc: location, headCount}}
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error adding location:", error);
+    throw error;
+  }
+};
+
+export const updateRequisitionLocation = async (
+  requisitionId: string,
+  positionSlotId: string,
+  location: string,
+  headCount: number
+) => {
+  try {
+    const response = await axiosInstance.patch(
+      `/requisition/locations?requisitionId=${requisitionId}`,
+      {locations: {position_slot_id: positionSlotId, loc: location, headCount}}
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error updating location:", error);
+    throw error;
+  }
+};
+
+export const removeRequisitionLocation = async (
+  requisitionId: string,
+  positionSlotId: string,
+  location: string
+) => {
+  try {
+    // Axios delete with body requires 'data' property in config
+    const response = await axiosInstance.patch(
+      `/requisition/locations?requisitionId=${requisitionId}`,
+      {locations: {position_slot_id: positionSlotId, loc: location}}
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error removing location:", error);
+    throw error;
+  }
+};

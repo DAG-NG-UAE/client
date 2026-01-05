@@ -31,7 +31,7 @@ export interface Requisition {
   num_filled?: number;
   proposed_salary?: string;
   expected_start_date?: string;
-  positions_list: {position_slot_id: string; loc: string; qty: number}[];
+  positions_list: {position_slot_id: string; loc: string; qty: number; is_active: boolean}[];
   stakeholder_names: {id: string; names: string; role: string}[]; 
   locations: string;
   

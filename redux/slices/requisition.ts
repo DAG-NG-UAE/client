@@ -1,9 +1,20 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { getRequisitions, getSingleRequisition, holdRequisition, approveRequisition, unPublishRequisition, publishRequisition, assignRecruiters, removeRecruiters } from '@/api/requisitionApi';
-import { RecruiterSelection, Requisition } from '@/interface/requisition';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  getRequisitions,
+  getSingleRequisition,
+  holdRequisition,
+  approveRequisition,
+  unPublishRequisition,
+  publishRequisition,
+  assignRecruiters,
+  removeRecruiters,
+  addRequisitionLocation,
+  updateRequisitionLocation,
+  removeRequisitionLocation,
+} from "@/api/requisitionApi";
+import { RecruiterSelection, Requisition } from "@/interface/requisition";
 import { dispatch } from "../dispatchHandle";
-import { enqueueSnackbar } from 'notistack';
-
+import { enqueueSnackbar } from "notistack";
 
 export interface RequisitionState {
   requisitions: Partial<Requisition>[];
@@ -20,7 +31,7 @@ const initialState: RequisitionState = {
 };
 
 export const requisitionSlice = createSlice({
-  name: 'requisitions',
+  name: "requisitions",
   initialState,
   reducers: {
     startLoading(state) {
@@ -34,9 +45,15 @@ export const requisitionSlice = createSlice({
       state.loading = false;
       state.requisitions = action.payload;
     },
-    setSelectedRequisition: (state, action: PayloadAction<Partial<Requisition>>) => {
+    setSelectedRequisition: (
+      state,
+      action: PayloadAction<Partial<Requisition>>
+    ) => {
       state.loading = false;
-      state.selectedRequisition = { ...state.selectedRequisition, ...action.payload };
+      state.selectedRequisition = {
+        ...state.selectedRequisition,
+        ...action.payload,
+      };
     },
     clearSelectedRequisition: (state) => {
       state.selectedRequisition = null;
@@ -46,6 +63,10 @@ export const requisitionSlice = createSlice({
     },
     stopLoading(state) {
       state.loading = false;
+    },
+    clearRequisition(state) {
+      state.requisitions = [];
+      state.selectedRequisition = null
     }
   },
 });
@@ -57,10 +78,11 @@ export const {
   setSelectedRequisition,
   clearSelectedRequisition,
   clearError,
-  stopLoading
+  stopLoading,
+  clearRequisition
 } = requisitionSlice.actions;
 
-export const fetchRequisitions = async(status?: string) => {
+export const fetchRequisitions = async (status?: string) => {
   try {
     dispatch(startLoading());
     const response = await getRequisitions(status);
@@ -70,7 +92,7 @@ export const fetchRequisitions = async(status?: string) => {
   }
 };
 
-export const fetchRequisitionById = async(id: string) => {
+export const fetchRequisitionById = async (id: string) => {
   try {
     dispatch(startLoading());
     const response = await getSingleRequisition(id);
@@ -80,85 +102,160 @@ export const fetchRequisitionById = async(id: string) => {
   }
 };
 
-export const handleApproveRequisition = async({ recruiters, requisitionId }: { recruiters: RecruiterSelection[], requisitionId: string }) => {
+export const handleApproveRequisition = async ({
+  recruiters,
+  requisitionId,
+}: {
+  recruiters: RecruiterSelection[];
+  requisitionId: string;
+}) => {
   try {
     dispatch(startLoading());
     await approveRequisition(recruiters, requisitionId);
-    await fetchRequisitions('pending')
-    enqueueSnackbar('Requisition has been approved', { variant: 'success' });
+    await fetchRequisitions("pending");
+    enqueueSnackbar("Requisition has been approved", { variant: "success" });
     // Optionally refetch requisitions or update state directly
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   }
 };
 
-export const putRequisitionOnHold = async(requisitionId: string) => {
+export const putRequisitionOnHold = async (requisitionId: string) => {
   try {
     dispatch(startLoading());
     await holdRequisition(requisitionId);
-    enqueueSnackbar('Requisition put on hold', { variant: 'success' });
+    enqueueSnackbar("Requisition put on hold", { variant: "success" });
     // Optionally refetch requisitions or update state directly
-    await fetchRequisitions('pending')
+    await fetchRequisitions("pending");
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   }
 };
 
-export const callPublishRequisition = async(requisitionId:string) => { 
-  try{ 
-    dispatch(startLoading())
-    await publishRequisition(requisitionId)
-    await fetchRequisitionById(requisitionId)
-    enqueueSnackbar('Job Posted on Careers page', {variant: 'success'})
-  }catch(error:any){ 
+export const callPublishRequisition = async (requisitionId: string) => {
+  try {
+    dispatch(startLoading());
+    await publishRequisition(requisitionId);
+    await fetchRequisitionById(requisitionId);
+    enqueueSnackbar("Job Posted on Careers page", { variant: "success" });
+  } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
-  }finally {
+  } finally {
     dispatch(clearError());
     dispatch(stopLoading());
   }
-}
+};
 
-export const callUnPublishRequisition = async(requisitionId: string, jobListKey:string) => { 
-  try{ 
-    dispatch(startLoading())
-    await unPublishRequisition(requisitionId, jobListKey)
-    await fetchRequisitionById(requisitionId)
-    enqueueSnackbar('Job Taken down from Careers page', {variant: 'success'})
-  }catch(error:any){ 
+export const callUnPublishRequisition = async (
+  requisitionId: string,
+  jobListKey: string
+) => {
+  try {
+    dispatch(startLoading());
+    await unPublishRequisition(requisitionId, jobListKey);
+    await fetchRequisitionById(requisitionId);
+    enqueueSnackbar("Job Taken down from Careers page", { variant: "success" });
+  } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
-  }finally {
+  } finally {
     dispatch(clearError());
     dispatch(stopLoading());
   }
-}
+};
 
-export const callAssignRecruiters = async(requisitionId:string, recruiters:{userId: string, roleId: string}[]) => { 
-  try{ 
-    dispatch(startLoading())
-    await assignRecruiters(requisitionId, recruiters)
-    await fetchRequisitionById(requisitionId) 
-    enqueueSnackbar('Recruiters assigned', {variant: 'success'})
-  }catch(error:any){ 
+export const callAssignRecruiters = async (
+  requisitionId: string,
+  recruiters: { userId: string; roleId: string }[]
+) => {
+  try {
+    dispatch(startLoading());
+    await assignRecruiters(requisitionId, recruiters);
+    await fetchRequisitionById(requisitionId);
+    enqueueSnackbar("Recruiters assigned", { variant: "success" });
+  } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
-  }finally {
+  } finally {
     dispatch(clearError());
     dispatch(stopLoading());
   }
-}
+};
 
-export const callRemoveRecruiters = async(requisitionId:string, userId: string) => { 
-  try{ 
-    dispatch(startLoading())
-    await removeRecruiters(requisitionId, userId)
-    // we want to fetch the requisition and then we want to update the selected requisition 
-    await fetchRequisitionById(requisitionId) 
-    enqueueSnackbar('Recruiter removed ', {variant: 'success'})
-  }catch(error:any){ 
+export const callRemoveRecruiters = async (
+  requisitionId: string,
+  userId: string
+) => {
+  try {
+    dispatch(startLoading());
+    await removeRecruiters(requisitionId, userId);
+    // we want to fetch the requisition and then we want to update the selected requisition
+    await fetchRequisitionById(requisitionId);
+    enqueueSnackbar("Recruiter removed ", { variant: "success" });
+  } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
-  }finally {
+  } finally {
     dispatch(clearError());
     dispatch(stopLoading());
   }
-}
+};
+
+export const callAddRequisitionLocation = async (
+  requisitionId: string,
+  location: string,
+  headCount: number
+) => {
+  try {
+    dispatch(startLoading());
+    await addRequisitionLocation(requisitionId, location, headCount);
+    await fetchRequisitionById(requisitionId);
+    enqueueSnackbar("Location added successfully", { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
+  }
+};
+
+export const callUpdateRequisitionLocation = async (
+  requisitionId: string,
+  positionSlotId: string,
+  location: string,
+  headCount: number
+) => {
+  try {
+    dispatch(startLoading());
+    await updateRequisitionLocation(
+      requisitionId,
+      positionSlotId,
+      location,
+      headCount
+    );
+    await fetchRequisitionById(requisitionId);
+    enqueueSnackbar("Location updated successfully", { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
+  }
+};
+
+export const callDeleteRequisitionLocation = async (
+  requisitionId: string,
+  positionSlotId: string,
+  location: string
+) => {
+  try {
+    dispatch(startLoading());
+    await removeRequisitionLocation(requisitionId, positionSlotId, location);
+    await fetchRequisitionById(requisitionId);
+    enqueueSnackbar("Location marked as in active and removed from the careers page", { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
+  }
+};
 
 export default requisitionSlice.reducer;

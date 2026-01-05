@@ -17,6 +17,7 @@ import { useRouter, usePathname } from 'next/navigation'; // Import useRouter an
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { AppRole } from '@/utils/constants';
+import { formatRoleName } from '@/utils/transform';
 
 const drawerWidth = 240;
 
@@ -180,7 +181,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
           </Box>
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: theme.typography.fontWeightMedium }}>{user.full_name}</Typography>
-            <Typography variant="body2" color="text.secondary">{user.role_name}</Typography>
+            <Typography variant="body2" color="text.secondary">{formatRoleName(user.role_name)}</Typography>
           </Box>
         </Box>
       )}

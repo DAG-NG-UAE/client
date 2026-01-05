@@ -8,7 +8,8 @@ import { AppRole } from '@/utils/constants';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { getFirstAndLastInitials } from '@/utils/transform';
-import { callAssignRecruiters, callRemoveRecruiters } from '@/redux/slices/requisition';
+import { callAssignRecruiters, callRemoveRecruiters, callAddRequisitionLocation, callUpdateRequisitionLocation, callDeleteRequisitionLocation } from '@/redux/slices/requisition';
+import { Check, Edit, Close as CloseIcon } from '@mui/icons-material';
 
 interface JobPostingDetailsProps {
   requisition: Partial<Requisition>;
@@ -22,10 +23,18 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
   console.log(`the requisition is => ${JSON.stringify(requisition.stakeholder_names)}`)
   const theme = useTheme();
   const {recruiters} = useSelector((state: RootState) => state.users)
-  const [locations, setLocations] = useState<{position_slot_id:string; loc: string; qty:number}[]>(requisition.positions_list || []);
+  const [locations, setLocations] = useState<{position_slot_id:string; loc: string; qty:number; is_active:boolean}[]>(requisition.positions_list || []);
   const [newLocation, setNewLocation] = useState('');
+  const [newQuantity, setNewQuantity] = useState<number | ''>('');
+  const [editingLocationId, setEditingLocationId] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [unpublishing, setUnpublishing] = useState(false);
+
+  useEffect(() => {
+    if (requisition.positions_list) {
+      setLocations(requisition.positions_list);
+    }
+  }, [requisition.positions_list]);
 
   useEffect(() => { 
     handleFetchRecruiters()
@@ -54,12 +63,37 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
   const [assigningRecruiters, setAssigningRecruiters] = useState(false);
   const [removingRecruiterId, setRemovingRecruiterId] = useState<string | null>(null);
 
-  const handleAddLocation = () => {
-     setLocations([...locations, { position_slot_id: '', qty: 0, loc: newLocation }]);
-    };
+  const handleAddLocation = async () => {
+    if (newLocation && newQuantity && requisition.requisition_id) {
+      if (editingLocationId) {
+        // Edit Mode
+        await callUpdateRequisitionLocation(requisition.requisition_id, editingLocationId, newLocation, Number(newQuantity));
+        setEditingLocationId(null);
+      } else {
+        // Add Mode
+        await callAddRequisitionLocation(requisition.requisition_id, newLocation, Number(newQuantity));
+      }
+      setNewLocation('');
+      setNewQuantity('');
+    }
+  };
 
-  const handleRemoveLocation = (locToRemove: RequisitionPositionLists) => {
-    setLocations(locations.filter(loc => loc.position_slot_id !== locToRemove.position_slot_id));
+  const handleRemoveLocation = async (locToRemove: {position_slot_id: string, loc: string}) => {
+    if (requisition.requisition_id) {
+      await callDeleteRequisitionLocation(requisition.requisition_id, locToRemove.position_slot_id, locToRemove.loc);
+    }
+  };
+
+  const handleEditLocation = (loc: {position_slot_id:string; loc: string; qty:number}) => {
+    setNewLocation(loc.loc);
+    setNewQuantity(loc.qty);
+    setEditingLocationId(loc.position_slot_id);
+  };
+
+  const handleCancelEdit = () => {
+    setNewLocation('');
+    setNewQuantity('');
+    setEditingLocationId(null);
   };
 
   // Recruiter Handlers
@@ -144,32 +178,81 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                 <TextField
                   fullWidth
                   size="small"
+                  label="Location"
                   placeholder="Enter location"
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
+                />
+                <TextField
+                  sx={{ width: 120 }}
+                  size="small"
+                  label="Headcount"
+                  type="number"
+                  placeholder='Qty'
+                  value={newQuantity}
+                  onChange={(e) => setNewQuantity(e.target.value === '' ? '' : Number(e.target.value))}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddLocation()}
                 />
-                <IconButton onClick={handleAddLocation} color="primary" sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: 1 }}>
-                    <Add />
-                </IconButton>
+                
+                {editingLocationId ? (
+                   <>
+                    <IconButton onClick={handleAddLocation} color="primary" sx={{ bgcolor: 'secondary.main', color: 'white', '&:hover': { bgcolor: 'secondary.dark' }, borderRadius: 1 }}>
+                        <Check />
+                    </IconButton>
+                    <IconButton onClick={handleCancelEdit} size="small">
+                        <CloseIcon />
+                    </IconButton>
+                   </>
+                ) : (
+                   <IconButton 
+                      onClick={handleAddLocation} 
+                      color="primary" 
+                      sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: 1 }}
+                    >
+                      <Add />
+                   </IconButton>
+                )}
               </Stack>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {requisition.positions_list?.map((loc) => (
-                  <Chip
-                    key={loc.position_slot_id}
-                    label={loc.loc}
-                    onDelete={() => handleRemoveLocation(loc)}
-                    variant="outlined"
-                    sx={{ bgcolor: 'action.hover' , color:'theme.palette.secondary.main'}}
-                  />
+                {locations?.map((loc) => (
+                  <Tooltip key={loc.position_slot_id} title={loc.is_active === false ? "This location is currently inactive/hidden" : ""}>
+                    <Chip
+                      label={`${loc.loc} (${loc.qty})`}
+                      onDelete={() => handleRemoveLocation(loc)}
+                      onClick={() => handleEditLocation(loc)}
+                      variant={editingLocationId === loc.position_slot_id ? "filled" : "outlined"}
+                      color={editingLocationId === loc.position_slot_id ? "primary" : "default"}
+                      sx={{ 
+                        opacity: loc.is_active === false ? 0.6 : 1,
+                        textDecoration: loc.is_active === false ? 'line-through' : 'none',
+                        bgcolor: editingLocationId === loc.position_slot_id 
+                          ? 'primary.light' 
+                          : loc.is_active === false 
+                            ? 'action.disabledBackground' 
+                            : 'action.hover' 
+                      }}
+                    />
+                  </Tooltip>
                 ))}
               </Stack>
             </Box>
           ) : (
-            <Stack direction="row" spacing={1}>
-              {requisition.positions_list?.map((loc) => (
-                <Chip key={loc.position_slot_id} label={loc.loc} size="small" color="primary" variant="outlined" sx={{ bgcolor: 'action.hover' }} />
-              )) || <Typography variant="body2" color="text.secondary">No locations set</Typography>}
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {locations.length > 0 ? locations.map((loc) => (
+                <Tooltip key={loc.position_slot_id} title={loc.is_active === false ? "Inactive/Hidden" : ""}>
+                   <Chip 
+                    label={`${loc.loc} (${loc.qty})`} 
+                    size="small" 
+                    color={loc.is_active === false ? "default" : "primary"} 
+                    variant="outlined" 
+                    sx={{ 
+                      bgcolor: loc.is_active === false ? 'action.disabledBackground' : 'action.hover',
+                      opacity: loc.is_active === false ? 0.6 : 1,
+                      textDecoration: loc.is_active === false ? 'line-through' : 'none'
+                     }} 
+                   />
+                </Tooltip>
+              )) : <Typography variant="body2" color="text.secondary">No locations set</Typography>}
             </Stack>
           )}
         </Box>
