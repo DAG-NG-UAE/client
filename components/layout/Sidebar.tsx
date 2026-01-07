@@ -32,8 +32,9 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
   const router = useRouter();
   const pathname = usePathname(); // Get current pathname
   const [isCandidatesOpen, setCandidatesOpen] = useState(false);
+  const [isOfferOpen, setOfferOpen] = useState(false);
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  // console.log(`the user is => ${JSON.stringify(user)} and isAuthenticated is => ${isAuthenticated}`)
+  console.log(`the user is => ${JSON.stringify(user)} and isAuthenticated is => ${isAuthenticated}`)
 
   useEffect(() => {
     if (pathname.startsWith('/candidates')) {
@@ -43,6 +44,10 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
 
   const handleCandidatesClick = () => {
     setCandidatesOpen(!isCandidatesOpen);
+  };
+
+  const handleOfferClick = () => {
+    setOfferOpen(!isOfferOpen);
   };
 
   const allMenuItems = [
@@ -62,10 +67,14 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
     { text: 'Pending Feedback', path: '/candidates/pending_feedback' },
     { text: 'Interviewed', path: '/candidates/interviewed' },
     { text: 'Approved for Offer', path: '/candidates/approved_for_offer' },
-    { text: 'Offer Accepted', path: '/candidates/offer-accepted' },
-    { text: 'Offer Rejected', path: '/candidates/offer-rejected' },
-    { text: 'Offer Withdrawn', path: '/candidates/offer-withdrawn' },
   ];
+
+  const offerSubItems = [
+    { text: 'All', path: '/offers/all' },
+    { text: 'Pending', path: '/offers/pending' },
+    { text: 'Accepted', path: '/offers/accepted' },
+    { text: 'Rejected', path: '/offers/rejected' },
+];
 
   const drawerContent = (
     <Box sx={{ overflow: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -157,6 +166,56 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             ))}
           </List>
         </Collapse>
+
+        {/* Offer dropdown */}
+        <ListItemButton 
+          onClick={handleOfferClick}
+          selected={pathname.startsWith('/offer')}
+          sx={{
+            margin: theme.spacing(0.5, 1),
+            borderRadius: theme.shape.borderRadius,
+            '&.Mui-selected': {
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.main,
+              },
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: 'inherit' }}><PeopleIcon /></ListItemIcon>
+          <ListItemText primary="Offers" />
+          {isOfferOpen ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={isOfferOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {offerSubItems.map((item) => (
+              <ListItemButton
+                key={item.text}
+                selected={pathname === item.path}
+                onClick={() => {
+                  router.push(item.path);
+                  if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile
+                }}
+                sx={{ 
+                  pl: 4,
+                  margin: theme.spacing(0.5, 1),
+                  borderRadius: theme.shape.borderRadius,
+                  '&.Mui-selected': {
+                    backgroundColor: theme.palette.primary.main,
+                    color: theme.palette.primary.contrastText,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.main,
+                    },
+                  },
+                }}
+              >
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Collapse>
+
       </List>
       {user && (
         <Box sx={{

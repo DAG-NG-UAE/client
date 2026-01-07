@@ -94,11 +94,11 @@ export const statusDetails: { [key: string]: { title: string; subtitle: string }
     title: 'Shortlisted Candidates',
     subtitle: 'View and manage all shortlisted candidates for various roles.',
   },
-  'interview-scheduled': {
+  'interview_scheduled': {
     title: 'Interview Scheduled',
     subtitle: 'Candidates who have an interview scheduled.',
   },
-  'pending-feedback': {
+  'pending_feedback': {
     title: 'Pending Feedback',
     subtitle: 'Candidates for whom feedback is pending post-interview.',
   },
@@ -142,4 +142,23 @@ export const enum AppRole {
   // 
   HeadOfHr = 'head_of_hr', 
   HrManager = 'hr_manager'
+}
+
+export const offerStatusDetail: { [key: string]: { title: string; subtitle: string } } = {
+  all: {
+    title: 'Offers', 
+    subtitle: 'Manage and track all offers'
+  },
+  pending: {
+    title: 'Pending Offers',
+    subtitle: 'View and manage all pending offers.',
+  },
+  accepted: {
+    title: 'Accepted Offers',
+    subtitle: 'View and manage all accepted offers.',
+  },
+  rejected: {
+    title: 'Rejected Offers',
+    subtitle: 'View and manage all rejected offers.',
+  },
 }

@@ -34,7 +34,7 @@ export interface Requisition {
   positions_list: {position_slot_id: string; loc: string; qty: number; is_active: boolean}[];
   stakeholder_names: {id: string; names: string; role: string}[]; 
   locations: string;
-  
+  recruitment_reason?: string;
   recruiter?: string;
   content?: string;
 
@@ -50,6 +50,8 @@ export interface Requisition {
     status: string;
     date: string;
   }[];
+
+  created_at: string;
 
   posting_locations?: string[]; //! Delete this later 
   requisition_positions?: RequisitionPosition[];//! Delete this later 

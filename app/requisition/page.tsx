@@ -57,12 +57,12 @@ const RequisitionPage = () => {
         </Stack>
 
         {/* Summary Stats */}
-        <SummaryStats stats={[
+        {/* <SummaryStats stats={[
             { title: 'Total Requisitions', value: 'X' },
             { title: 'Pending Review', value: 'X' },
             { title: 'Approved', value: 'X' },
             { title: 'In Progress', value: 'X' },
-          ]}/>
+          ]}/> */}
 
         {/* Filters */}
         <Filters 

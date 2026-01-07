@@ -114,7 +114,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
           {details.subtitle}
         </Typography>
 
-        <SummaryStats stats={summaryData} />
+        {/* <SummaryStats stats={summaryData} /> */}
 
 {/*       
           <Filters 

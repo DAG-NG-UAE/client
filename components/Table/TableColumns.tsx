@@ -25,7 +25,7 @@ export const PendingRequisitionColumns: TableColumn<Partial<Requisition>>[] = [
     { 
         key: 'submitted_date',
         label: 'Submitted', 
-        render: (row) => getRelativeTime(row.submitted_date!)
+        render: (row) => getRelativeTime(row.created_at!)
     }
 ]
 
@@ -48,7 +48,7 @@ export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
     { 
         key: 'Days open', 
         label: 'Days Open', 
-        render: (row) => getRelativeTime(row.submitted_date!)
+        render: (row) => getRelativeTime(row.created_at!)
     }, 
     {
         key: 'filled', 
@@ -57,7 +57,18 @@ export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
     }, 
     {
         key: 'status', 
-        label: 'Status'
+        label: 'Status',
+        render: (row) => (
+            <Chip 
+                {...getStatusChipProps(row.status)} 
+                size="small" 
+                sx={{ 
+                borderRadius: '6px', 
+                fontWeight: 500,
+                ...(getStatusChipProps(row.status).sx || {})
+                }}
+            />
+        )
     }, 
     { 
         key: 'publish', 

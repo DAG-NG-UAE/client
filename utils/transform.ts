@@ -28,6 +28,11 @@ export const getFirstAndLastInitials = (fullName: string): string => {
  */
 export const getRelativeTime = (isoString: string, unitOfTime?: 'days'): string => {
     const targetDate = new Date(isoString).getTime();
+
+    console.log(`the iso string is ${isoString}`)
+    console.log(`the target date is ${targetDate}`)
+    console.log(`the current date is ${new Date().getTime()}`)
+
     const now = new Date().getTime();
     const diffInSeconds = Math.floor((now - targetDate) / 1000);
     const isPast = diffInSeconds >= 0;

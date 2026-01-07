@@ -286,7 +286,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                 </Box>
               </Box>
 
-              <FormInput label="Expected Salary" required placeholder="e.g., $120,000 - $140,000" value={expectedSalary} onChange={(e) => setExpectedSalary(e.target.value)} />
+              <FormInput label="Expected Salary" required placeholder="e.g., N120,000 - N140,000" value={expectedSalary} onChange={(e) => setExpectedSalary(e.target.value)} />
 
               <Box mb={3}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>

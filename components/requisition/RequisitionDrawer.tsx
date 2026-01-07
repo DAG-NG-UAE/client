@@ -6,7 +6,7 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import BusinessCenterOutlinedIcon from '@mui/icons-material/BusinessCenterOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
+import CurrencyExchangeOutlined from '@mui/icons-material/CurrencyExchangeOutlined';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import { RecruiterSelection, Requisition, RequisitionPosition } from '@/interface/requisition';
@@ -128,8 +128,8 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
                         <DetailItem label="Number of Positions" value={requisition.num_positions} />
                     </Section>
 
-                    <Section title="Proposed Salary" icon={<AttachMoneyOutlinedIcon color="primary" fontSize="small"/>}>
-                        <DetailItem label="Budget" value={requisition.proposed_salary} />
+                    <Section title="Proposed Salary" icon={<CurrencyExchangeOutlined color="primary" fontSize="small"/>}>
+                        <DetailItem label="Budget" value={requisition.proposed_salary ? new Intl.NumberFormat().format(Number(requisition.proposed_salary)) : 'N/A'} />
                     </Section>
 
                     <Section title="Hiring By Location" icon={<LocationOnOutlinedIcon color="primary" fontSize="small"/>}>
@@ -149,7 +149,7 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
                       </Section>
 
                     <Section title="Reason for Recruitment" icon={<AssignmentIndOutlinedIcon color="primary" fontSize="small"/>}>
-                        <Typography variant="body2">{"To backfill the position of a departing employee and support the growing needs of the engineering team for the new 'Phoenix' project."}</Typography> {/* Mock data for now */}
+                        <Typography variant="body2">{requisition.recruitment_reason || 'N/A'}</Typography> {/* Mock data for now */}
                     </Section>
 
                     <Section title="Stakeholders" icon={<PeopleOutlineIcon color="primary" fontSize="small"/>}>

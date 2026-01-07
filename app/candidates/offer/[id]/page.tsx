@@ -55,6 +55,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { formatOfferDate } from '@/utils/transform';
+import { generateOffer } from '@/api/offer';
 
 
 
@@ -143,7 +144,7 @@ export default function OfferPage() {
   // State for form fields
   const [salary, setSalary] = useState('145,000');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [probation, setProbation] = useState('6 months');
+  const [probation, setProbation] = useState('6');
   const [noticePeriod, setNoticePeriod] = useState(4);
   const [noticeUnit, setNoticeUnit] = useState('Days');
 
@@ -243,7 +244,7 @@ export default function OfferPage() {
       dispatch(removeSelectedClause(instanceId));
   };
 
-  const handleSendOffer = () => {
+  const handleSendOffer = async() => {
       // 1. Prepare Offer Details (replacements)
       const offerDetails = {
           candidate_id: candidateId,
@@ -270,14 +271,42 @@ export default function OfferPage() {
       // 2. Prepare Clauses Mapping
       const clausesPayload = selectedClauses?.map((clause, index) => ({
           master_clause_id: clause.master_clauses_id,
-          instance_id: clause.instanceId,
+          // instance_id: clause.instanceId,
           sort_order: index // Explicitly taking the index as sort_order
       })) || [];
+      const payload = {
+        candidate_id: candidateId,
+        requisition_id: selectedCandidate?.requisition_id,
+        position: position,
+        location: location,
+        remote: isRemote ? "Remote" : "No Remote / Flex Time",
+        commencement_date: startDate,
+        company_name: companyName,
+        weekday_work_start: weekdayStart,
+        weekday_work_end: weekdayEnd, 
+        weekday_working_hour_start: weekdayStartTime, 
+        weekday_working_hour_end: weekdayEndTime,
+        weekend_included: weekendIncluded,
+        weekend_working_hour_start: weekendIncluded ? weekendStartTime : "", 
+        weekend_working_hour_end: weekendIncluded ? weekendEndTime : "",
+        probation_period: probation,
+        notice_period: noticePeriod,
+        notice_unit: noticeUnit,
+        leave_days: leaveDays,
+        // signatory_id: selectedSignatory?.signatory_id, 
+        clause_order: clausesPayload
+      }
 
       console.log("----- SENDING OFFER -----");
       console.log("Offer Details (for 'offers' table):", offerDetails);
       console.log("Clauses Mapping (for 'offer_clauses_mapping' table):", clausesPayload);
       console.log("-------------------------");
+      console.log(`payload: ${JSON.stringify(payload)}`)
+
+      const response = await generateOffer(payload);
+      if(response.offer_id && response.token){ 
+        alert(`offer generated. Offer token is ${response.token}`)
+      }
   }
 
   const interpolateContent = (text: string) => {
@@ -583,8 +612,8 @@ export default function OfferPage() {
                       onChange={(e) => setProbation(e.target.value)}
                       size="small"
                     >
-                        <MenuItem value="3 months">3 Months</MenuItem>
-                        <MenuItem value="6 months">6 Months</MenuItem>
+                        <MenuItem value="3">3 Months</MenuItem>
+                        <MenuItem value="6">6 Months</MenuItem>
                     </TextField>
                   </Box>
                 </Box>

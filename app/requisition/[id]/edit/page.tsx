@@ -12,7 +12,7 @@ import { Save } from '@mui/icons-material';
 import { getSingleRequisition, updateRequisition } from '@/api/requisitionApi';
 import {  useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { callUnPublishRequisition, fetchRequisitions, callPublishRequisition, fetchRequisitionById } from '@/redux/slices/requisition';
+import { callUnPublishRequisition, fetchRequisitions, callPublishRequisition, fetchRequisitionById, saveJobDescription } from '@/redux/slices/requisition';
 import { dispatch } from '@/redux/dispatchHandle';
 import { enqueueSnackbar } from 'notistack';
 
@@ -46,9 +46,8 @@ const RequisitionEditPage = () => {
     };
     console.log('Saving requisition...', updatedRequisition);
     // router.push(`/requisition/${params.id}`);
-    await updateRequisition(params.id as string, updatedRequisition);
+    await saveJobDescription(params.id as string, updatedRequisition);
     console.log('Requisition saved successfully');
-    router.push(`/requisition/${params.id}`);
   };
 
   const handlePublishRequisition = async(requisitionId: string) => { 
@@ -92,6 +91,9 @@ const RequisitionEditPage = () => {
         />
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+          {loading ? (
+            <CircularProgress />
+          ) : (
             <Button 
                 variant="contained" 
                 startIcon={<Save />}
@@ -100,6 +102,7 @@ const RequisitionEditPage = () => {
             >
                 Save Job Description
             </Button>
+          )}
         </Box>
 
       </Container>

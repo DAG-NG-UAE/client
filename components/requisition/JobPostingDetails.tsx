@@ -23,6 +23,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
   console.log(`the requisition is => ${JSON.stringify(requisition.stakeholder_names)}`)
   const theme = useTheme();
   const {recruiters} = useSelector((state: RootState) => state.users)
+  const {selectedRequisition} = useSelector((state: RootState) => state.requisitions)
   const [locations, setLocations] = useState<{position_slot_id:string; loc: string; qty:number; is_active:boolean}[]>(requisition.positions_list || []);
   const [newLocation, setNewLocation] = useState('');
   const [newQuantity, setNewQuantity] = useState<number | ''>('');
@@ -480,7 +481,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
             </Typography>
           <Box sx={{display:'flex', borderRadius: 2, p: 2, width: '50%', backgroundColor:theme.palette.secondary.main}}>
             <p>
-              {requisition.sanity_job_list_key == null ? '' : `${requisition.public_share_link}` }
+              {selectedRequisition?.sanity_job_list_key == null ? '' : `${selectedRequisition?.public_share_link}` }
             </p>
           </Box>
         </Box>

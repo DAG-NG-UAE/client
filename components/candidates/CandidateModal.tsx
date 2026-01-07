@@ -9,7 +9,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CurrencyExchangeOutlined from '@mui/icons-material/CurrencyExchangeOutlined';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StarIcon from '@mui/icons-material/Star';
@@ -246,8 +246,8 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     value={candidate.mobile_number} 
                                 />
                                 <DetailItem 
-                                    icon={<AttachMoneyIcon fontSize="small" />} 
-                                    value={fetchedDetails?.salary_target_min ? `$${fetchedDetails.salary_target_min}` : undefined} 
+                                    icon={<CurrencyExchangeOutlined fontSize="small" />} 
+                                    value={fetchedDetails?.salary_target_min ? `N${new Intl.NumberFormat().format(Number(fetchedDetails.salary_target_min))}` : undefined} 
                                     label="Expected Salary"
                                 />
                                 <DetailItem 

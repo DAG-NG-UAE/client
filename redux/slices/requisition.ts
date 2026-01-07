@@ -11,6 +11,7 @@ import {
   addRequisitionLocation,
   updateRequisitionLocation,
   removeRequisitionLocation,
+  updateRequisition,
 } from "@/api/requisitionApi";
 import { RecruiterSelection, Requisition } from "@/interface/requisition";
 import { dispatch } from "../dispatchHandle";
@@ -250,6 +251,20 @@ export const callDeleteRequisitionLocation = async (
     await removeRequisitionLocation(requisitionId, positionSlotId, location);
     await fetchRequisitionById(requisitionId);
     enqueueSnackbar("Location marked as in active and removed from the careers page", { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
+  }
+};
+
+export const saveJobDescription = async (requisitionId: string, data: Partial<Requisition>) => {
+  try {
+    dispatch(startLoading());
+    await updateRequisition(requisitionId, data);
+    await fetchRequisitionById(requisitionId);
+    enqueueSnackbar("Job description saved successfully", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   } finally {

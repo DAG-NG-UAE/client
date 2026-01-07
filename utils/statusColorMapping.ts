@@ -69,6 +69,15 @@ export const getStatusChipProps = (status: string | undefined) => {
         },
         variant: "filled" as "filled",
       };
+    case "interview_scheduled":
+    return {
+      label: "Interview Scheduled",
+      sx: {
+        bgcolor: "#fef9c2",
+        color: "#b7904d",
+      },
+      variant: "filled" as "filled",
+    };
     case "interview":
       return {
         label: "Interview",
@@ -87,12 +96,30 @@ export const getStatusChipProps = (status: string | undefined) => {
         },
         variant: "filled" as "filled",
       };
+      case "accepted":
+      return {
+        label: "Accepted",
+        sx: {
+          bgcolor: "#dbfce7",
+          color: "#83c09d"
+        },
+        variant: "filled" as "filled",
+      };
       case "approved_for_offer":
       return {
         label: "Approved for Offer",
         sx: {
           bgcolor: "#FEF3C7",
           color: "#D97706"
+        },
+        variant: "filled" as "filled",
+      };
+      case "pending_feedback":
+      return {
+        label: "Pending Feedback",
+        sx: {
+          bgcolor: "#ffe2e2",
+          color: "#b3353e"
         },
         variant: "filled" as "filled",
       };
