@@ -32,6 +32,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
   const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname(); // Get current pathname
+  const [isRecruitmentOpen, setRecruitmentOpen] = useState(false);
   const [isCandidatesOpen, setCandidatesOpen] = useState(false);
   const [isOfferOpen, setOfferOpen] = useState(false);
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -47,20 +48,29 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
     setCandidatesOpen(!isCandidatesOpen);
   };
 
+  const handleRecruitmentClick = () => {
+    setRecruitmentOpen(!isRecruitmentOpen);
+  };
+
   const handleOfferClick = () => {
     setOfferOpen(!isOfferOpen);
   };
 
   const allMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
-    { text: 'Pending Requisitions', icon: <WarningIcon/> , path:'/pending-requisition', roles: [AppRole.HeadOfHr, AppRole.HrManager]},
-    { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
     { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: [AppRole.HrManager] },
     { text: 'Signatures', icon: <GestureIcon />, path: '/signatures', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager] },
   ];
 
   const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role_name));
 
+  const recruitmentSubItems = [ 
+    { text: 'New Request', icon: <WarningIcon/> , path:'/requisition/request', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter]},
+    { text: 'Pending Requisitions', icon: <WarningIcon/> , path:'/pending-requisition', roles: [AppRole.HeadOfHr, AppRole.HrManager]},
+    { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
+  ]
+
+  const recruitmentMenuItems = recruitmentSubItems.filter(item => user && item.roles.includes(user.role_name));
   const candidateSubItems = [
     { text: 'All', path: '/candidates/all'},
     { text: 'Applied', path: '/candidates/applied' },
@@ -120,6 +130,61 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             <ListItemText primary={item.text} />
           </ListItemButton>
         ))}
+        {/* Recruitment collapsible menu */}
+        <ListItemButton 
+          onClick={handleRecruitmentClick}
+          selected={pathname.startsWith('/recruitment')}
+          sx={{
+            margin: theme.spacing(0.5, 1),
+            borderRadius: theme.shape.borderRadius,
+            '&.Mui-selected': {
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.main,
+              },
+            },
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: 'inherit' }}><PeopleIcon/> </ListItemIcon>
+          <ListItemText primary="Recruitment" />
+          {isRecruitmentOpen ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={isRecruitmentOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {recruitmentMenuItems.map((item) => (
+              <ListItemButton
+                key={item.text}
+                selected={pathname === item.path}
+                onClick={() => {
+                  router.push(item.path);
+                  if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile
+                }}
+                sx={{ 
+                  pl: 4,
+                  margin: theme.spacing(0.5, 1),
+                  borderRadius: theme.shape.borderRadius,
+                  '&.Mui-selected': {
+                    backgroundColor: theme.palette.primary.main,
+                    color: theme.palette.primary.contrastText,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.main,
+                    },
+                  },
+                  '&:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Collapse>
         {/* Candidates collapsible menu */}
         <ListItemButton 
           onClick={handleCandidatesClick}

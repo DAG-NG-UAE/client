@@ -12,6 +12,7 @@ import {
   updateRequisitionLocation,
   removeRequisitionLocation,
   updateRequisition,
+  createRequisition,
 } from "@/api/requisitionApi";
 import { RecruiterSelection, Requisition } from "@/interface/requisition";
 import { dispatch } from "../dispatchHandle";
@@ -272,5 +273,18 @@ export const saveJobDescription = async (requisitionId: string, data: Partial<Re
     dispatch(stopLoading());
   }
 };
+
+export const callCreateRequisition = async(requisition: Partial<Requisition>) => { 
+  try {
+    dispatch(startLoading());
+    await createRequisition(requisition);
+    enqueueSnackbar("Talent Request sent successfully", { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
+  }
+}
 
 export default requisitionSlice.reducer;

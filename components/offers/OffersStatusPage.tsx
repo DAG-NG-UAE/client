@@ -32,15 +32,25 @@ const OfferStatusPage = ({status}: {status: string}) => {
 
     const renderActions = (row: Partial<Offer>) => {
       return (
-        <>
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => handleRowClick(row)}
-          >
-            View
-          </Button>
-        </>
+        <Box display='flex' gap={2}>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => handleRowClick(row)}
+            >
+              View
+            </Button>
+            {row.finalized_date && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => alert('we integrate with zoho api and make the user hired')}
+              >
+                Create Employee
+              </Button>
+            )}
+        </Box>
+        
       );
     };
 

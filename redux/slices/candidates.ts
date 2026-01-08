@@ -113,6 +113,7 @@ export const callUpdateCandidateStatus = async (updateData: Partial<CandidatePro
     enqueueSnackbar('Candidate status updated', { variant: 'success' });
     dispatch(stopLoading());
     // Optionally refetch candidates or update state directly
+    fetchAllCandidates(undefined, 'applied')
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   } finally {
@@ -135,6 +136,7 @@ export const callScheduleInterview = async (
     dispatch(startLoading());
     await scheduleInterview(interviewData);
     enqueueSnackbar('Interview scheduled successfully', { variant: 'success' });
+    fetchAllCandidates(undefined, 'shortlisted')
     dispatch(stopLoading());
     // Optionally refetch candidate or update state directly
   } catch (error: any) {

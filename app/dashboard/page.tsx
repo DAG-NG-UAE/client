@@ -14,7 +14,10 @@ import {
   Divider,
   useTheme,
   Paper,
-  IconButton
+  IconButton,
+  Skeleton,
+  Alert,
+  LinearProgress
 } from '@mui/material';
 import { 
   Work as WorkIcon, 
@@ -29,6 +32,8 @@ import {
 import { getRequisitions } from '../../api/requisitionApi';
 import withAuth from '@/components/auth/withAuth';
 import { AppRole } from '@/utils/constants';
+import useSWR from 'swr';
+import axiosInstance from '@/api/axiosInstance';
 
 // --- Mock Data ---
 const mockFunnelData = [
@@ -98,22 +103,30 @@ const KPICard = ({ title, value, icon, color, trend }: { title: string, value: s
   );
 };
 
-const FunnelChart = () => {
-  const maxCount = Math.max(...mockFunnelData.map(d => d.count));
+const FunnelChart = ({ funnelChartData }: { funnelChartData: { label: string; value: number | string }[] }) => {
+  const colors = ['#3f51b5', '#2196f3', '#00bcd4', '#4caf50', '#8bc34a'];
+  
+  const processedData = funnelChartData.map((item, index) => ({
+    ...item,
+    value: Number(item.value) || 0,
+    color: colors[index % colors.length]
+  }));
+
+  const maxCount = Math.max(...processedData.map(d => d.value)) || 1;
   
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-      {mockFunnelData.map((item, index) => (
-        <Box key={item.stage} sx={{ display: 'flex', alignItems: 'center' }}>
+      {processedData.map((item, index) => (
+        <Box key={item.label} sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ width: 100 }}>
-            <Typography variant="body2" fontWeight={600} color="text.secondary">{item.stage}</Typography>
+            <Typography variant="body2" fontWeight={600} color="text.secondary">{item.label}</Typography>
           </Box>
           <Box sx={{ flex: 1, mx: 2 }}>
             <Box 
               sx={{ 
                 height: 32, 
                 borderRadius: 2, 
-                width: `${(item.count / maxCount) * 100}%`,
+                width: `${(item.value / maxCount) * 100}%`,
                 bgcolor: item.color,
                 display: 'flex',
                 alignItems: 'center',
@@ -125,39 +138,33 @@ const FunnelChart = () => {
             >
             </Box>
           </Box>
-          <Typography variant="body2" fontWeight="bold">{item.count}</Typography>
+          <Typography variant="body2" fontWeight="bold">{item.value}</Typography>
         </Box>
       ))}
     </Box>
   );
 };
 
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data.data)
 const DashboardPage = () => {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [activeRequisitionsCount, setActiveRequisitionsCount] = useState<number>(0);
+  const { data, error, isLoading } = useSWR('/analytics/dashboard/stats', fetcher)
+
+  if (isLoading) return <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />;
+  if (error) return <Alert severity="error">Failed to load dashboard data</Alert>;
+
   const theme = useTheme();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch real requisitions to get the count
-        const data: any[] = await getRequisitions();
-        const activeCount = data.filter((r: any) => r.status === 'open' || r.status === 'active' || r.status === 'approved').length;
-        setActiveRequisitionsCount(activeCount || 12); // Fallback to 12 if 0 for demo purposes/visuals
-      } catch (err) {
-        console.error("Failed to fetch dashboard data", err);
-        setActiveRequisitionsCount(8); // Fallback
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const funnelBase = data?.funnel_applied || 1; // Avoid division by zero
 
-  if (loading) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></Box>;
-  }
+  const funnelStages = [
+    { label: 'Applied', value: data.funnel_applied },
+    { label: 'Shortlisted', value: data.funnel_shortlisted },
+    { label: 'Offered', value: data.funnel_offered },
+    { label: 'Hired', value: data.funnel_hired },
+  ];
+
+  console.log(`the funnel stages are ${JSON.stringify(funnelStages)}`)
+
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, minHeight: '100vh', backgroundColor: 'background.default' }}>
@@ -177,25 +184,25 @@ const DashboardPage = () => {
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
           <KPICard 
             title="Active Requisitions" 
-            value={activeRequisitionsCount} 
+            value={data?.active_requisitions || 0}
             icon={<WorkIcon />} 
             color={theme.palette.primary.main} 
-            trend="+2 New"
+            trend={data?.daily_requisition_request > 0 ? `+${data?.daily_requisition_request} New` : ""}
           />
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
           <KPICard 
             title="Total Candidates" 
-            value="1,240" 
-            icon={<GroupIcon />} 
+            value={data?.total_candidates || 0 } 
+            icon={ <GroupIcon />} 
             color="#9c27b0" 
-            trend="+12%"
+            trend={data?.daily_candidates > 0 ? `+${data?.daily_candidates} New` : ""}
           />
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
           <KPICard 
             title="Filled This Month" 
-            value="18" 
+            value={data.filled_this_month || 0} 
             icon={<CheckCircleIcon />} 
             color="#2e7d32"
           />
@@ -203,7 +210,7 @@ const DashboardPage = () => {
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
           <KPICard 
             title="Pe. Interviews" 
-            value="24" 
+            value={data?.pending_feedback || 0} 
             icon={<ScheduleIcon />} 
             color="#ed6c02"
           />
@@ -211,7 +218,7 @@ const DashboardPage = () => {
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
           <KPICard 
             title="Offers Sent" 
-            value="12" 
+            value={data.funnel_offered || 0} 
             icon={<SendIcon />} 
             color="#009688"
           />
@@ -243,13 +250,14 @@ const DashboardPage = () => {
               <Typography variant="h6" fontWeight={600}>Recruitment Funnel</Typography>
               <IconButton size="small"><MoreVertIcon /></IconButton>
             </Box>
-            <FunnelChart />
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 4 }}>
+            <FunnelChart funnelChartData={funnelStages}/>
+            
+            {/* <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 4 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#4caf50' }} />
                  <Typography variant="caption" color="text.secondary">Offers Accepted (62%)</Typography>
               </Box>
-            </Box>
+            </Box> */}
           </Paper>
         </Box>
 

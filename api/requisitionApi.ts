@@ -215,3 +215,14 @@ export const removeRequisitionLocation = async (
     throw error;
   }
 };
+
+
+export const createRequisition = async (requisition: Partial<Requisition>) => {
+  try {
+    const response = await axiosInstance.post("/requisition", requisition);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error creating requisition:", error);
+    throw error;
+  }
+};

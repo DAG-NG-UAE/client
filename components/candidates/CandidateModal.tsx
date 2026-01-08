@@ -4,7 +4,7 @@ import { getStatusChipProps } from "@/utils/statusColorMapping";
 import { 
     Dialog, DialogTitle, DialogContent, IconButton, Typography, Box, Avatar, 
     Button, Chip, Paper, Divider, TextField, Stack, useTheme,
-    DialogActions
+    DialogActions, CircularProgress
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import EmailIcon from '@mui/icons-material/Email';
@@ -18,6 +18,9 @@ import { useEffect, useState } from "react";
 import { determineActions } from "@/utils/determineActions";
 import { CandidateActions, CandidateActionButton, CandidateStatus } from "@/interface/candidate";
 import ScheduleInterviewModal from "./ScheduleInterviewModal"; // Import the new modal
+import { callUpdateCandidateStatus } from "@/redux/slices/candidates";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface CandidateModalProps {
     open: boolean;
@@ -52,6 +55,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     const [note, setNote] = useState('');
     const [currentAction, setCurrentAction] = useState<CandidateActionButton | null>(null);
     const [updateCandidate, setUpdateCandidate] = useState(false);
+    const {loading} = useSelector((state: RootState) => state.candidates)
 
     const handleAction = (action: CandidateActionButton) => {
         setCurrentAction(action);
@@ -85,7 +89,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
             notes: note
         }
         // Placeholder for API call:
-        await updateCandidateStatus(body);
+        await callUpdateCandidateStatus(body)
 
         // Reset and close modals
         setNotesModalOpen(false);
@@ -115,8 +119,12 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                 />
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
-                <Button onClick={() => setNotesModalOpen(false)}>Cancel</Button>
-                <Button onClick={handleSubmitNote} variant="contained" disabled={!note}>Submit</Button>
+                <Button onClick={() => setNotesModalOpen(false)} disabled={loading}>Cancel</Button>
+                {loading ? (
+                    <CircularProgress size={24} sx={{ color: theme.palette.primary.main }} />
+                ) : (
+                    <Button onClick={handleSubmitNote} variant="contained" disabled={!note}>Submit</Button>
+                )}
             </DialogActions>
         </Dialog>
     );

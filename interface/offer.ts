@@ -23,6 +23,7 @@ export interface Offer {
   digital_signature: string;
   status: 'accepted' | 'rejected' | 'pending';
   expiry_date: string;
+  finalized_date: string;
   last_accessed_at: string 
   access_count: number;
 
