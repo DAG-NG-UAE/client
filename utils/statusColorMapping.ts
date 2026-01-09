@@ -123,7 +123,7 @@ export const getStatusChipProps = (status: string | undefined) => {
         },
         variant: "filled" as "filled",
       };
-    case "reject":
+    case "rejected":
       return {
         label: "Rejected",
         sx: {

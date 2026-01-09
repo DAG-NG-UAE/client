@@ -5,20 +5,16 @@ import React from "react";
 import Link from 'next/link';
 import { fetchSingleCandidate } from "@/redux/slices/candidates";
 
-export const PingHiringManagersButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
-    const handleClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        // In a real app, you'd dispatch an action or call an API
-        console.log(`Pinging hiring managers for candidate: ${candidate.candidate_id}`);
-        alert(`Pinging hiring managers for ${candidate.candidate_name}`);
-    };
 
+export const PingHiringManagersButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
     return (
         <Button
             variant="outlined"
             size="small"
             startIcon={<Email fontSize="small" />}
-            onClick={handleClick}
+            component={Link}
+            href={`/candidates/ping/${candidate.candidate_id}`}
+            onClick={(e) => e.stopPropagation()}
             sx={{ mr: 1, textTransform: 'none' }}
         >
             Ping Hiring Managers

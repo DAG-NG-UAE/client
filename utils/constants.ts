@@ -162,3 +162,9 @@ export const offerStatusDetail: { [key: string]: { title: string; subtitle: stri
     subtitle: 'View and manage all rejected offers.',
   },
 }
+
+export const enum AutomationType { 
+  NEW_REQUISITION = 'new_req', 
+  PING_HIRING_MANAGER = 'ping_hiring_manager',
+  
+}

@@ -131,6 +131,7 @@ const RequisitionRequest = () => {
     });
 
     const payload = {
+      automationType: 'new_req',
       requestDate: requestDate ? requestDate.format("YYYY-MM-DD") : null,
       department,
       raisedBy,

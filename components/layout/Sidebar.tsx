@@ -79,6 +79,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
     { text: 'Pending Feedback', path: '/candidates/pending_feedback' },
     { text: 'Interviewed', path: '/candidates/interviewed' },
     { text: 'Approved for Offer', path: '/candidates/approved_for_offer' },
+    { text: 'Rejected', path: '/candidates/rejected' },
   ];
 
   const offerSubItems = [

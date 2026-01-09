@@ -319,7 +319,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                         </Box>
 
                         {/* Interview History - Mocked */}
-                        <Box sx={{ width: '100%' }}>
+                        {/* <Box sx={{ width: '100%' }}>
                             <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
                                 <SectionTitle>Interview History</SectionTitle>
                                 <Box sx={{ pl: 2, borderLeft: `3px solid ${theme.palette.primary.main}` }}>
@@ -333,10 +333,10 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     <Typography variant="body2">Strong technical skills, good communication.</Typography>
                                 </Box>
                             </Paper>
-                        </Box>
+                        </Box> */}
 
                         {/* Notes */}
-                        <Box sx={{ width: '100%' }}>
+                        {/* <Box sx={{ width: '100%' }}>
                             <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
                                 <SectionTitle>Notes</SectionTitle>
                                 {candidate.notes && (
@@ -355,7 +355,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     <Button variant="contained" sx={{ textTransform: 'none' }}>Add Note</Button>
                                 </Stack>
                             </Paper>
-                        </Box>
+                        </Box> */}
                     </Box>
                 </DialogContent>
                 {NotesConfirmationModal}
