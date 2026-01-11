@@ -121,8 +121,18 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
     try {
       const selectedObjs = recruiters.filter(r => r.user_id !== undefined && tempSelectedRecruiters.includes(r.user_id));
       console.log(`The selected recruiters are => ${JSON.stringify(selectedObjs)}`)
+      
+      const assignedIds = assignedRecruiters.map(r => r.user_id);
+      const newRecruiters = selectedObjs.filter(r => !assignedIds.includes(r.user_id));
+
+      const emails = newRecruiters.map(r => r.email).filter(Boolean).join(';');
+
       if (requisition.requisition_id) {
-        await callAssignRecruiters(requisition.requisition_id, selectedObjs.filter((r): r is {user_id: string, role_id: string, full_name: string} => r.user_id !== undefined && r.role_id !== undefined).map(r => ({userId: r.user_id, roleId: r.role_id})))
+        await callAssignRecruiters(
+            requisition.requisition_id, 
+            selectedObjs.filter((r): r is {user_id: string, role_id: string, full_name: string} => r.user_id !== undefined && r.role_id !== undefined).map(r => ({userId: r.user_id, roleId: r.role_id})),
+            emails
+        )
       }
       handleCloseRecruiterPopover();
     } catch (error) {
@@ -140,7 +150,11 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
       const updatedAssignedRecruiters = assignedRecruiters.filter(r => r.user_id !== recruiterIdToRemove);
 
       console.log(`this is the updated assigned recruiter => ${JSON.stringify(updatedAssignedRecruiters)}`)
-       await callRemoveRecruiters(requisition.requisition_id, recruiterIdToRemove);
+      
+      const recruiterToRemove = assignedRecruiters.find(r => r.user_id === recruiterIdToRemove);
+      const email = recruiterToRemove?.email || "";
+
+       await callRemoveRecruiters(requisition.requisition_id, recruiterIdToRemove, email);
     } catch (error) {
       console.error("Failed to remove recruiter", error);
     } finally {

@@ -123,6 +123,15 @@ export const getStatusChipProps = (status: string | undefined) => {
         },
         variant: "filled" as "filled",
       };
+    case "revision_requested":
+      return {
+        label: "Revision Requested",
+        sx: {
+          bgcolor: "#ffe2e2",
+          color: "#b3353e"
+        },
+        variant: "filled" as "filled",
+      };
     case "rejected":
       return {
         label: "Rejected",

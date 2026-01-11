@@ -68,8 +68,8 @@ export const requisitionSlice = createSlice({
     },
     clearRequisition(state) {
       state.requisitions = [];
-      state.selectedRequisition = null
-    }
+      state.selectedRequisition = null;
+    },
   },
 });
 
@@ -81,7 +81,7 @@ export const {
   clearSelectedRequisition,
   clearError,
   stopLoading,
-  clearRequisition
+  clearRequisition,
 } = requisitionSlice.actions;
 
 export const fetchRequisitions = async (status?: string) => {
@@ -107,13 +107,15 @@ export const fetchRequisitionById = async (id: string) => {
 export const handleApproveRequisition = async ({
   recruiters,
   requisitionId,
+  recruiterEmails,
 }: {
   recruiters: RecruiterSelection[];
   requisitionId: string;
+  recruiterEmails: string;
 }) => {
   try {
     dispatch(startLoading());
-    await approveRequisition(recruiters, requisitionId);
+    await approveRequisition(recruiters, requisitionId, recruiterEmails);
     await fetchRequisitions("pending");
     enqueueSnackbar("Requisition has been approved", { variant: "success" });
     // Optionally refetch requisitions or update state directly
@@ -167,11 +169,12 @@ export const callUnPublishRequisition = async (
 
 export const callAssignRecruiters = async (
   requisitionId: string,
-  recruiters: { userId: string; roleId: string }[]
+  recruiters: { userId: string; roleId: string }[],
+  recruiterEmails: string
 ) => {
   try {
     dispatch(startLoading());
-    await assignRecruiters(requisitionId, recruiters);
+    await assignRecruiters(requisitionId, recruiters, recruiterEmails);
     await fetchRequisitionById(requisitionId);
     enqueueSnackbar("Recruiters assigned", { variant: "success" });
   } catch (error: any) {
@@ -184,11 +187,12 @@ export const callAssignRecruiters = async (
 
 export const callRemoveRecruiters = async (
   requisitionId: string,
-  userId: string
+  userId: string,
+  recruiterEmail: string
 ) => {
   try {
     dispatch(startLoading());
-    await removeRecruiters(requisitionId, userId);
+    await removeRecruiters(requisitionId, userId, recruiterEmail);
     // we want to fetch the requisition and then we want to update the selected requisition
     await fetchRequisitionById(requisitionId);
     enqueueSnackbar("Recruiter removed ", { variant: "success" });
@@ -251,7 +255,10 @@ export const callDeleteRequisitionLocation = async (
     dispatch(startLoading());
     await removeRequisitionLocation(requisitionId, positionSlotId, location);
     await fetchRequisitionById(requisitionId);
-    enqueueSnackbar("Location marked as in active and removed from the careers page", { variant: "success" });
+    enqueueSnackbar(
+      "Location marked as in active and removed from the careers page",
+      { variant: "success" }
+    );
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   } finally {
@@ -260,12 +267,17 @@ export const callDeleteRequisitionLocation = async (
   }
 };
 
-export const saveJobDescription = async (requisitionId: string, data: Partial<Requisition>) => {
+export const saveJobDescription = async (
+  requisitionId: string,
+  data: Partial<Requisition>
+) => {
   try {
     dispatch(startLoading());
     await updateRequisition(requisitionId, data);
     await fetchRequisitionById(requisitionId);
-    enqueueSnackbar("Job description saved successfully", { variant: "success" });
+    enqueueSnackbar("Job description saved successfully", {
+      variant: "success",
+    });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   } finally {
@@ -274,7 +286,9 @@ export const saveJobDescription = async (requisitionId: string, data: Partial<Re
   }
 };
 
-export const callCreateRequisition = async(requisition: Partial<Requisition>) => { 
+export const callCreateRequisition = async (
+  requisition: Partial<Requisition>
+) => {
   try {
     dispatch(startLoading());
     await createRequisition(requisition);
@@ -285,6 +299,6 @@ export const callCreateRequisition = async(requisition: Partial<Requisition>) =>
     dispatch(clearError());
     dispatch(stopLoading());
   }
-}
+};
 
 export default requisitionSlice.reducer;

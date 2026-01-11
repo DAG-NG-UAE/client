@@ -87,6 +87,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
     { text: 'Pending', path: '/offers/pending' },
     { text: 'Accepted', path: '/offers/accepted' },
     { text: 'Rejected', path: '/offers/rejected' },
+    { text: 'Revision Requested', path: '/offers/revision_requested' },
 ];
 
   const drawerContent = (

@@ -12,13 +12,14 @@ import {
   ListItemAvatar, 
   ListItemText,
   Divider,
-  useTheme,
   Paper,
   IconButton,
   Skeleton,
   Alert,
   LinearProgress
 } from '@mui/material';
+import { useTheme, keyframes } from '@mui/material/styles';
+import { useRouter } from 'next/navigation';
 import { 
   Work as WorkIcon, 
   Group as GroupIcon, 
@@ -27,7 +28,8 @@ import {
   Send as SendIcon, 
   Timer as TimerIcon,
   TrendingUp as TrendingUpIcon,
-  MoreVert as MoreVertIcon
+  MoreVert as MoreVertIcon,
+
 } from '@mui/icons-material';
 import { getRequisitions } from '../../api/requisitionApi';
 import withAuth from '@/components/auth/withAuth';
@@ -35,14 +37,6 @@ import { AppRole } from '@/utils/constants';
 import useSWR from 'swr';
 import axiosInstance from '@/api/axiosInstance';
 
-// --- Mock Data ---
-const mockFunnelData = [
-  { stage: 'Applied', count: 1240, color: '#3f51b5' },
-  { stage: 'Shortlisted', count: 450, color: '#2196f3' },
-  { stage: 'Interviewed', count: 180, color: '#00bcd4' },
-  { stage: 'Offered', count: 45, color: '#4caf50' },
-  { stage: 'Hired', count: 28, color: '#8bc34a' },
-];
 
 const mockRecentActivity = [
   { id: 1, user: 'Sarah Jenkins', action: 'scheduled an interview for', target: 'Senior Frontend Developer', time: '2 hours ago', avatar: 'S' },
@@ -53,17 +47,33 @@ const mockRecentActivity = [
 
 // --- Components ---
 
-const KPICard = ({ title, value, icon, color, trend }: { title: string, value: string | number, icon: React.ReactNode, color: string, trend?: string }) => {
+const blinkAnimation = keyframes`
+  0% { 
+    background-color: transparent; 
+  }
+  50% { 
+    background-color: rgba(255, 0, 0, 0.1); /* Subtle red tint */
+    border-color: #ff0000;                /* Optional: make the border red too */
+  }
+  100% { 
+    background-color: transparent; 
+  }
+`;
+
+const KPICard = ({ title, value, icon, color, trend, blink, onClick }: { title: string, value: string | number, icon: React.ReactNode, color: string, trend?: string, blink?: boolean, onClick?: () => void }) => {
   const theme = useTheme();
   return (
     <Card 
       elevation={0}
+      onClick={onClick}
       sx={{ 
         height: '100%', 
         borderRadius: 3, 
         border: `1px solid ${theme.palette.divider}`,
         background: theme.palette.background.paper, 
         transition: 'transform 0.2s, box-shadow 0.2s',
+        cursor: onClick ? 'pointer' : 'default',
+        animation: blink ? `${blinkAnimation} 1.5s infinite ease-in-out` : 'none',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: theme.shadows[4],
@@ -147,6 +157,7 @@ const FunnelChart = ({ funnelChartData }: { funnelChartData: { label: string; va
 
 const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data.data)
 const DashboardPage = () => {
+  const router = useRouter();
   const { data, error, isLoading } = useSWR('/analytics/dashboard/stats', fetcher)
 
   if (isLoading) return <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />;
@@ -156,6 +167,7 @@ const DashboardPage = () => {
 
   const funnelBase = data?.funnel_applied || 1; // Avoid division by zero
 
+  console.log(`the data is ${JSON.stringify(data)}`)
   const funnelStages = [
     { label: 'Applied', value: data.funnel_applied },
     { label: 'Shortlisted', value: data.funnel_shortlisted },
@@ -221,6 +233,16 @@ const DashboardPage = () => {
             value={data.funnel_offered || 0} 
             icon={<SendIcon />} 
             color="#009688"
+          />
+        </Box>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard 
+            title="Offer Revision" 
+            value={data?.revise_offers || 0} 
+            icon={<ScheduleIcon />} 
+            color="#ed6c02"
+            blink={(data?.revise_offers || 0) > 0}
+            onClick={() => router.push('/offers/revision_requested')}
           />
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>

@@ -67,9 +67,15 @@ const RequisitionDrawer = ({ open, onClose, requisition }: RequisitionDrawerProp
             enqueueSnackbar('Recruiters are needed to approve a requisition', { variant: 'error' });
             return;
         }
-        console.log('Approved:', requisition?.requisition_id, selectedRecruiters);
+            
+        const emails = selectedRecruiters.map(s => {
+            const recruiter = allRecruiters.find(r => r.user_id === s.userId);
+            return recruiter?.email
+        }).filter(Boolean).join(';');
+
+        console.log('Approved:', requisition?.requisition_id, emails);
         if(requisition?.requisition_id){ 
-            handleApproveRequisition({ recruiters: selectedRecruiters, requisitionId: requisition?.requisition_id});
+            handleApproveRequisition({ recruiters: selectedRecruiters, requisitionId: requisition?.requisition_id, recruiterEmails: emails});
         }
         onClose();
     };
