@@ -25,7 +25,9 @@ const OfferStatusPage = ({status}: {status: string}) => {
     }, [status])
 
     const handleRowClick = (row: Partial<Offer>) => {
-      if (row.offer_id) {
+      if(status == 'revision_requested'){
+        router.push(`/offers/revisionDetails/${row.offer_id}`);
+      }else{
         router.push(`/offers/view/${row.offer_id}`);
       }
     };
