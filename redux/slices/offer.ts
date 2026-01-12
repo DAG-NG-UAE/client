@@ -81,7 +81,7 @@ export const offerSlice = createSlice({
     setGuarantor(state, action: PayloadAction<Partial<Guarantor>>) {
       state.guarantor = action.payload;
     },
-    clearState(state) {
+    clearOfferState(state) {
       state.masterClauses = [];
       state.currentOffer = null;
       state.selectedClauses = [];
@@ -104,7 +104,7 @@ export const {
   setCurrentOffer,
   setJoiningDetails,
   setGuarantor,
-  clearState,
+  clearOfferState,
   stopLoading,
 } = offerSlice.actions;
 

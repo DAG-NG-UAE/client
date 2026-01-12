@@ -70,3 +70,13 @@ export const generateOffer = async(payload: any) => {
     throw error;
   }
 }
+
+export const updateOffer = async(payload: any, offerId: string) => { 
+  try {
+    const response = await axiosInstance.patch(`offer/edit?offerId=${offerId}`, payload);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching offer letter", error);
+    throw error;
+  }
+}

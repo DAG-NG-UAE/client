@@ -134,7 +134,7 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
                                     startIcon={<Edit />}
                                     fullWidth
                                     size="large"
-                                    onClick={() => alert("Navigate to generate revised offer")}
+                                    onClick={() => router.push(`/offers/revise/${id}`)}
                                 >
                                     Generate Revised Offer
                                 </Button>

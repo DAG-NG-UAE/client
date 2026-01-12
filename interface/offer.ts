@@ -1,8 +1,10 @@
 export interface Clauses {
-  master_clauses_id: string;
+  master_clause_id: string;
   title: string;
   content: string;
   is_mandatory: boolean;
+  custom_content?: string;
+  company_name?: string;
 }
 export interface ExtendedClause extends Clauses {
   instanceId: string; // Unique ID for the drag mapping (in case multiple of same clause)
@@ -21,13 +23,13 @@ export interface Offer {
   accepted_at: string;
   rejection_reason: string | null;
   digital_signature: string;
-  status: 'accepted' | 'rejected' | 'pending';
+  status: "accepted" | "rejected" | "pending";
   expiry_date: string;
   finalized_date: string;
-  last_accessed_at: string 
+  last_accessed_at: string;
   access_count: number;
 
-  clauses?: Clauses[]
+  clauses?: Clauses[];
 }
 
 export interface Language {
@@ -73,7 +75,7 @@ export interface Reference {
 
 export interface JoiningDetails {
   // Section 2: Personal Details
-  first_name: string; 
+  first_name: string;
   last_name: string;
   middle_name: string;
   gender: string;
@@ -137,7 +139,6 @@ export interface JoiningDetails {
   educational_history: EducationalHistory[];
   trainings_certifications: TrainingCertification[];
 }
-
 
 export interface Guarantor {
   guarantor_full_name: string;
