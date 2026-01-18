@@ -31,7 +31,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   const details = statusDetails[status] || { title: 'Candidates', subtitle: 'Manage all candidates.' };
 
   const {positions} = useSelector((state: RootState) => state.positions)
-  const {candidates, selectedCandidate} = useSelector((state:RootState) => state.candidates)
+  const {candidates, selectedCandidate, meta} = useSelector((state:RootState) => state.candidates)
   const {user} = useSelector((state:RootState) => state.auth)
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -137,6 +137,11 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
               onRowClick={handleRowClick}
               actions={hasActions ? renderActions : undefined}
               keyExtractor={(candidates) => candidates.candidate_id}
+              totalCount={meta?.total || 0}
+              page={(meta?.page || 1) - 1} // MUI is 0-indexed
+              rowsPerPage={meta?.limit || 10}
+              onPageChange={(e, newPage) => fetchAllCandidates(undefined, status, newPage + 1, meta?.limit)}
+              onRowsPerPageChange={(e) => fetchAllCandidates(undefined, status, 1, parseInt(e.target.value, 10))}
             >
             </TableComponent>
             {/* <CandidateTable candidates={candidates} status={status} /> */}

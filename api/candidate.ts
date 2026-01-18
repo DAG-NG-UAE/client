@@ -6,7 +6,7 @@ import { CandidateEvaluationPayload } from "@/interface/interview";
 export const getCandidatesForRequisition = async (requisitionId: string) => {
   try {
     const response = await axiosInstance.get(
-      `requistion/candidate?requisitionId=${requisitionId}`
+      `requistion/candidate?requisitionId=${requisitionId}`,
     );
     console.log("Fetched candidates:", response.data.data);
     return response.data.data;
@@ -26,7 +26,7 @@ export const apply = async (applicantData: FormData, slug: string) => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response.data.data;
   } catch (error) {
@@ -37,7 +37,9 @@ export const apply = async (applicantData: FormData, slug: string) => {
 
 export const getAllCandidates = async (
   requisitionId?: string,
-  status?: string
+  status?: string,
+  page: number = 1,
+  limit: number = 10,
 ) => {
   try {
     const queryParams = new URLSearchParams();
@@ -47,15 +49,18 @@ export const getAllCandidates = async (
     if (status && status.trim().toLowerCase() !== "all") {
       queryParams.append("stage", status);
     }
+
+    // Add pagination params
+    queryParams.append("page", page.toString());
+    queryParams.append("limit", limit.toString());
+
     const queryString = queryParams.toString();
-    const url =
-      requisitionId || status ? `candidate?${queryString}` : `candidate`;
+    const url = `candidate?${queryString}`;
     const response = await axiosInstance.get(url);
     console.log(
-      `the response from get all candidate => ${JSON.stringify(
-        response.data.data
-      )}`
+      `the response from get all candidate => ${JSON.stringify(response.data)}`,
     );
+    // Return full response structure: { data: CandidateProfile[], meta: PaginationMeta }
     return response.data.data;
   } catch (error) {
     console.error("Error fetching all candidates:", error);
@@ -66,7 +71,7 @@ export const getAllCandidates = async (
 export const getSingleCandidate = async (candidateId: string) => {
   try {
     const response = await axiosInstance.get(
-      `candidate/single?candidateId=${candidateId}`
+      `candidate/single?candidateId=${candidateId}`,
     );
     return response.data.data;
   } catch (error) {
@@ -86,7 +91,7 @@ export const getCandidateResume = async (candidateId: string) => {
 };
 
 export const updateCandidateStatus = async (
-  updateData: Partial<CandidateProfile>
+  updateData: Partial<CandidateProfile>,
 ) => {
   try {
     const response = await axiosInstance.put(`/candidate`, updateData);
@@ -109,7 +114,7 @@ export const scheduleInterview = async (interviewData: {
     console.log("The data to the backend is ", interviewData);
     const response = await axiosInstance.post(
       "/interview/schedule",
-      interviewData
+      interviewData,
     );
     return response.data.data;
   } catch (error) {
@@ -119,12 +124,12 @@ export const scheduleInterview = async (interviewData: {
 };
 
 export const evaluateCandidate = async (
-  evaluationData: CandidateEvaluationPayload
+  evaluationData: CandidateEvaluationPayload,
 ) => {
   try {
     const response = await axiosInstance.post(
       "/interview/evaluate-candidate",
-      evaluationData
+      evaluationData,
     );
     return response.data.data;
   } catch (error) {
@@ -142,8 +147,11 @@ export const pingHiringManager = async (payload: {
 }) => {
   try {
     console.log("The data to the backend is ", payload);
-    const response = await axiosInstance.post('/candidate/ping-hiring-manager', payload)
-    return response.data.data
+    const response = await axiosInstance.post(
+      "/candidate/ping-hiring-manager",
+      payload,
+    );
+    return response.data.data;
   } catch (error) {
     console.error("Error pinging hiring manager");
     throw error;
