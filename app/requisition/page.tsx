@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Box, Typography, Button, Container, Stack } from '@mui/material';
 import SummaryStats from '../../components/SummaryStats';
 import Filters from '../../components/Filters';
@@ -42,6 +42,10 @@ const RequisitionPage = () => {
     fetchData();
   }, []);
   
+  const handleSearch = useCallback((query: string) => {
+    fetchRequisitions(undefined, 1, 10, query);
+  }, []);
+  
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
       <Container maxWidth="xl">
@@ -70,6 +74,7 @@ const RequisitionPage = () => {
         menuItems={menuItems} 
         textPlaceholder="Search by position, department, or requester..." 
         isCandidate={false} 
+        onSearch={handleSearch} 
         />
 
         {/* Table component */}

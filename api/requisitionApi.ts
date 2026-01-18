@@ -6,16 +6,18 @@ export const getRequisitions = async (
   status?: string,
   page: number = 1,
   limit: number = 10,
+  search?: string,
 ): Promise<{ data: Partial<Requisition>[]; meta: any }> => {
   try {
     console.log(
-      `the params being passed ${status} page=${page} limit=${limit}`,
+      `the params being passed ${status} page=${page} limit=${limit} search=${search}`,
     );
     const config = {
       params: {
         ...(status ? { status } : {}),
         page,
         limit,
+        ...(search ? { search } : {}),
       },
     };
 

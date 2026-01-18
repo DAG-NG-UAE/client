@@ -109,10 +109,11 @@ export const fetchRequisitions = async (
   status?: string,
   page: number = 1,
   limit: number = 10,
+  search?: string,
 ) => {
   try {
     dispatch(startLoading());
-    const response = await getRequisitions(status, page, limit);
+    const response = await getRequisitions(status, page, limit, search);
     dispatch(setRequisitions(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));

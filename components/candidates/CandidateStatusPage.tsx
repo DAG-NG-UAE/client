@@ -14,6 +14,7 @@ import { CandidateProfile } from '@/interface/candidate';
 import { dispatch } from '@/redux/dispatchHandle';
 import CandidateModal from './CandidateModal';
 import { FillInterviewFormButton, PingHiringManagersButton, GenerateOfferLetterButton } from './CandidateRowActions';
+import Filters from '../Filters';
 
 
 interface CandidateStatusPageProps {
@@ -116,17 +117,17 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
 
         {/* <SummaryStats stats={summaryData} /> */}
 
-{/*       
+      
           <Filters 
               menuItems={allRoles} 
               textPlaceholder="Search candidate..." 
               isCandidate={true} 
               allYears={allYears}
               refreshPosition={handleRefreshPositions}
-              filterFunction={fetchCandidates}
+              // filterFunction={fetchCandidates}
               onYearChange={handleYearChange}
           />
-           */}
+          
 
 
         {candidates && (
