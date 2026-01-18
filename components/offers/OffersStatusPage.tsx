@@ -1,10 +1,10 @@
 import { offerStatusDetail } from "@/utils/constants";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, CircularProgress } from "@mui/material";
 import TableComponent from "../Table/Table";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { useEffect } from "react";
-import { fetchAllOffers } from "@/redux/slices/offer";
+import { callCreateEmployee, fetchAllOffers } from "@/redux/slices/offer";
 import { getColumnsForOfferStatus } from "@/utils/offersColumnConfig";
 import { Offer } from "@/interface/offer";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ const OfferStatusPage = ({status}: {status: string}) => {
     console.log(status)
     const details = offerStatusDetail[status] || { title: 'Offers', subtitle: 'Manage all offers.' };
 
-    const {offers} = useSelector((state: RootState) => state.offers)
+    const {offers, loading} = useSelector((state: RootState) => state.offers)
 
     useEffect(() => { 
         if(status == 'all'){
@@ -32,24 +32,40 @@ const OfferStatusPage = ({status}: {status: string}) => {
       }
     };
 
+    const handleCreateEmployee = (row: Partial<Offer>) => {
+      if(row.requisition_id && row.candidate_id){
+        callCreateEmployee(row.requisition_id, row.candidate_id)
+      }
+    }
+
     const renderActions = (row: Partial<Offer>) => {
       return (
         <Box display='flex' gap={2}>
             <Button
               variant="outlined"
               color="primary"
-              onClick={() => handleRowClick(row)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRowClick(row);
+              }}
             >
               View
             </Button>
             {row.finalized_date && (
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => alert('we integrate with zoho api and make the user hired')}
-              >
-                Create Employee
-              </Button>
+              loading ? (
+                <CircularProgress size={24} />
+              ) : (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCreateEmployee(row);
+                  }}
+                >
+                  Create Employee
+                </Button>
+              )
             )}
         </Box>
         

@@ -38,12 +38,9 @@ import useSWR from 'swr';
 import axiosInstance from '@/api/axiosInstance';
 
 
-const mockRecentActivity = [
-  { id: 1, user: 'Sarah Jenkins', action: 'scheduled an interview for', target: 'Senior Frontend Developer', time: '2 hours ago', avatar: 'S' },
-  { id: 2, user: 'Mike Ross', action: 'sent an offer to', target: 'Product Manager', time: '4 hours ago', avatar: 'M' },
-  { id: 3, user: 'System', action: 'New application received for', target: 'UX Designer', time: '5 hours ago', avatar: null },
-  { id: 4, user: 'Isabella K', action: 'opened a new requisition', target: 'Marketing Lead', time: '1 day ago', avatar: 'I' },
-];
+import RecentActivity from '@/components/dashboard/RecentActivity';
+
+
 
 // --- Components ---
 
@@ -285,58 +282,7 @@ const DashboardPage = () => {
 
         {/* Recent Activity */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Paper 
-             elevation={0}
-             sx={{ 
-               p: 3, 
-               borderRadius: 3, 
-               border: `1px solid ${theme.palette.divider}`,
-               height: '100%'
-             }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" fontWeight={600}>Recent Activity</Typography>
-              <Typography component="span" variant="caption" color="primary" sx={{ cursor: 'pointer', fontWeight: 600 }}>View All</Typography>
-            </Box>
-            <List sx={{ px: 0 }}>
-              {mockRecentActivity.map((activity, index) => (
-                <React.Fragment key={activity.id}>
-                  <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: theme.palette.primary.light, color: theme.palette.primary.main, width: 32, height: 32, fontSize: '0.875rem' }}>
-                        {activity.avatar || <WorkIcon fontSize="small" />}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {activity.user}
-                        </Typography>
-                      }
-                      secondary={
-                        <React.Fragment>
-                          <Typography
-                            component="span"
-                            variant="caption"
-                            color="text.secondary"
-                          >
-                            {activity.action} 
-                          </Typography>
-                          <Typography component="span" variant="caption" color="text.primary" fontWeight={500}>
-                            {" " + activity.target}
-                          </Typography>
-                          <Typography display="block" variant="caption" color="text.disabled" sx={{ mt: 0.5 }}>
-                            {activity.time}
-                          </Typography>
-                        </React.Fragment>
-                      }
-                    />
-                  </ListItem>
-                  {index < mockRecentActivity.length - 1 && <Divider component="li" variant="inset" />}
-                </React.Fragment>
-              ))}
-            </List>
-          </Paper>
+             <RecentActivity />
         </Box>
       </Box>
     </Box>

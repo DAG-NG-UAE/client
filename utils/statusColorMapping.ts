@@ -141,6 +141,24 @@ export const getStatusChipProps = (status: string | undefined) => {
         },
         variant: "filled" as "filled",
       };
+    case "published":
+      return {
+        label: "Yes",
+         color: "success" as "success",
+        variant: "outlined" as "outlined",
+      };
+    case "not_published":
+      return {
+        label: "No",
+         color: "error" as "error",
+        variant: "outlined" as "outlined",
+      };
+    case "no_publication":
+      return {
+        label: "N/A",
+         color: "default" as "default",
+        variant: "outlined" as "outlined",
+      };
     default:
       return {
         label: status || "Unknown",

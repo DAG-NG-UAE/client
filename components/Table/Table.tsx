@@ -50,7 +50,7 @@ function TableComponent<T>({
             <Table sx={{ minWidth: 650 }} aria-label="data table">
                 <TableHead>
                     <TableRow sx={{ backgroundColor: 'background.default' }}>
-                        <TableCell padding="checkbox">
+                        {/* <TableCell padding="checkbox">
                             <Checkbox
                                 color="primary"
                                 indeterminate={selected.length > 0 && selected.length < data.length}
@@ -60,7 +60,7 @@ function TableComponent<T>({
                                     'aria-label': 'select all items',
                                 }}
                             />
-                        </TableCell>
+                        </TableCell> */}
                         {columns.map(col => (
                             <TableCell key={col.label} sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>{col.label}</TableCell>
                         ))}
@@ -95,7 +95,7 @@ function TableComponent<T>({
                                     selected={isItemSelected}
                                     sx={{ cursor: 'pointer' }}
                                 >
-                                    <TableCell padding="checkbox">
+                                    {/* <TableCell padding="checkbox">
                                         <Checkbox
                                             color="primary"
                                             checked={isItemSelected}
@@ -107,7 +107,7 @@ function TableComponent<T>({
                                                 'aria-labelledby': `table-checkbox-${index}`,
                                             }}
                                         />
-                                    </TableCell>
+                                    </TableCell> */}
                                     {columns.map((col) => (
                                         <TableCell key={col.key as string}>
                                             {col.render ? col.render(row) : String(row[col.key as keyof T] ?? '')}

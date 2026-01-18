@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   TextField,
@@ -24,7 +24,8 @@ import dayjs, { Dayjs } from "dayjs";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { createRequisition } from "@/api/requisitionApi";
-import { callCreateRequisition } from "@/redux/slices/requisition";
+import { callCreateRequisition, stopLoading } from "@/redux/slices/requisition";
+import { dispatch } from "@/redux/dispatchHandle";
 
 const LOCATIONS = [
   "Lagos",
@@ -119,6 +120,11 @@ const RequisitionRequest = () => {
         loc.headcount
     );
 
+    useEffect(() => {
+      if(loading == true){
+        dispatch(stopLoading())
+      }
+    }, [loading])
     const handleSubmit = async () => {
     // Construct locationsSummary HTML string
     let locationsSummary = "";

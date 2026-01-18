@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -11,6 +11,7 @@ import {
   IconButton,
   Avatar,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -18,6 +19,11 @@ import EditIcon from "@mui/icons-material/Edit";
 import { AppRole } from "@/utils/constants";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import axios from "axios";
+import axiosInstance from "@/api/axiosInstance";
+
+// Helper to determine API URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 interface SignatureSlotProps {
   title: string;
@@ -27,23 +33,94 @@ interface SignatureSlotProps {
 
 const SignatureSlot = ({ title, role, description }: SignatureSlotProps) => {
   const theme = useTheme();
-  // In a real app, this would come from an API/backend based on the role
   const [signature, setSignature] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+ 
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch existing signature on mount
+  useEffect(() => {
+    const fetchSignature = async () => {
+      try {
+        setLoading(true);
+        // Assuming there's an endpoint to get signature by role
+        const response = await axiosInstance.get(`/signature`);
+        console.log(response.data)
+        if (response.data.data && response.data.data.signatureUrl) {
+          console.log('hhh')
+           // Construct full URL if relative path is returned
+           const url = response.data.data.signatureUrl.startsWith('http') 
+             ? response.data.data.signatureUrl 
+             : `${API_URL}${response.data.data.signatureUrl}`;
+          setSignature(url);
+        }
+      } catch (error) {
+        console.error("Failed to fetch signature:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSignature();
+  }, []);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSignature(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      if (file.size > 5 * 1024 * 1024) {
+          alert("File size exceeds 5MB limit");
+          return;
+      }
+
+      // Create a local preview URL immediately
+      const previewUrl = URL.createObjectURL(file);
+      const previousSignature = signature;
+      setSignature(previewUrl);
+      
+      try {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("signature", file); 
+
+        const response = await axiosInstance.post(`/signature`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        // Check for various response properties (value, data, or signatureUrl) to be robust
+        const serverPath = response.data?.value
+
+        if (serverPath) {
+            const url = serverPath.startsWith('http') 
+             ? serverPath 
+             : `${API_URL}${serverPath}`;
+            setSignature(url); // Update UI with the new URL from server
+        }
+      } catch (error) {
+        console.error("Error uploading signature:", error);
+        alert("Failed to upload signature. Please try again.");
+        setSignature(previousSignature); // Revert to previous signature
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
-  const handleRemoveSignature = () => {
-    setSignature(null);
+  const handleRemoveSignature = async () => {
+      if (!confirm("Are you sure you want to delete this signature?")) return;
+      
+      try {
+        // Optional: Call backend to delete
+        // await axios.delete(`${API_URL}/api/upload/signature/${role}`);
+        setSignature(null);
+      } catch (error) {
+          console.error("Error removing signature", error);
+      }
   };
+
+
+  console.log(signature)
 
   return (
     <Card
@@ -90,7 +167,9 @@ const SignatureSlot = ({ title, role, description }: SignatureSlotProps) => {
             mb: 2,
           }}
         >
-          {signature ? (
+          {loading ? (
+             <CircularProgress size={30} />
+          ) : signature ? (
             <>
               <Box
                 component="img"
@@ -115,12 +194,13 @@ const SignatureSlot = ({ title, role, description }: SignatureSlotProps) => {
                     size="small"
                     component="label"
                     sx={{ bgcolor: theme.palette.background.paper }}
+                    disabled={uploading}
                   >
                      <EditIcon fontSize="small" />
                      <input
                         type="file"
                         hidden
-                        accept="image/*"
+                        accept="image/png, image/jpeg, image/jpg" 
                         onChange={handleFileUpload}
                       />
                   </IconButton>
@@ -143,7 +223,7 @@ const SignatureSlot = ({ title, role, description }: SignatureSlotProps) => {
                 color: "text.secondary",
               }}
             >
-              <Typography variant="body2">No signature uploaded</Typography>
+              <Typography variant="body2">{uploading ? "Uploading..." : "No signature uploaded"}</Typography>
             </Box>
           )}
         </Box>
@@ -151,19 +231,20 @@ const SignatureSlot = ({ title, role, description }: SignatureSlotProps) => {
         <Button
           component="label"
           variant="contained"
-          startIcon={<CloudUploadIcon />}
+          startIcon={uploading ? <CircularProgress size={20} color="inherit"/> : <CloudUploadIcon />}
           fullWidth
+          disabled={uploading}
           sx={{
             mt: "auto",
             textTransform: "none",
             borderRadius: theme.shape.borderRadius,
           }}
         >
-          {signature ? "Replace Signature" : "Upload Signature"}
+          {uploading ? "Uploading..." : (signature ? "Replace Signature" : "Upload Signature")}
           <input
             type="file"
             hidden
-            accept="image/*"
+            accept="image/png, image/jpeg, image/jpg"
             onChange={handleFileUpload}
           />
         </Button>
@@ -174,6 +255,7 @@ const SignatureSlot = ({ title, role, description }: SignatureSlotProps) => {
 
 export default function SignaturesPage() {
   const theme = useTheme();
+   const {user} = useSelector((state: RootState) => state.auth);
 
   return (
     <Box
@@ -200,16 +282,13 @@ export default function SignaturesPage() {
           gap: 3,
         }}
       >
+        
         <SignatureSlot
-          title="Head of HR Signature"
-          role={AppRole.HeadOfHr}
+          title={user?.role_name == AppRole.HeadOfHr ? "Head of HR Signature" : "HR Manager Signature"}
+          role={user?.role_name!}
           description="This signature will be used for high-level approvals and official offer letters."
         />
-        <SignatureSlot
-          title="HR Manager Signature"
-          role={AppRole.HrManager}
-          description="This signature will be applied to standard recruitment documents and potential candidate communications."
-        />
+        
       </Box>
     </Box>
   );

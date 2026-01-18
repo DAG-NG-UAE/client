@@ -74,20 +74,36 @@ export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
         key: 'publish', 
         label: 'Publish',
         render: (row) => {
-            if (row.sanity_job_list_key) {
-                return <Button size="small" sx={{ backgroundColor: 'red', color: 'white', '&:hover': { backgroundColor: 'darkred' } }}>Unpublish</Button>;
-            } else if (row.current_job_description_id) {
-                return <Button size="small" sx={{ backgroundColor: 'green', color: 'white', '&:hover': { backgroundColor: 'darkgreen' } }}>Publish</Button>;
+            if (row.sanity_job_list_key && row.status == 'approved') {
+                return <Chip 
+                {...getStatusChipProps('published')} 
+                size="small" 
+                sx={{ 
+                borderRadius: '6px', 
+                fontWeight: 500,
+                ...(getStatusChipProps('published').sx || {})
+                }}
+            />
+            } else if (row.current_job_description_id && row.status !== 'approved') {
+                return <Chip 
+                {...getStatusChipProps('not_published')} 
+                size="small" 
+                sx={{ 
+                borderRadius: '6px', 
+                fontWeight: 500,
+                ...(getStatusChipProps('not_published').sx || {})
+                }}
+            />
             } else {
-                return (
-                    <Tooltip title="Please include job description">
-                        <span>
-                            <Button size="small" sx={{ backgroundColor: 'grey', color: 'white', '&:hover': { backgroundColor: 'darkgrey' } }} disabled>
-                                Publish
-                            </Button>
-                        </span>
-                    </Tooltip>
-                );
+                return <Chip 
+                    {...getStatusChipProps('no_publication')} 
+                    size="small" 
+                    sx={{ 
+                    borderRadius: '6px', 
+                    fontWeight: 500,
+                    ...(getStatusChipProps('no_publication').sx || {})
+                    }}
+            />
             }
         }
     }

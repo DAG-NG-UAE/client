@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { fetchOfferById, fetchCandidateJoiningDetails } from '@/redux/slices/offer';
-import { Box, Button, Card, CardContent, Stack, Typography, Avatar, Divider, Chip } from '@mui/material';
+import { Box, Button, Card, CardContent, Stack, Typography, Avatar, Divider, Chip, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem } from '@mui/material';
 import { Email, Phone, Edit, CheckCircle, Warning, Person, CalendarToday, AttachMoney, LocationOn } from '@mui/icons-material';
 import { formatOfferDate } from '@/utils/transform';
 import { useRouter } from 'next/navigation';
@@ -14,17 +14,23 @@ interface OfferRevisionDetailsProps {
 const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
     const router = useRouter();
     const { currentOffer: offer, joiningDetails, loading } = useSelector((state: RootState) => state.offers);
+    const [historyOpen, setHistoryOpen] = useState(false);
     
+    // Safely retrieve negotiation history
+    const negotiationHistory = joiningDetails?.negotiation_history || [];
+    const latestMessage = negotiationHistory.length > 0 ? negotiationHistory[negotiationHistory.length - 1] : null;
+
     // Mock revision data - in a real app this might come from the offer object or a separate endpoint
-    const revisionData = {
-        message: "Thank you for the offer. However, I would like to request a revision regarding the base salary. Based on my experience and current market rates, I was expecting a package closer to $120,000. Additionally, I would like to discuss the possibility of remote work options for 2 days a week.",
-        revisionDate: new Date().toISOString(),
+    const actualRevisionData = { 
+        message: latestMessage?.message || 'No message',
+        revisionDate: latestMessage?.timestamp || 'No timestamp',
         urgency: "High",
         contact: {
-            email: "candidate@example.com",
-            phone: "+234 800 123 4567"
+            email: joiningDetails?.preferred_email || 'No email',
+            phone: joiningDetails?.preferred_number || 'No phone'
         }
-    };
+    }
+ 
 
     useEffect(() => {
         if (id) {
@@ -70,11 +76,20 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
                             </Typography>
                             <Box sx={{ p: 3, borderRadius: 2, bgcolor: '#fff5f5', border: '1px dashed #ffcdd2', mt: 2 }}>
                                 <Typography variant="body1" sx={{ fontStyle: 'italic', color: 'text.primary', mb: 2 }}>
-                                    "{revisionData.message}"
+                                    "{actualRevisionData.message}"
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary" display="block">
-                                    Received on: {new Date(revisionData.revisionDate).toLocaleDateString()}
+                                    Received on: {actualRevisionData.revisionDate !== 'No timestamp' ? new Date(actualRevisionData.revisionDate).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                                 </Typography>
+                                {negotiationHistory.length > 1 && (
+                                    <Button 
+                                        size="small" 
+                                        sx={{ mt: 1, textTransform: 'none', p: 0, justifyContent: 'flex-start' }} 
+                                        onClick={() => setHistoryOpen(true)}
+                                    >
+                                        View all {negotiationHistory.length} messages
+                                    </Button>
+                                )}
                             </Box>
                         </CardContent>
                     </Card>
@@ -105,13 +120,13 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <Email color="action" fontSize="small" />
                                         <Typography variant="body2">
-                                            {joiningDetails?.personal_email || revisionData.contact?.email || 'No email provided'}
+                                            {joiningDetails?.personal_email || actualRevisionData.contact?.email || 'No email provided'}
                                         </Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <Phone color="action" fontSize="small" />
                                         <Typography variant="body2">
-                                            {joiningDetails?.mobile_nigeria || revisionData.contact?.phone || 'No phone provided'}
+                                            {joiningDetails?.mobile_nigeria || actualRevisionData.contact?.phone || 'No phone provided'}
                                         </Typography>
                                     </Box>
                                 </Box>
@@ -171,6 +186,33 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
                     </Card>
                 </Box>
             </Box>
+            {/* History Dialog */}
+            <Dialog open={historyOpen} onClose={() => setHistoryOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Negotiation History</DialogTitle>
+                <DialogContent dividers>
+                    <List disablePadding>
+                        {negotiationHistory.map((msg, index) => (
+                           <ListItem key={index} alignItems="flex-start" sx={{ 
+                               flexDirection: 'column', 
+                               py: 2,
+                               borderBottom: '1px solid', 
+                               borderColor: 'divider',
+                               '&:last-child': { borderBottom: 'none' }
+                           }}>
+                               <Typography variant="caption" fontWeight="bold" color="primary.main">
+                                   {msg.sender} • {new Date(msg.timestamp).toLocaleString()}
+                               </Typography>
+                               <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                   {msg.message}
+                               </Typography>
+                           </ListItem>
+                        ))}
+                    </List>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setHistoryOpen(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

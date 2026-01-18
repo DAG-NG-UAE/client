@@ -20,7 +20,7 @@ interface JobPostingDetailsProps {
 
 
 const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequisition, handleUnpublishRequisition}: JobPostingDetailsProps) => {
-  console.log(`the requisition is => ${JSON.stringify(requisition.stakeholder_names)}`)
+  console.log(`the requisition is => ${JSON.stringify(requisition)}`)
   const theme = useTheme();
   const {recruiters} = useSelector((state: RootState) => state.users)
   const {selectedRequisition} = useSelector((state: RootState) => state.requisitions)
@@ -305,7 +305,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                       <Box sx={{ position: 'relative', display: 'inline-flex' }}>
                          <Switch
                           checked={!!requisition.sanity_job_list_key}
-                          disabled={publishing || unpublishing}
+                          disabled={publishing || unpublishing || requisition.status !== 'approved'}
                           onChange={async (e) => {
                             if (e.target.checked) {
                               // Publish

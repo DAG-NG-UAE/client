@@ -8,6 +8,7 @@ import {
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { dispatch } from "../dispatchHandle";
 import {
+  createEmployee,
   getAllClauses,
   getAllOffers,
   getGuarantor,
@@ -179,5 +180,17 @@ export const fetchOfferLetter = async (id: string) => {
     dispatch(stopLoading());
   }
 };
+
+export const callCreateEmployee = async (requisitionId: string, candidateId: string) => { 
+  try{ 
+    dispatch(startLoading());
+    const response = await createEmployee(requisitionId, candidateId);
+    
+  }catch(error: any){
+    dispatch(hasError(error?.response?.data || error));
+  }finally{
+    dispatch(stopLoading());
+  }
+}
 
 export default offerSlice.reducer;

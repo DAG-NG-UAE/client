@@ -73,6 +73,13 @@ export interface Reference {
   contact_no: string;
 }
 
+export interface NegotiationDetails { 
+  sender: string;
+  candidateName: string; 
+  message: string; 
+  timestamp: string
+}
+
 export interface JoiningDetails {
   // Section 2: Personal Details
   first_name: string;
@@ -138,6 +145,9 @@ export interface JoiningDetails {
   employment_history: EmploymentHistory[];
   educational_history: EducationalHistory[];
   trainings_certifications: TrainingCertification[];
+  negotiation_history?: NegotiationDetails[]
+  preferred_email?: string; 
+  preferred_number?: string
 }
 
 export interface Guarantor {

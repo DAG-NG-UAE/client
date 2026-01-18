@@ -69,6 +69,7 @@ export const requisitionSlice = createSlice({
     clearRequisition(state) {
       state.requisitions = [];
       state.selectedRequisition = null;
+      state.loading = false
     },
   },
 });

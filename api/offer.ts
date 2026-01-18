@@ -80,3 +80,13 @@ export const updateOffer = async(payload: any, offerId: string) => {
     throw error;
   }
 }
+
+export const createEmployee = async(requisitionId: string, candidateId: string) => { 
+  try {
+    const response = await axiosInstance.patch(`offer/employee/create?requisitionId=${requisitionId}&candidateId=${candidateId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching offer letter", error);
+    throw error;
+  }
+}

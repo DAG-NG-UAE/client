@@ -67,6 +67,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { formatOfferDate } from '@/utils/transform';
 import { generateOffer, updateOffer } from '@/api/offer';
 import { enqueueSnackbar } from 'notistack';
+import { getAllSignatures } from '@/api/signature';
+import { Signature } from '@/interface/signature';
 
 function SortableClause({ id, title, content, onRemove, isPreviewMode }: { id: string, title: string, content: React.ReactNode, onRemove?: () => void, isPreviewMode?: boolean }) {
     const {
@@ -138,21 +140,8 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
 
 
   
-  //mock signature data
-  const signatories = [
-  { 
-    signatory_id: '1', 
-    full_name: 'Avinash Singh', 
-    designation: 'Head, Human Resources', 
-    signature_url: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Jon_Kirsch%27s_Signature.png' 
-  },
-  { 
-    signatory_id: '2', 
-    full_name: 'Sunday Ayimoro', 
-    designation: 'Senior HR Manager', 
-    signature_url: '' // No image, just a line
-  }
-];
+  // Signatures
+  const [signatories, setSignatories] = useState<Signature[]>([]);
 
   // State for form fields
   const [salary, setSalary] = useState('145,000');
@@ -219,7 +208,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
 }
 
   // Authorized Personnels to sign
-  const [selectedSignatory, setSelectedSignatory] = useState<any>(signatories[0]);
+  const [selectedSignatory, setSelectedSignatory] = useState<Signature | null>(null);
 
   // Sensors for DnD
   const sensors = useSensors(
@@ -236,6 +225,19 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
   // Initial Data Fetch
   useEffect(() => {
      fetchMasterClauses();
+
+     const loadSignatures = async () => {
+         try {
+             const data = await getAllSignatures();
+             setSignatories(data);
+             if (data.length > 0) {
+                 setSelectedSignatory(data[0]);
+             }
+         } catch (e) {
+             console.error("Failed to load signatures", e);
+         }
+     };
+     loadSignatures();
 
      if (candidateId) {
          fetchSingleCandidate(candidateId);
@@ -344,30 +346,6 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
           return;
       }
 
-      // 1. Prepare Offer Details (replacements)
-      const offerDetails = {
-          candidate_id: effectiveCandidateId,
-          requisition_id: selectedCandidate?.requisition_id,
-          position: position,
-          location: location,
-          remote: isRemote ? "Remote" : "No Remote / Flex Time",
-          commencement_date: startDate,
-          company_name: companyName,
-          weekday_work_start: weekdayStart,
-          weekday_work_end: weekdayEnd, 
-          weekday_working_hour_start: weekdayStartTime, 
-          weekday_working_hour_end: weekdayEndTime,
-          weekend_included: weekendIncluded,
-          weekend_working_hour_start: weekendIncluded ? weekendStartTime : "", 
-          weekend_working_hour_end: weekendIncluded ? weekendEndTime : "",
-          probation_period: probation,
-          notice_period: noticePeriod,
-          notice_unit: noticeUnit,
-          leave_days: leaveDays,
-          reporting_to: line_manager,
-          signatory_id: selectedSignatory?.signatory_id
-      };
-
       // 2. Prepare Clauses Mapping
       const clausesPayload = selectedClauses?.map((clause, index) => ({
           master_clause_id: clause.master_clause_id,
@@ -401,12 +379,9 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
         monthly_housing: breakdownHousing || null,
         monthly_transport: breakdownTransport || null,
         other_allowance: breakdownAllowance || null,
+        status: existingOfferId ? 'pending' : undefined
       }
 
-      console.log("----- SENDING OFFER -----");
-      console.log("Offer Details (for 'offers' table):", offerDetails);
-      console.log("Clauses Mapping (for 'offer_clauses_mapping' table):", clausesPayload);
-      console.log("-------------------------");
       console.log(`payload: ${JSON.stringify(payload)}`)
 
       if(existingOfferId){ 
@@ -833,17 +808,17 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
 
                     <TextField
                       select
-                      value={selectedSignatory?.signatory_id}
+                      value={selectedSignatory?.signature_id || ''}
                       onChange={(e) => {
-                          const sig = signatories.find(s => s.signatory_id === e.target.value);
-                          setSelectedSignatory(sig);
+                          const sig = signatories.find(s => s.signature_id === e.target.value);
+                          setSelectedSignatory(sig || null);
                       }}
                       fullWidth
                       size="small"
                     >
                     {signatories.map((sig) => (
-                      <MenuItem key={sig.signatory_id} value={sig.signatory_id}>
-                        {sig.full_name} ({sig.designation})
+                      <MenuItem key={sig.signature_id} value={sig.signature_id}>
+                        {sig.user_name}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -1062,7 +1037,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                  <Box sx={{ position: 'relative', width: 'fit-content' }}>
                     {/* The Signature Image */}
                     <img 
-                      src={selectedSignatory?.signature_url} 
+                      src={selectedSignatory ? `http://localhost:5000/${selectedSignatory.signature_path.replace(/\\/g, '/').replace(/^\/+/, '')}` : ''} 
                       style={{ 
                         height: '70px', 
                         display: 'block',
@@ -1090,12 +1065,12 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                     />
                   </Box>
 
-                  <Box sx={{ mt: selectedSignatory?.signature_url ? 0 : 4 }}>
+                  <Box sx={{ mt: selectedSignatory?.signature_path ? 0 : 4 }}>
                     <Typography variant="body1" fontWeight="bold">
-                      {selectedSignatory?.full_name || "____________________"}
+                      {selectedSignatory?.user_name || "____________________"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {selectedSignatory?.designation || "Authorized Signatory"}
+                      Authorized Signatory
                     </Typography>
                   </Box>
                 </Box>
