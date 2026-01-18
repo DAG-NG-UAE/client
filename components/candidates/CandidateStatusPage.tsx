@@ -105,10 +105,29 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
 
   
 
-  // ... inside component ...
+  // State to track selected role/requisition
+  const [selectedRole, setSelectedRole] = useState('all');
+
+  // ... (previous useEffect) ...
+
+  const handleRoleChange = (requisitionId: string) => {
+    setSelectedRole(requisitionId);
+    fetchAllCandidates(requisitionId, status); // Fetch immediately on role change, resetting search implicitly or we can arguably keep it? 
+  };
+  
+  const searchRef = React.useRef('');
+
   const handleSearch = React.useCallback((query: string) => {
-    fetchAllCandidates(undefined, status, 1, 10, query);
-  }, [status]);
+    searchRef.current = query;
+    // When searching, use the currently selected role
+    fetchAllCandidates(selectedRole, status, 1, 10, query);
+  }, [selectedRole, status]);
+
+  const handleFilterChange = (requisitionId: string) => {
+    setSelectedRole(requisitionId);
+    // When filtering by role, use the current search query
+    fetchAllCandidates(requisitionId, status, 1, 10, searchRef.current);
+  }
 
   return (
     <>
@@ -129,7 +148,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
               isCandidate={true} 
               allYears={allYears}
               refreshPosition={handleRefreshPositions}
-              // filterFunction={fetchCandidates}
+              filterFunction={handleFilterChange}
               onYearChange={handleYearChange}
               onSearch={handleSearch}
           />

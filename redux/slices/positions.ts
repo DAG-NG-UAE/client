@@ -43,6 +43,7 @@ export const fetchPositions = async () => {
   try {
     dispatch(startLoading());
     const response = await getPosition();
+    console.log('positions slice =>', response)
     dispatch(setPositions(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
