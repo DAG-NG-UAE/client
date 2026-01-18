@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TableProps } from "@/interface/table";
-import { Box, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography, Checkbox, CircularProgress } from "@mui/material";
+import { Box, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography, Checkbox, CircularProgress, TablePagination } from "@mui/material";
 import TableContainer from "@mui/material/TableContainer";
 
 function TableComponent<T>({
@@ -10,14 +10,25 @@ function TableComponent<T>({
     onRowClick,
     actions,
     loading,
-    emptyMessage = 'No Data Available at this time'
+    emptyMessage = 'No Data Available at this time',
+    totalCount,
+    page = 0,
+    rowsPerPage = 10,
+    onPageChange,
+    onRowsPerPageChange
 }: TableProps<T>) {
-    console.log(`the data is => ${JSON.stringify(data)}`)
+    // Safety check for data
+    const safeData = Array.isArray(data) ? data : [];
+    if (!Array.isArray(data)) {
+        console.error("TableComponent: data is not an array", data);
+    }
+
+    console.log(`the data is => ${JSON.stringify(safeData)}`)
     const [selected, setSelected] = useState<readonly any[]>([]);
 
     const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.checked) {
-            const newSelecteds = data.map((n) => keyExtractor(n));
+            const newSelecteds = safeData.map((n) => keyExtractor(n));
             setSelected(newSelecteds);
             return;
         }
@@ -53,8 +64,8 @@ function TableComponent<T>({
                         {/* <TableCell padding="checkbox">
                             <Checkbox
                                 color="primary"
-                                indeterminate={selected.length > 0 && selected.length < data.length}
-                                checked={data.length > 0 && selected.length === data.length}
+                                indeterminate={selected.length > 0 && selected.length < safeData.length}
+                                checked={safeData.length > 0 && selected.length === safeData.length}
                                 onChange={handleSelectAllClick}
                                 inputProps={{
                                     'aria-label': 'select all items',
@@ -74,14 +85,14 @@ function TableComponent<T>({
                                 <CircularProgress />
                             </TableCell>
                         </TableRow>
-                    ) : data.length === 0 ? (
+                    ) : safeData.length === 0 ? (
                         <TableRow>
                             <TableCell colSpan={columns.length + 2} align="center">
                                 <Typography>{emptyMessage}</Typography>
                             </TableCell>
                         </TableRow>
                     ) : (
-                        data.map((row, index) => {
+                        safeData.map((row, index) => {
                             const rowKey = keyExtractor(row);
                             const isItemSelected = isSelected(rowKey);
                             return (
@@ -124,6 +135,17 @@ function TableComponent<T>({
                     )}
                 </TableBody>
             </Table>
+            {totalCount !== undefined && onPageChange && (
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={totalCount}
+                    rowsPerPage={rowsPerPage}
+                    page={page} // Material UI uses 0-indexed pages
+                    onPageChange={onPageChange}
+                    onRowsPerPageChange={onRowsPerPageChange}
+                />
+            )}
         </TableContainer>
     );
 };

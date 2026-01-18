@@ -18,8 +18,16 @@ import { RecruiterSelection, Requisition } from "@/interface/requisition";
 import { dispatch } from "../dispatchHandle";
 import { enqueueSnackbar } from "notistack";
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface RequisitionState {
   requisitions: Partial<Requisition>[];
+  meta: PaginationMeta | null;
   selectedRequisition: Partial<Requisition> | null;
   loading: boolean;
   error: string | null;
@@ -27,6 +35,7 @@ export interface RequisitionState {
 
 const initialState: RequisitionState = {
   requisitions: [],
+  meta: null,
   selectedRequisition: null,
   loading: false,
   error: null,
@@ -43,13 +52,24 @@ export const requisitionSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    setRequisitions(state, action: PayloadAction<Partial<Requisition>[]>) {
+    setRequisitions(
+      state,
+      action: PayloadAction<{
+        data: Partial<Requisition>[];
+        meta: PaginationMeta;
+      }>,
+    ) {
+      console.log(
+        "setRequisitions reducer called with payload:",
+        action.payload,
+      );
       state.loading = false;
-      state.requisitions = action.payload;
+      state.requisitions = action.payload.data || []; // Fallback to empty array
+      state.meta = action.payload.meta;
     },
     setSelectedRequisition: (
       state,
-      action: PayloadAction<Partial<Requisition>>
+      action: PayloadAction<Partial<Requisition>>,
     ) => {
       state.loading = false;
       state.selectedRequisition = {
@@ -69,7 +89,7 @@ export const requisitionSlice = createSlice({
     clearRequisition(state) {
       state.requisitions = [];
       state.selectedRequisition = null;
-      state.loading = false
+      state.loading = false;
     },
   },
 });
@@ -85,10 +105,14 @@ export const {
   clearRequisition,
 } = requisitionSlice.actions;
 
-export const fetchRequisitions = async (status?: string) => {
+export const fetchRequisitions = async (
+  status?: string,
+  page: number = 1,
+  limit: number = 10,
+) => {
   try {
     dispatch(startLoading());
-    const response = await getRequisitions(status);
+    const response = await getRequisitions(status, page, limit);
     dispatch(setRequisitions(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
@@ -153,7 +177,7 @@ export const callPublishRequisition = async (requisitionId: string) => {
 
 export const callUnPublishRequisition = async (
   requisitionId: string,
-  jobListKey: string
+  jobListKey: string,
 ) => {
   try {
     dispatch(startLoading());
@@ -171,7 +195,7 @@ export const callUnPublishRequisition = async (
 export const callAssignRecruiters = async (
   requisitionId: string,
   recruiters: { userId: string; roleId: string }[],
-  recruiterEmails: string
+  recruiterEmails: string,
 ) => {
   try {
     dispatch(startLoading());
@@ -189,7 +213,7 @@ export const callAssignRecruiters = async (
 export const callRemoveRecruiters = async (
   requisitionId: string,
   userId: string,
-  recruiterEmail: string
+  recruiterEmail: string,
 ) => {
   try {
     dispatch(startLoading());
@@ -208,7 +232,7 @@ export const callRemoveRecruiters = async (
 export const callAddRequisitionLocation = async (
   requisitionId: string,
   location: string,
-  headCount: number
+  headCount: number,
 ) => {
   try {
     dispatch(startLoading());
@@ -227,7 +251,7 @@ export const callUpdateRequisitionLocation = async (
   requisitionId: string,
   positionSlotId: string,
   location: string,
-  headCount: number
+  headCount: number,
 ) => {
   try {
     dispatch(startLoading());
@@ -235,7 +259,7 @@ export const callUpdateRequisitionLocation = async (
       requisitionId,
       positionSlotId,
       location,
-      headCount
+      headCount,
     );
     await fetchRequisitionById(requisitionId);
     enqueueSnackbar("Location updated successfully", { variant: "success" });
@@ -250,7 +274,7 @@ export const callUpdateRequisitionLocation = async (
 export const callDeleteRequisitionLocation = async (
   requisitionId: string,
   positionSlotId: string,
-  location: string
+  location: string,
 ) => {
   try {
     dispatch(startLoading());
@@ -258,7 +282,7 @@ export const callDeleteRequisitionLocation = async (
     await fetchRequisitionById(requisitionId);
     enqueueSnackbar(
       "Location marked as in active and removed from the careers page",
-      { variant: "success" }
+      { variant: "success" },
     );
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
@@ -270,7 +294,7 @@ export const callDeleteRequisitionLocation = async (
 
 export const saveJobDescription = async (
   requisitionId: string,
-  data: Partial<Requisition>
+  data: Partial<Requisition>,
 ) => {
   try {
     dispatch(startLoading());
@@ -288,7 +312,7 @@ export const saveJobDescription = async (
 };
 
 export const callCreateRequisition = async (
-  requisition: Partial<Requisition>
+  requisition: Partial<Requisition>,
 ) => {
   try {
     dispatch(startLoading());

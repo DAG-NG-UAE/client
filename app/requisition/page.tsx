@@ -17,8 +17,9 @@ import { RequisitionRowActions } from '@/components/requisition/RequisitionActio
 
 
 const RequisitionPage = () => {
-  const {requisitions, loading} = useSelector((state:RootState) => state.requisitions)
+  const {requisitions, loading, meta} = useSelector((state:RootState) => state.requisitions)
  
+  console.log(`the requisitions are => ${JSON.stringify(requisitions)}`)
   const columns = RequisitionColumns
   const status = loading
 
@@ -79,6 +80,11 @@ const RequisitionPage = () => {
           loading={status == true}
           onRowClick={handleRowClick}
           keyExtractor={(requisitions) => requisitions.requisition_id}
+          totalCount={meta?.total || 0}
+          page={(meta?.page || 1) - 1}
+          rowsPerPage={meta?.limit || 10}
+          onPageChange={(e, newPage) => fetchRequisitions(undefined, newPage + 1, meta?.limit)}
+          onRowsPerPageChange={(e) => fetchRequisitions(undefined, 1, parseInt(e.target.value, 10))}
         >
         </TableComponent>
       </Container>

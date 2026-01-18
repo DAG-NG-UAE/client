@@ -3,12 +3,20 @@ import axiosInstance from "./axiosInstance";
 import { RecruiterSelection, Requisition } from "@/interface/requisition";
 
 export const getRequisitions = async (
-  status?: string
-): Promise<Partial<Requisition>[]> => {
+  status?: string,
+  page: number = 1,
+  limit: number = 10,
+): Promise<{ data: Partial<Requisition>[]; meta: any }> => {
   try {
-    console.log(`the params being passed ${status}`);
+    console.log(
+      `the params being passed ${status} page=${page} limit=${limit}`,
+    );
     const config = {
-      params: status ? { status } : {},
+      params: {
+        ...(status ? { status } : {}),
+        page,
+        limit,
+      },
     };
 
     // 2. Pass the config object as the second argument to axiosInstance.get()
@@ -22,11 +30,11 @@ export const getRequisitions = async (
 };
 
 export const getSingleRequisition = async (
-  id: string
+  id: string,
 ): Promise<Partial<Requisition>> => {
   try {
     const response = await axiosInstance.get(
-      `/requisition/single?requisitionId=${id}`
+      `/requisition/single?requisitionId=${id}`,
     );
     console.log("The response we get is", JSON.stringify(response));
     return response.data.data;
@@ -37,11 +45,11 @@ export const getSingleRequisition = async (
 };
 
 export const getCareerDetail = async (
-  slug: string
+  slug: string,
 ): Promise<Partial<Requisition>> => {
   try {
     const response = await axiosInstance.get(
-      `/requisition/career?slug=${slug}`
+      `/requisition/career?slug=${slug}`,
     );
     return response.data.data;
   } catch (error) {
@@ -52,12 +60,12 @@ export const getCareerDetail = async (
 
 export const updateRequisition = async (
   id: string,
-  data: Partial<Requisition>
+  data: Partial<Requisition>,
 ): Promise<Partial<Requisition>> => {
   try {
     const response = await axiosInstance.put(
       `/requisition?requisitionId=${id}`,
-      data
+      data,
     );
     return response.data.data;
   } catch (error) {
@@ -69,7 +77,7 @@ export const updateRequisition = async (
 export const publishRequisition = async (requisitionId: string) => {
   try {
     const response = await axiosInstance.put(
-      `/requisition/publish?requisitionId=${requisitionId}`
+      `/requisition/publish?requisitionId=${requisitionId}`,
     );
     return response.data.data;
   } catch (error) {
@@ -80,11 +88,11 @@ export const publishRequisition = async (requisitionId: string) => {
 
 export const unPublishRequisition = async (
   requisitionId: string,
-  jobListKey: string
+  jobListKey: string,
 ) => {
   try {
     const response = await axiosInstance.put(
-      `/requisition/unpublish?requisitionId=${requisitionId}&jobListKey=${jobListKey}`
+      `/requisition/unpublish?requisitionId=${requisitionId}&jobListKey=${jobListKey}`,
     );
     return response.data.data;
   } catch (error) {
@@ -106,12 +114,12 @@ export const getPosition = async () => {
 export const approveRequisition = async (
   recruiter: RecruiterSelection[],
   requisitionId: string,
-  recruiterEmails: string
+  recruiterEmails: string,
 ) => {
   try {
     const response = await axiosInstance.post(
       `requisition/approve?requisitionId=${requisitionId}`,
-      { recruiter, recruiterEmails }
+      { recruiter, recruiterEmails },
     );
     return response.data.data;
   } catch (error) {
@@ -123,7 +131,7 @@ export const approveRequisition = async (
 export const holdRequisition = async (requisitionId: string) => {
   try {
     const response = await axiosInstance.put(
-      `requisition/hold?requisitionId=${requisitionId}`
+      `requisition/hold?requisitionId=${requisitionId}`,
     );
     return response.data.data;
   } catch (error) {
@@ -135,12 +143,12 @@ export const holdRequisition = async (requisitionId: string) => {
 export const assignRecruiters = async (
   requisitionId: string,
   recruiters: { userId: string; roleId: string }[],
-  recruiterEmails: string
+  recruiterEmails: string,
 ) => {
   try {
     const response = await axiosInstance.put(
       `/requisition/assign-recruiters?requisitionId=${requisitionId}`,
-      { recruiters, recruiterEmails }
+      { recruiters, recruiterEmails },
     );
     return response.data.data;
   } catch (error) {
@@ -152,12 +160,12 @@ export const assignRecruiters = async (
 export const removeRecruiters = async (
   requisitionId: string,
   userId: string,
-  recruiterEmail: string
+  recruiterEmail: string,
 ) => {
   try {
     const response = await axiosInstance.put(
       `/requisition/remove-recruiters?requisitionId=${requisitionId}`,
-      { userId, recruiterEmail }
+      { userId, recruiterEmail },
     );
     return response.data.data;
   } catch (error) {
@@ -169,12 +177,12 @@ export const removeRecruiters = async (
 export const addRequisitionLocation = async (
   requisitionId: string,
   location: string,
-  headCount: number
+  headCount: number,
 ) => {
   try {
     const response = await axiosInstance.patch(
       `/requisition/locations?requisitionId=${requisitionId}`,
-      { locations: { loc: location, headCount } }
+      { locations: { loc: location, headCount } },
     );
     return response.data.data;
   } catch (error) {
@@ -187,7 +195,7 @@ export const updateRequisitionLocation = async (
   requisitionId: string,
   positionSlotId: string,
   location: string,
-  headCount: number
+  headCount: number,
 ) => {
   try {
     const response = await axiosInstance.patch(
@@ -198,7 +206,7 @@ export const updateRequisitionLocation = async (
           loc: location,
           headCount,
         },
-      }
+      },
     );
     return response.data.data;
   } catch (error) {
@@ -210,13 +218,13 @@ export const updateRequisitionLocation = async (
 export const removeRequisitionLocation = async (
   requisitionId: string,
   positionSlotId: string,
-  location: string
+  location: string,
 ) => {
   try {
     // Axios delete with body requires 'data' property in config
     const response = await axiosInstance.patch(
       `/requisition/locations?requisitionId=${requisitionId}`,
-      { locations: { position_slot_id: positionSlotId, loc: location } }
+      { locations: { position_slot_id: positionSlotId, loc: location } },
     );
     return response.data.data;
   } catch (error) {
