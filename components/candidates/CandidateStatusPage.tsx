@@ -105,6 +105,11 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
 
   
 
+  // ... inside component ...
+  const handleSearch = React.useCallback((query: string) => {
+    fetchAllCandidates(undefined, status, 1, 10, query);
+  }, [status]);
+
   return (
     <>
       <Box>
@@ -126,6 +131,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
               refreshPosition={handleRefreshPositions}
               // filterFunction={fetchCandidates}
               onYearChange={handleYearChange}
+              onSearch={handleSearch}
           />
           
 

@@ -40,6 +40,7 @@ export const getAllCandidates = async (
   status?: string,
   page: number = 1,
   limit: number = 10,
+  search?: string,
 ) => {
   try {
     const queryParams = new URLSearchParams();
@@ -53,6 +54,11 @@ export const getAllCandidates = async (
     // Add pagination params
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
+
+    // Add search param
+    if (search) {
+      queryParams.append("search", search);
+    }
 
     const queryString = queryParams.toString();
     const url = `candidate?${queryString}`;

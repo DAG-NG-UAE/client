@@ -90,10 +90,17 @@ export const fetchAllCandidates = async (
   status?: string,
   page: number = 1,
   limit: number = 10,
+  search?: string,
 ) => {
   try {
     dispatch(startLoading());
-    const response = await getAllCandidates(requisitionId, status, page, limit);
+    const response = await getAllCandidates(
+      requisitionId,
+      status,
+      page,
+      limit,
+      search,
+    );
     console.log(
       `in the candidate slice I called the get all candidates => ${JSON.stringify(response)}`,
     );
