@@ -10,10 +10,20 @@ export const getAllClauses = async () => {
   }
 };
 
-export const getAllOffers = async (status?: string) => {
+export const getAllOffers = async (
+  status?: string,
+  page: number = 1,
+  limit: number = 10,
+) => {
   try {
-    const url = status ? `offer/all?status=${status}` : "offer/all";
+    let url = status ? `offer/all?status=${status}` : "offer/all";
+    const separator = url.includes("?") ? "&" : "?";
+    url += `${separator}page=${page}&limit=${limit}`;
+
     const response = await axiosInstance.get(url);
+    console.log(
+      `the response from get all offers => ${JSON.stringify(response.data)}`,
+    );
     return response.data.data;
   } catch (error) {
     console.error("Error fetching all offers", error);
@@ -33,7 +43,9 @@ export const getOfferById = async (id: string) => {
 
 export const getJoiningDetails = async (offerId: string) => {
   try {
-    const response = await axiosInstance.get(`offer/joining/info?offerId=${offerId}`);
+    const response = await axiosInstance.get(
+      `offer/joining/info?offerId=${offerId}`,
+    );
     return response.data.data;
   } catch (error) {
     console.error("Error fetching joining details", error);
@@ -43,7 +55,9 @@ export const getJoiningDetails = async (offerId: string) => {
 
 export const getGuarantor = async (offerId: string) => {
   try {
-    const response = await axiosInstance.get(`offer/guarantor/info?offerId=${offerId}`);
+    const response = await axiosInstance.get(
+      `offer/guarantor/info?offerId=${offerId}`,
+    );
     return response.data.data;
   } catch (error) {
     console.error("Error fetching guarantor", error);
@@ -61,7 +75,7 @@ export const getOfferLetter = async (offerId: string) => {
   }
 };
 
-export const generateOffer = async(payload: any) => { 
+export const generateOffer = async (payload: any) => {
   try {
     const response = await axiosInstance.post(`offer/send`, payload);
     return response.data.data;
@@ -69,24 +83,32 @@ export const generateOffer = async(payload: any) => {
     console.error("Error fetching offer letter", error);
     throw error;
   }
-}
+};
 
-export const updateOffer = async(payload: any, offerId: string) => { 
+export const updateOffer = async (payload: any, offerId: string) => {
   try {
-    const response = await axiosInstance.patch(`offer/edit?offerId=${offerId}`, payload);
+    const response = await axiosInstance.patch(
+      `offer/edit?offerId=${offerId}`,
+      payload,
+    );
     return response.data.data;
   } catch (error) {
     console.error("Error fetching offer letter", error);
     throw error;
   }
-}
+};
 
-export const createEmployee = async(requisitionId: string, candidateId: string) => { 
+export const createEmployee = async (
+  requisitionId: string,
+  candidateId: string,
+) => {
   try {
-    const response = await axiosInstance.patch(`offer/employee/create?requisitionId=${requisitionId}&candidateId=${candidateId}`);
+    const response = await axiosInstance.patch(
+      `offer/employee/create?requisitionId=${requisitionId}&candidateId=${candidateId}`,
+    );
     return response.data.data;
   } catch (error) {
     console.error("Error fetching offer letter", error);
     throw error;
   }
-}
+};

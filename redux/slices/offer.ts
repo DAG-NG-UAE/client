@@ -5,6 +5,7 @@ import {
   JoiningDetails,
   Offer,
 } from "@/interface/offer";
+import { PaginationMeta } from "./requisition";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { dispatch } from "../dispatchHandle";
 import {
@@ -20,6 +21,7 @@ import {
 export interface OfferState {
   masterClauses: Partial<Clauses>[];
   offers: Partial<Offer>[];
+  meta: PaginationMeta | null;
   joiningDetails: Partial<JoiningDetails> | null;
   guarantor: Partial<Guarantor> | null;
   currentOffer: Partial<Offer> | null;
@@ -31,6 +33,7 @@ export interface OfferState {
 const initialState: OfferState = {
   masterClauses: [],
   offers: [],
+  meta: null,
   joiningDetails: null,
   guarantor: null,
   currentOffer: null,
@@ -54,7 +57,7 @@ export const offerSlice = createSlice({
       state.loading = false;
     },
     setMasterClauses(state, action: PayloadAction<Partial<Clauses>[]>) {
-      (state.loading = false), (state.masterClauses = action.payload);
+      ((state.loading = false), (state.masterClauses = action.payload));
     },
     addSelectedClause(state, action: PayloadAction<ExtendedClause>) {
       if (!state.selectedClauses) state.selectedClauses = [];
@@ -63,15 +66,20 @@ export const offerSlice = createSlice({
     removeSelectedClause(state, action: PayloadAction<string>) {
       if (state.selectedClauses) {
         state.selectedClauses = state.selectedClauses.filter(
-          (clause) => clause.instanceId !== action.payload
+          (clause) => clause.instanceId !== action.payload,
         );
       }
     },
     setSelectedClauses(state, action: PayloadAction<ExtendedClause[]>) {
       state.selectedClauses = action.payload;
     },
-    setOffers(state, action: PayloadAction<Partial<Offer>[]>) {
-      state.offers = action.payload;
+    setOffers(
+      state,
+      action: PayloadAction<{ data: Partial<Offer>[]; meta: PaginationMeta }>,
+    ) {
+      state.loading = false;
+      state.offers = action.payload.data || [];
+      state.meta = action.payload.meta;
     },
     setCurrentOffer(state, action: PayloadAction<Partial<Offer>>) {
       state.currentOffer = action.payload;
@@ -121,10 +129,14 @@ export const fetchMasterClauses = async () => {
   }
 };
 
-export const fetchAllOffers = async (status?: string) => {
+export const fetchAllOffers = async (
+  status?: string,
+  page: number = 1,
+  limit: number = 10,
+) => {
   try {
     dispatch(startLoading());
-    const response = await getAllOffers(status);
+    const response = await getAllOffers(status, page, limit);
     dispatch(setOffers(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
@@ -181,16 +193,18 @@ export const fetchOfferLetter = async (id: string) => {
   }
 };
 
-export const callCreateEmployee = async (requisitionId: string, candidateId: string) => { 
-  try{ 
+export const callCreateEmployee = async (
+  requisitionId: string,
+  candidateId: string,
+) => {
+  try {
     dispatch(startLoading());
     const response = await createEmployee(requisitionId, candidateId);
-    
-  }catch(error: any){
+  } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
-  }finally{
+  } finally {
     dispatch(stopLoading());
   }
-}
+};
 
 export default offerSlice.reducer;

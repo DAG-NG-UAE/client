@@ -14,7 +14,8 @@ const OfferStatusPage = ({status}: {status: string}) => {
     console.log(status)
     const details = offerStatusDetail[status] || { title: 'Offers', subtitle: 'Manage all offers.' };
 
-    const {offers, loading} = useSelector((state: RootState) => state.offers)
+    const {offers, loading, meta} = useSelector((state: RootState) => state.offers)
+    const { user } = useSelector((state:RootState) => state.auth)
 
     useEffect(() => { 
         if(status == 'all'){
@@ -93,6 +94,11 @@ const OfferStatusPage = ({status}: {status: string}) => {
               onRowClick={handleRowClick}
               actions={hasActions ? renderActions : undefined}
               keyExtractor={(offers) => offers.offer_id}
+              totalCount={meta?.total || 0}
+              page={(meta?.page || 1) - 1} // MUI is 0-indexed
+              rowsPerPage={meta?.limit || 10}
+              onPageChange={(e, newPage) => fetchAllOffers(status === 'all' ? undefined : status, newPage + 1, meta?.limit)}
+              onRowsPerPageChange={(e) => fetchAllOffers(status === 'all' ? undefined : status, 1, parseInt(e.target.value, 10))}
             >
             </TableComponent>
           </Box>
