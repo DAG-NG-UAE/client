@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { fetchOfferById, fetchCandidateJoiningDetails, fetchGuarantor, fetchOfferLetter } from '@/redux/slices/offer';
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
 import { ContentCopy, Edit, Visibility, Description, AssignmentInd } from '@mui/icons-material';
 import { formatOfferDate } from '@/utils/transform';
 import JoiningDetailsView from './JoiningDetailsView';
@@ -46,7 +46,17 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
     };
 
     if (loading && !offer && viewMode === 'offer') {
-        return <Typography>Loading...</Typography>;
+        // we want to show skeleton of the page (4 cards)
+        return (
+            <Box sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Skeleton variant="rectangular" width="100%" height={200} />
+                    <Skeleton variant="rectangular" width="100%" height={200} />
+                    <Skeleton variant="rectangular" width="100%" height={200} />
+                    <Skeleton variant="rectangular" width="100%" height={200} />
+                </Box>
+            </Box>
+        );
     }
 
     if (viewMode === 'joining') {

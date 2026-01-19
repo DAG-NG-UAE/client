@@ -74,7 +74,7 @@ export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
         key: 'publish', 
         label: 'Publish',
         render: (row) => {
-            if (row.sanity_job_list_key && row.status == 'approved') {
+            if (row.sanity_job_list_key && (row.status == 'approved' || row.status == 'closed')) {
                 return <Chip 
                 {...getStatusChipProps('published')} 
                 size="small" 

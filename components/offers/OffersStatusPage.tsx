@@ -3,21 +3,43 @@ import { Box, Button, Typography, CircularProgress } from "@mui/material";
 import TableComponent from "../Table/Table";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { callCreateEmployee, fetchAllOffers } from "@/redux/slices/offer";
 import { getColumnsForOfferStatus } from "@/utils/offersColumnConfig";
 import { Offer } from "@/interface/offer";
 import { useRouter } from "next/navigation";
+import Filters from "../Filters";
+import { fetchPositions } from "@/redux/slices/positions";
 
 const OfferStatusPage = ({status}: {status: string}) => {
     const router = useRouter();
     console.log(status)
     const details = offerStatusDetail[status] || { title: 'Offers', subtitle: 'Manage all offers.' };
 
-    const {offers, loading, meta} = useSelector((state: RootState) => state.offers)
-    const { user } = useSelector((state:RootState) => state.auth)
+    const { offers, loading, meta } = useSelector((state: RootState) => state.offers);
+    const { positions } = useSelector((state: RootState) => state.positions);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedRole, setSelectedRole] = useState("all");
+
+    
+    // Filter out duplicate requisition_ids for the filter dropdown
+    const uniquePositions = positions.filter((pos, index, self) =>
+        index === self.findIndex((p) => p.requisition_id === pos.requisition_id)
+    );
+
+    const allRoles = [
+      { text: 'All Roles', value: 'all' },
+      ...uniquePositions.map((position) => ({
+        text: position.position,
+        value: position.requisition_id,
+      })),
+    ];
+
+    console.log(allRoles)
 
     useEffect(() => { 
+        setSearchQuery("");
+        setSelectedRole("all");
         if(status == 'all'){
             fetchAllOffers()
         }else{
@@ -39,12 +61,19 @@ const OfferStatusPage = ({status}: {status: string}) => {
       }
     }
 
+    const limit = meta?.limit || 10;
+    const handleSearch = useCallback((query: string) => {
+        setSearchQuery(query);
+        fetchAllOffers(status === 'all' ? undefined : status, 1, limit, query, selectedRole);
+    }, [status, limit, selectedRole]);
+
     const renderActions = (row: Partial<Offer>) => {
       return (
         <Box display='flex' gap={2}>
             <Button
-              variant="outlined"
+              variant="contained"
               color="primary"
+              size="small"
               onClick={(e) => {
                 e.stopPropagation();
                 handleRowClick(row);
@@ -53,12 +82,11 @@ const OfferStatusPage = ({status}: {status: string}) => {
               View
             </Button>
             {row.finalized_date && (
-              loading ? (
-                <CircularProgress size={24} />
-              ) : (
+              
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   color="primary"
+                  size="small"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCreateEmployee(row);
@@ -67,11 +95,20 @@ const OfferStatusPage = ({status}: {status: string}) => {
                   Create Employee
                 </Button>
               )
-            )}
+    }
         </Box>
         
       );
     };
+
+    const handleRefreshPositions = () => {
+        fetchPositions()
+    };
+
+    const handleFilterChange = (requisitionId: string) => {
+        setSelectedRole(requisitionId);
+        fetchAllOffers(status === 'all' ? undefined : status, 1, limit, searchQuery, requisitionId);
+    }
 
     const hasActions = true;
 
@@ -86,6 +123,16 @@ const OfferStatusPage = ({status}: {status: string}) => {
         </Typography>
 
 
+        <Filters 
+            key={status}
+            menuItems={allRoles} 
+            textPlaceholder="Search candidate name. position " 
+            isCandidate={false} 
+            onSearch={handleSearch}
+            refreshPosition={handleRefreshPositions}
+            filterFunction={handleFilterChange}
+        />
+        
         {offers && (
           <Box sx={{ mt: 4 }}>
             <TableComponent
@@ -97,8 +144,8 @@ const OfferStatusPage = ({status}: {status: string}) => {
               totalCount={meta?.total || 0}
               page={(meta?.page || 1) - 1} // MUI is 0-indexed
               rowsPerPage={meta?.limit || 10}
-              onPageChange={(e, newPage) => fetchAllOffers(status === 'all' ? undefined : status, newPage + 1, meta?.limit)}
-              onRowsPerPageChange={(e) => fetchAllOffers(status === 'all' ? undefined : status, 1, parseInt(e.target.value, 10))}
+              onPageChange={(e, newPage) => fetchAllOffers(status === 'all' ? undefined : status, newPage + 1, meta?.limit, searchQuery, selectedRole)}
+              onRowsPerPageChange={(e) => fetchAllOffers(status === 'all' ? undefined : status, 1, parseInt(e.target.value, 10), searchQuery, selectedRole)}
             >
             </TableComponent>
           </Box>

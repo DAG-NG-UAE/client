@@ -41,8 +41,8 @@ export const FillInterviewFormButton = ({ candidate }: { candidate: Partial<Cand
 export const GenerateOfferLetterButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
     return (
         <Button
-            variant="outlined"
-            color="success"
+            variant="contained"
+            color="primary"
             size="small"
             startIcon={<Description fontSize="small" />}
             component={Link}

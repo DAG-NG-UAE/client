@@ -14,11 +14,24 @@ export const getAllOffers = async (
   status?: string,
   page: number = 1,
   limit: number = 10,
+  search?: string,
+  requisitionId?: string,
 ) => {
   try {
-    let url = status ? `offer/all?status=${status}` : "offer/all";
-    const separator = url.includes("?") ? "&" : "?";
-    url += `${separator}page=${page}&limit=${limit}`;
+    const params = new URLSearchParams();
+    if (status) params.append("status", status);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
+    if (search) params.append("search", search);
+    if (requisitionId && requisitionId !== "all")
+      params.append("requisitionId", requisitionId);
+
+    const url = `offer/all?${params.toString()}`;
+
+    if (search) {
+      // Re-adding search manually if needed, or trusting URLSearchParams handles encoding
+      // URLSearchParams handles encoding automatically.
+    }
 
     const response = await axiosInstance.get(url);
     console.log(

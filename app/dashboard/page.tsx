@@ -155,12 +155,11 @@ const FunnelChart = ({ funnelChartData }: { funnelChartData: { label: string; va
 const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data.data)
 const DashboardPage = () => {
   const router = useRouter();
+  const theme = useTheme();
   const { data, error, isLoading } = useSWR('/analytics/dashboard/stats', fetcher)
 
   if (isLoading) return <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />;
   if (error) return <Alert severity="error">Failed to load dashboard data</Alert>;
-
-  const theme = useTheme();
 
   const funnelBase = data?.funnel_applied || 1; // Avoid division by zero
 

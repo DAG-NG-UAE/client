@@ -133,10 +133,18 @@ export const fetchAllOffers = async (
   status?: string,
   page: number = 1,
   limit: number = 10,
+  search?: string,
+  requisitionId?: string,
 ) => {
   try {
     dispatch(startLoading());
-    const response = await getAllOffers(status, page, limit);
+    const response = await getAllOffers(
+      status,
+      page,
+      limit,
+      search,
+      requisitionId,
+    );
     dispatch(setOffers(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));

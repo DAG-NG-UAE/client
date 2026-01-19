@@ -21,7 +21,7 @@ export interface Requisition {
   position: string;
   department: string;
   submitted_date: string;
-  status: "In Progress" | "approved" | "Pending" | "Closed";
+  status: "In Progress" | "approved" | "Pending" | "closed";
   applicants: number;
   current_job_description_id: string | null;
   sanity_job_list_key: string 

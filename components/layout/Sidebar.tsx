@@ -13,6 +13,21 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import WarningIcon from '@mui/icons-material/Warning'
 import GestureIcon from '@mui/icons-material/Gesture';
+import WorkIcon from '@mui/icons-material/Work';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
+import PersonOffIcon from '@mui/icons-material/PersonOff';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import EditNoteIcon from '@mui/icons-material/EditNote';
 import { styled, useTheme } from '@mui/material/styles';
 import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
 import { useSelector } from 'react-redux';
@@ -58,36 +73,36 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
 
   const allMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
-    { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: [AppRole.HrManager] },
+    { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager] },
     { text: 'Signatures', icon: <GestureIcon />, path: '/signatures', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager] },
   ];
 
   const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role_name));
 
   const recruitmentSubItems = [ 
-    { text: 'New Request', icon: <WarningIcon/> , path:'/requisition/request', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter]},
-    { text: 'Pending Requisitions', icon: <WarningIcon/> , path:'/pending-requisition', roles: [AppRole.HeadOfHr, AppRole.HrManager]},
+    { text: 'New Request', icon: <NoteAddIcon/> , path:'/requisition/request', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter]},
+    { text: 'Pending Requisitions', icon: <PendingActionsIcon/> , path:'/pending-requisition', roles: [AppRole.HeadOfHr, AppRole.HrManager]},
     { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
   ]
 
   const recruitmentMenuItems = recruitmentSubItems.filter(item => user && item.roles.includes(user.role_name));
   const candidateSubItems = [
-    { text: 'All', path: '/candidates/all'},
-    { text: 'Applied', path: '/candidates/applied' },
-    { text: 'Shortlisted', path: '/candidates/shortlisted' },
-    { text: 'Interview Scheduled', path: '/candidates/interview_scheduled' },
-    { text: 'Pending Feedback', path: '/candidates/pending_feedback' },
-    { text: 'Interviewed', path: '/candidates/interviewed' },
-    { text: 'Approved for Offer', path: '/candidates/approved_for_offer' },
-    { text: 'Rejected', path: '/candidates/rejected' },
+    { text: 'All', path: '/candidates/all', icon: <ListAltIcon />},
+    { text: 'Applied', path: '/candidates/applied', icon: <PersonAddIcon /> },
+    { text: 'Shortlisted', path: '/candidates/shortlisted', icon: <FactCheckIcon /> },
+    { text: 'Interview Scheduled', path: '/candidates/interview_scheduled', icon: <CalendarMonthIcon /> },
+    { text: 'Pending Feedback', path: '/candidates/pending_feedback', icon: <HourglassEmptyIcon /> },
+    { text: 'Interviewed', path: '/candidates/interviewed', icon: <QuestionAnswerIcon /> },
+    { text: 'Approved for Offer', path: '/candidates/approved_for_offer', icon: <HowToRegIcon /> },
+    { text: 'Rejected', path: '/candidates/rejected', icon: <PersonOffIcon /> },
   ];
 
   const offerSubItems = [
-    { text: 'All', path: '/offers/all' },
-    { text: 'Pending', path: '/offers/pending' },
-    { text: 'Accepted', path: '/offers/accepted' },
-    { text: 'Rejected', path: '/offers/rejected' },
-    { text: 'Revision Requested', path: '/offers/revision_requested' },
+    { text: 'All', path: '/offers/all', icon: <ListAltIcon /> },
+    { text: 'Pending', path: '/offers/pending', icon: <HourglassEmptyIcon /> },
+    { text: 'Accepted', path: '/offers/accepted', icon: <CheckCircleIcon /> },
+    { text: 'Rejected', path: '/offers/rejected', icon: <CancelIcon /> },
+    { text: 'Revision Requested', path: '/offers/revision_requested', icon: <EditNoteIcon /> },
 ];
 
   const drawerContent = (
@@ -151,7 +166,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             },
           }}
         >
-          <ListItemIcon sx={{ color: 'inherit' }}><PeopleIcon/> </ListItemIcon>
+          <ListItemIcon sx={{ color: 'inherit' }}><WorkIcon/> </ListItemIcon>
           <ListItemText primary="Recruitment" />
           {isRecruitmentOpen ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>
@@ -230,6 +245,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
                   },
                 }}
               >
+                <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
               </ListItemButton>
             ))}
@@ -252,7 +268,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             },
           }}
         >
-          <ListItemIcon sx={{ color: 'inherit' }}><PeopleIcon /></ListItemIcon>
+          <ListItemIcon sx={{ color: 'inherit' }}><LocalOfferIcon /></ListItemIcon>
           <ListItemText primary="Offers" />
           {isOfferOpen ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>
@@ -279,6 +295,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
                   },
                 }}
               >
+                <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
               </ListItemButton>
             ))}
