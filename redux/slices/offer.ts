@@ -16,7 +16,9 @@ import {
   getJoiningDetails,
   getOfferById,
   getOfferLetter,
+  resolveRequisition,
 } from "@/api/offer";
+import { enqueueSnackbar } from "notistack";
 
 export interface OfferState {
   masterClauses: Partial<Clauses>[];
@@ -208,8 +210,23 @@ export const callCreateEmployee = async (
   try {
     dispatch(startLoading());
     const response = await createEmployee(requisitionId, candidateId);
+    enqueueSnackbar('Employee created successfully', { variant: 'success' });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar('Failed to create employee', { variant: 'error' });
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callResolveRequisition = async (offerId: string) => {
+  try {
+    dispatch(startLoading());
+    const response = await resolveRequisition(offerId);
+    enqueueSnackbar('Requisition marked as resolved', { variant: 'success' });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar('Failed to mark requisition as resolved', { variant: 'error' });
   } finally {
     dispatch(stopLoading());
   }

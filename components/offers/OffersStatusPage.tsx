@@ -81,7 +81,7 @@ const OfferStatusPage = ({status}: {status: string}) => {
             >
               View
             </Button>
-            {row.finalized_date && (
+            {row.finalized_date && row.current_status !== 'hired' ? (
               
                 <Button
                   variant="contained"
@@ -93,6 +93,15 @@ const OfferStatusPage = ({status}: {status: string}) => {
                   }}
                 >
                   Create Employee
+                </Button>
+              ): (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  disabled={true}
+                >
+                  Employee Created
                 </Button>
               )
     }

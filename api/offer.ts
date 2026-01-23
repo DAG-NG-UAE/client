@@ -125,3 +125,13 @@ export const createEmployee = async (
     throw error;
   }
 };
+
+export const resolveRequisition = async(offerId: string) => { 
+    try {
+        const response = await axiosInstance.patch(`offer/revision/resolve?offerId=${offerId}`);
+        return response.data.data;
+    } catch (error) {
+        console.error("Error resolving requisition", error);
+        throw error;
+    }
+}

@@ -45,6 +45,7 @@ import { Highlight } from '@/components/offers/Highlight';
 import { getStatusChipProps } from '@/utils/statusColorMapping';
 import { Clauses, ExtendedClause } from '@/interface/offer';
 import { GenerateSalaryTable } from './GenerateSalaryTable';
+import SendOffer from './SendOffer';
 
 // DnD Imports
 import {
@@ -144,7 +145,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
   const [signatories, setSignatories] = useState<Signature[]>([]);
 
   // State for form fields
-  const [salary, setSalary] = useState('145,000');
+  const [salary, setSalary] = useState('145000');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [probation, setProbation] = useState('6');
   const [noticePeriod, setNoticePeriod] = useState(4);
@@ -154,7 +155,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   
   // Company Details 
-  const [companyName, setCompanyName] = useState('Dubai Auto Gallery'); 
+  const [companyName, setCompanyName] = useState('DAG Nigeria Limited'); 
   // Employment Details template literal prefill 
   const [position, setPosition] = useState(selectedCandidate?.role_applied_for || '');
   const [location, setLocation] = useState('Ikeja-Lagos-Onsite');
@@ -172,7 +173,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
   const [weekendEndTime, setWeekendEndTime] = useState('14:00');
 
   const [leaveDays, setLeaveDays] = useState('20');
-  const [line_manager, setLineManager] = useState('');
+  const [line_manager, setLineManager] = useState('Shirley Werchota (Chief Digital officer)');
   
   // Salary Breakdown State (Monthly values)
   const [breakdownBasic, setBreakdownBasic] = useState('73850');
@@ -209,6 +210,11 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
 
   // Authorized Personnels to sign
   const [selectedSignatory, setSelectedSignatory] = useState<Signature | null>(null);
+
+  // Send Offer State
+  const [showSendOffer, setShowSendOffer] = useState(false);
+  const [generatedOfferId, setGeneratedOfferId] = useState('');
+  const [generatedOfferToken, setGeneratedOfferToken] = useState('');
 
   // Sensors for DnD
   const sensors = useSensors(
@@ -342,8 +348,12 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
   const handleSendOffer = async() => {
       const effectiveCandidateId = candidateId || currentOffer?.candidate_id;
       if (!effectiveCandidateId) {
-          alert("Candidate ID missing");
+          enqueueSnackbar("Candidate ID missing", { variant: "error" });
           return;
+      }
+      if(line_manager.length == 0){ 
+        enqueueSnackbar("Reporting Manager is required", { variant: "error" });
+        return;
       }
 
       // 2. Prepare Clauses Mapping
@@ -373,7 +383,8 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
         notice_unit: noticeUnit,
         leave_days: leaveDays,
         reporting_to: line_manager,
-        // signatory_id: selectedSignatory?.signatory_id, 
+        salary_net: salary,
+        signed: selectedSignatory?.signature_id,
         clause_order: clausesPayload, 
         monthly_basic: breakdownBasic || null,
         monthly_housing: breakdownHousing || null,
@@ -393,6 +404,9 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
         const response = await generateOffer(payload);
         if(response.offer_id && response.token){ 
           enqueueSnackbar(`offer generated. Offer token is ${response.token}`, { variant: "success" });
+          setGeneratedOfferId(response.offer_id);
+          setGeneratedOfferToken(response.token);
+          setShowSendOffer(true);
         }
       }
   }
@@ -441,6 +455,23 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
 
   if(!selectedCandidate){ 
     return <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />;
+  }
+
+  if (showSendOffer && selectedCandidate) {
+      return (
+          <SendOffer 
+              candidate={selectedCandidate}
+              offerId={generatedOfferId}
+              offerToken={generatedOfferToken}
+              offerDetails={{
+                  position: position,
+                  company_name: companyName,
+                  reporting_to: line_manager,
+                  commencement_date: startDate
+              }}
+              onBack={() => setShowSendOffer(false)}
+          />
+      );
   }
 
   return (
@@ -1037,7 +1068,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                  <Box sx={{ position: 'relative', width: 'fit-content' }}>
                     {/* The Signature Image */}
                     <img 
-                      src={selectedSignatory ? `http://localhost:5000/${selectedSignatory.signature_path.replace(/\\/g, '/').replace(/^\/+/, '')}` : ''} 
+                      src={selectedSignatory ? `http://localhost:5000/${selectedSignatory.signature_path.replace(/\\/g, '/').replace(/^\/+/, '')}` : null} 
                       style={{ 
                         height: '70px', 
                         display: 'block',

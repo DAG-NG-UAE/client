@@ -24,6 +24,8 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
   const theme = useTheme();
   const {recruiters} = useSelector((state: RootState) => state.users)
   const {selectedRequisition} = useSelector((state: RootState) => state.requisitions)
+  const {user} = useSelector((state: RootState) => state.auth)
+
   const [locations, setLocations] = useState<{position_slot_id:string; loc: string; qty:number; is_active:boolean}[]>(requisition.positions_list || []);
   const [newLocation, setNewLocation] = useState('');
   const [newQuantity, setNewQuantity] = useState<number | ''>('');
@@ -385,7 +387,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                             height: 20,
                           }}
                           onClick={() => { if (recruiter.user_id) handleRemoveRecruiter(recruiter.user_id); }}
-                          disabled={assigningRecruiters || removingRecruiterId === recruiter.user_id}
+                          disabled={assigningRecruiters || removingRecruiterId === recruiter.user_id || user?.role_name != AppRole.HeadOfHr && user?.role_name != AppRole.HrManager}
                         >
                           {removingRecruiterId === recruiter.user_id ? <CircularProgress size={12} color="inherit" /> : <Close fontSize="inherit" />}
                         </IconButton>
@@ -394,7 +396,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                   </Tooltip>
                 ))}
                 
-                {isEditMode && (
+                {isEditMode && (user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
                   <Tooltip title="Assign Recruiters">
                     <IconButton 
                       onClick={handleRecruiterClick} 

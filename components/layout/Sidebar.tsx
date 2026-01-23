@@ -72,8 +72,8 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
   };
 
   const allMenuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
-    { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager] },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.Recruiter] },
+    // { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager] },
     { text: 'Signatures', icon: <GestureIcon />, path: '/signatures', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager] },
   ];
 

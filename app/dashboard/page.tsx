@@ -243,8 +243,8 @@ const DashboardPage = () => {
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
           <KPICard 
-            title="Avg Time to Hire" 
-            value="21 Days" 
+            title="Avg Day(s) to Hire" 
+            value={data?.avg_time_to_fill || 0} 
             icon={<TimerIcon />} 
             color="#0288d1"
           />
@@ -288,4 +288,4 @@ const DashboardPage = () => {
   );
 };
 
-export default withAuth(DashboardPage, [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager]);
+export default withAuth(DashboardPage, [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager]);

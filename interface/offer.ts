@@ -14,6 +14,7 @@ export interface ExtendedClause extends Clauses {
 export interface Offer {
   offer_id: string;
   candidate_id: string;
+  current_status: string, //this is the candidate current status 
   requisition_id: string;
   position: string;
   location: string;

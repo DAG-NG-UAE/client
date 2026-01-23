@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { fetchOfferById, fetchCandidateJoiningDetails } from '@/redux/slices/offer';
-import { Box, Button, Card, CardContent, Stack, Typography, Avatar, Divider, Chip, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem } from '@mui/material';
+import { fetchOfferById, fetchCandidateJoiningDetails, callResolveRequisition, fetchAllOffers } from '@/redux/slices/offer';
+import { Box, Button, Card, CardContent, Stack, Typography, Avatar, Divider, Chip, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, CircularProgress } from '@mui/material';
 import { Email, Phone, Edit, CheckCircle, Warning, Person, CalendarToday, AttachMoney, LocationOn } from '@mui/icons-material';
 import { formatOfferDate } from '@/utils/transform';
 import { useRouter } from 'next/navigation';
@@ -18,6 +18,7 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
     
     // Safely retrieve negotiation history
     const negotiationHistory = joiningDetails?.negotiation_history || [];
+    console.log(negotiationHistory);
     const latestMessage = negotiationHistory.length > 0 ? negotiationHistory[negotiationHistory.length - 1] : null;
 
     // Mock revision data - in a real app this might come from the offer object or a separate endpoint
@@ -38,6 +39,12 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
             fetchCandidateJoiningDetails(id);
         }
     }, [id]);
+
+    const handleMarkAsResolved = async (offerId: string) => {
+        await callResolveRequisition(offerId);
+        window.history.back();
+        await fetchAllOffers('revision_requested');
+    }
 
     if (loading && !offer) {
         return <Typography sx={{ p: 4 }}>Loading details...</Typography>;
@@ -153,16 +160,20 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
                                 >
                                     Generate Revised Offer
                                 </Button>
-                                <Button 
-                                    variant="outlined" 
-                                    color="success" 
-                                    startIcon={<CheckCircle />}
-                                    fullWidth
+                                {loading ? (
+                                    <CircularProgress/>
+                                ): (
+                                    <Button
+                                        variant="outlined" 
+                                        color="success" 
+                                        startIcon={<CheckCircle />}
+                                        fullWidth
                                     size="large"
-                                    onClick={() => alert("Mark as resolved")}
+                                    onClick={() => handleMarkAsResolved(id)}
                                 >
                                     Mark as Resolved
                                 </Button>
+                                )}
                             </Stack>
                         </CardContent>
                     </Card>
@@ -191,7 +202,7 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
                 <DialogTitle>Negotiation History</DialogTitle>
                 <DialogContent dividers>
                     <List disablePadding>
-                        {negotiationHistory.map((msg, index) => (
+                        {negotiationHistory && negotiationHistory.length > 0 ? negotiationHistory.map((msg, index) => (
                            <ListItem key={index} alignItems="flex-start" sx={{ 
                                flexDirection: 'column', 
                                py: 2,
@@ -206,7 +217,7 @@ const OfferRevisionDetails = ({ id }: OfferRevisionDetailsProps) => {
                                    {msg.message}
                                </Typography>
                            </ListItem>
-                        ))}
+                        )) : <ListItem><Typography variant="body2">No negotiation history found.</Typography></ListItem>}
                     </List>
                 </DialogContent>
                 <DialogActions>

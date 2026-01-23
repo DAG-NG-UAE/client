@@ -6,7 +6,7 @@ import { CandidateEvaluationPayload } from "@/interface/interview";
 export const getCandidatesForRequisition = async (requisitionId: string) => {
   try {
     const response = await axiosInstance.get(
-      `requistion/candidate?requisitionId=${requisitionId}`,
+      `requisition/candidate?requisitionId=${requisitionId}`,
     );
     console.log("Fetched candidates:", response.data.data);
     return response.data.data;

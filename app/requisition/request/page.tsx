@@ -55,15 +55,15 @@ const RequisitionRequest = () => {
     const {loading} = useSelector((state: RootState) => state.requisitions);
   // Form State
   const [requestDate, setRequestDate] = useState<Dayjs | null>(null);
-  const [department, setDepartment] = useState("");
+  const [department, setDepartment] = useState("Digital");
   const [raisedBy, setRaisedBy] = useState(user?.full_name);
-  const [designation, setDesignation] = useState("");
+  const [designation, setDesignation] = useState("Data Engineer");
   const [justification, setJustification] = useState("");
-  const [position, setPosition] = useState("");
-  const [proposedSalary, setProposedSalary] = useState("");
+  const [position, setPosition] = useState("Chief Technology Officer");
+  const [proposedSalary, setProposedSalary] = useState("100000000");
   const [dateOfResumption, setDateOfResumption] = useState<Dayjs | null>(null);
-  const [reason, setReason] = useState("");
-  const [hodApproval, setHodApproval] = useState("");
+  const [reason, setReason] = useState("I need the new staff");
+  const [hodApproval, setHodApproval] = useState("isabella.k@bajajnigeria.com");
   const [locations, setLocations] = useState<LocationItem[]>([
     { id: 1, location: "", customLocation: "", headcount: "" },
   ]);
@@ -117,14 +117,14 @@ const RequisitionRequest = () => {
     locations.every(
       (loc) =>
         (loc.location !== "Other" ? loc.location : loc.customLocation) &&
-        loc.headcount
+        Number(loc.headcount) > 0
     );
 
     useEffect(() => {
       if(loading == true){
         dispatch(stopLoading())
       }
-    }, [loading])
+    }, [])
     const handleSubmit = async () => {
     // Construct locationsSummary HTML string
     let locationsSummary = "";
