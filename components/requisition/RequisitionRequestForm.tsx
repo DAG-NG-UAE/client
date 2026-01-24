@@ -79,17 +79,17 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   // HOD Approval Logic
   const [requireHodApproval, setRequireHodApproval] = useState(true);
 
+  // -- Locations (Shared for both Local and Expat now) --
+  const [locations, setLocations] = useState<LocationItem[]>([
+    { id: Date.now(), location: "", headcount: "1" },
+  ]);
+
   // -- Local Specific --
-  const [locationLocal, setLocationLocal] = useState("");
-  const [headcountLocal, setHeadcountLocal] = useState("");
   const [salaryLocal, setSalaryLocal] = useState("500000");
-  const [reasonForHire, setReasonForHire] = useState("");
+  const [reasonForHire, setReasonForHire] = useState("New Headcount"); // Defaulted to New Headcount
   const [replacementFor, setReplacementFor] = useState("");
 
   // -- Expat Specific --
-  const [locationsExpat, setLocationsExpat] = useState<LocationItem[]>([
-    { id: Date.now(), location: "", headcount: "" },
-  ]);
   const [nationality, setNationality] = useState("");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [salaryCurrency, setSalaryCurrency] = useState("");
@@ -101,6 +101,24 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   const [compProficiencyLevel, setCompProficiencyLevel] = useState("");
   const [qualification, setQualification] = useState("");
   const [experience, setExperience] = useState("");
+
+  // Location Handlers
+  const handleLocationChange = (id: number, field: keyof LocationItem, value: string) => {
+    setLocations((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const handleAddLocation = () => {
+    setLocations((prev) => [
+      ...prev,
+      { id: Date.now(), location: "", headcount: "1" },
+    ]);
+  };
+
+  const handleRemoveLocation = (id: number) => {
+    setLocations((prev) => prev.filter((item) => item.id !== id));
+  };
 
   // Update raisedBy if user loads late
   useEffect(() => {
@@ -146,24 +164,25 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
       reportingManager: reportingManager,
       hodEmail,
       jobDescription: jobDescription?.name, // Just name for now
-      justification: reasonForHire,
+      justification: reasonForHire, // This seems to be the "Reason" (e.g. Replacement)
+      reason: justification, // This seems to be the "Justification text"
       proposedSalaryCurrency: salaryCurrency,
       internalName: nickname,
+      requiredHodApproval: requireHodApproval,
+      replacementFor: reasonForHire === "Replacement" ? replacementFor : null,
     };
 
     let specificData = {};
 
     if (type === "Local") {
       specificData = {
-        location: locationLocal,
-        headcount: headcountLocal,
+        locations: locations, // Send the array
         proposedSalary: salaryLocal,
         proposedSalaryCurrency: 'Naira',
-        replacementFor: reasonForHire === "Replacement" ? replacementFor : null,
       };
     } else {
       specificData = {
-        locations: locationsExpat,
+        locations: locations, // Send the array of locations
         nationality,
         languages: selectedLanguages,
         proposedSalaryCurrency: salaryCurrency,
@@ -256,47 +275,49 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
          />
       </Box>
 
-      <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-            <FormControl fullWidth>
-                <InputLabel>Location</InputLabel>
-                <Select
-                    value={locationLocal}
-                    label="Location"
-                    onChange={(e) => setLocationLocal(e.target.value)}
-                >
-                    {LOCATIONS_NIGERIA.map(l => <MenuItem key={l} value={l}>{l}</MenuItem>)}
-                </Select>
-            </FormControl>
-        </Box>
-
-        <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-            <TextField 
-                fullWidth
-                label="Headcount"
-                type="number"
-                value={headcountLocal}
-                onChange={(e) => setHeadcountLocal(e.target.value)}
-            />
-        </Box>
-
-      {/* --- CONDITIONAL SECTIONS --- */}
-
-      {/* --- LOCAL SPECIFIC --- */}
-      {type === "Local" && (
-        <>
-            <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-                <TextField 
-                    fullWidth
-                    label="Proposed Monthly Salary"
-                    value={salaryLocal}
-                    onChange={(e) => setSalaryLocal(formatCurrency(e.target.value))}
-                    InputProps={{
-                        startAdornment: <InputAdornment position="start">₦</InputAdornment>,
-                    }}
-                />
+      <Box sx={{ width: "100%" }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Locations & Headcount (Fixed)</Typography>
+                {locations.map((item, index) => (
+                  <Box key={item.id} sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
+                    <Box sx={{ flex: 1 }}>
+                      <FormControl fullWidth>
+                        <InputLabel>Location</InputLabel>
+                        <Select
+                          value={item.location}
+                          label="Location"
+                          onChange={(e) => handleLocationChange(item.id, "location", e.target.value)}
+                        >
+                           {LOCATIONS_NIGERIA.map((l) => (
+                             <MenuItem key={l} value={l}>{l}</MenuItem>
+                           ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <TextField
+                        fullWidth
+                        label="Headcount"
+                        type="number"
+                        value={item.headcount}
+                        InputProps={{ readOnly: true }} // Fixed to 1 as per request
+                        helperText="Headcount is fixed to 1 per location entry"
+                      />
+                    </Box>
+                    <Box sx={{ width: 100, display: "flex", justifyContent: "center" }}>
+                      <IconButton onClick={() => handleRemoveLocation(item.id)} disabled={locations.length === 1}>
+                        <RemoveCircleOutlineIcon />
+                      </IconButton>
+                      {index === locations.length - 1 && (
+                        <IconButton onClick={handleAddLocation}>
+                          <AddCircleOutlineIcon />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
             </Box>
 
-            <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+        <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
                 <FormControl fullWidth>
                     <InputLabel>Reason for Hire</InputLabel>
                     <Select
@@ -319,7 +340,26 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
                         helperText="Please specify the name of the employee being replaced"
                     />
                 </Box>
-            )}
+          )}
+
+      {/* --- CONDITIONAL SECTIONS --- */}
+
+      {/* --- LOCAL SPECIFIC --- */}
+      {type === "Local" && (
+        <>
+            <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+                <TextField 
+                    fullWidth
+                    label="Proposed Monthly Salary"
+                    value={salaryLocal}
+                    onChange={(e) => setSalaryLocal(formatCurrency(e.target.value))}
+                    InputProps={{
+                        startAdornment: <InputAdornment position="start">₦</InputAdornment>,
+                    }}
+                />
+            </Box>
+
+            
         </>
       )}
 

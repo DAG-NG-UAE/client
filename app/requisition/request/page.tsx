@@ -68,29 +68,38 @@ const RequisitionRequest = () => {
       proposedSalary,
       dateOfResumption,
       reason,
-      hodApproval,
+      hodEmail,
       locations,
       proposedSalaryCurrency,
-      internalName
+      internalName,
+      // Expat Specifics
+      accommodation,
+      leaveStatus,
+      familyStatus,
+      computerProficiency,
+      qualification,
+      minimumExperience,
+      nationality,
+      languages,
+      // For Local
+      headcount,
+      location: legacyLocation, // alias just in case
+      requiredHodApproval,
+      replacementFor
     } = formData;
 
     // Construct locationsSummary HTML string
-    // This logic is preserved from the original file
-    // Construct locationsSummary HTML string
     let locationsSummary = "";
     
-    // Handle Expat (Multiple Locations) - Check if locations exists and is an array
+    // Process locations array for both types
     if (locations && Array.isArray(locations)) {
+      console.log("Locations:", locations);
       locations.forEach((loc: any) => {
         const locName = loc.location === "Other" ? loc.customLocation : loc.location;
         if (locName && loc.headcount) {
           locationsSummary += `\n<b>Location:</b> ${locName}<br> \n<b>Candidates Required:</b> ${loc.headcount}\n<hr>`;
         }
       });
-    } 
-    // Handle Local (Single Location) - Check for top-level location/headcount in formData
-    else if (formData.location && formData.headcount) {
-         locationsSummary += `\n<b>Location:</b> ${formData.location}<br> \n<b>Candidates Required:</b> ${formData.headcount}\n<hr>`;
     }
 
     // Construct Preferences Summary
@@ -123,17 +132,32 @@ const RequisitionRequest = () => {
         ? dateOfResumption.format("YYYY-MM-DD")
         : null,
       reason: reason || null,
-      hodApproval,
+      hodApproval: hodEmail,
       submittedBy: user?.email,
       locationsSummary: locationsSummary, 
       preferencesSummary: preferencesSummary,
       proposedSalaryCurrency,
       internalName,
-      recruitmentType: activeTab === 0 ? "Local" : "Expat", 
+      recruitmentType: activeTab === 0 ? "Local" : "Expat",
+      
+      // Pass locations array
+      locations: locations,
+      
+      requiredHodApproval,
+      replacementFor,
+      
+      accommodation,
+      leaveStatus,
+      familyStatus,
+      computerProficiency,
+      qualification,
+      minimumExperience,
+      nationality,
+      languages
     };
 
     console.log("Submitting Payload:", JSON.stringify(payload, null, 2));
-    // await callCreateRequisition(payload);
+    await callCreateRequisition(payload);
   };
 
   return (
