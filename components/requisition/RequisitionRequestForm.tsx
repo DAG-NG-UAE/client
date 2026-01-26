@@ -27,6 +27,8 @@ import dayjs, { Dayjs } from "dayjs";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { AppRole } from "@/utils/constants";
+import JobDescription from "@/components/requisition/JobDescription";
+import { convertToMarkdown } from "@/utils/documentConverter";
 
 // --- Mock Data Constants ---
 
@@ -75,6 +77,8 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   // Content
   const [justification, setJustification] = useState("");
   const [jobDescription, setJobDescription] = useState<File | null>(null);
+  const [jobDescriptionContent, setJobDescriptionContent] = useState("");
+  const [isConverting, setIsConverting] = useState(false);
   
   // HOD Approval Logic
   const [requireHodApproval, setRequireHodApproval] = useState(true);
@@ -139,9 +143,22 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   }, [user]);
 
   // Handlers
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setJobDescription(e.target.files[0]);
+      const file = e.target.files[0];
+      setJobDescription(file);
+      
+      // Convert document
+      setIsConverting(true);
+      try {
+        const markdown = await convertToMarkdown(file);
+        setJobDescriptionContent(markdown);
+      } catch (error) {
+        console.error("Conversion failed", error);
+        // You might want to show a toast/alert here
+      } finally {
+        setIsConverting(false);
+      }
     }
   };
 
@@ -163,7 +180,8 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
       dateOfResumption: resumptionDate,
       reportingManager: reportingManager,
       hodEmail,
-      jobDescription: jobDescription?.name, // Just name for now
+      jobDescription: jobDescriptionContent, // Send the markdown content!
+      originalFileName: jobDescription?.name,
       justification: reasonForHire, // This seems to be the "Reason" (e.g. Replacement)
       reason: justification, // This seems to be the "Justification text"
       proposedSalaryCurrency: salaryCurrency,
@@ -482,8 +500,38 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
        </Box>
 
        <Box sx={{ flex: "1 1 100%" }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Job Description</Typography>
-          {/* {handleFileUpload()} */}
+         {/* File Upload Section */}
+          <Box sx={{ mb: 2 }}>
+            <input
+              accept=".docx,.pdf"
+              style={{ display: "none" }}
+              id="raised-button-file"
+              type="file"
+              onChange={handleFileUpload}
+            />
+            <label htmlFor="raised-button-file">
+              <Button
+                variant="outlined"
+                component="span"
+                startIcon={<CloudUploadIcon />}
+              >
+                Upload Job Description (PDF/DOCX)
+              </Button>
+            </label>
+            {jobDescription && (
+              <Typography variant="caption" sx={{ ml: 2 }}>
+                {jobDescription.name} - {(jobDescription.size / 1024).toFixed(2)} KB
+              </Typography>
+            )}
+             {isConverting && <Typography variant="caption" sx={{ ml: 2 }}>Converting...</Typography>}
+          </Box>
+
+          {/* Job Description Editor/Preview */}
+          <JobDescription 
+             requisition={{ content: jobDescriptionContent }} 
+             isEditMode={true} 
+             onContentChange={(content) => setJobDescriptionContent(content)}
+          />
        </Box>
 
       {/* --- Action Buttons --- */}

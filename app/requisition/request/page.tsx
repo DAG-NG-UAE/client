@@ -85,7 +85,9 @@ const RequisitionRequest = () => {
       headcount,
       location: legacyLocation, // alias just in case
       requiredHodApproval,
-      replacementFor
+      replacementFor,
+      jobDescription,
+      originalFileName
     } = formData;
 
     // Construct locationsSummary HTML string
@@ -145,6 +147,8 @@ const RequisitionRequest = () => {
       
       requiredHodApproval,
       replacementFor,
+      jobDescription,
+      originalFileName,
       
       accommodation,
       leaveStatus,

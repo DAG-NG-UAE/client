@@ -48,7 +48,7 @@ export const getSingleRequisition = async (
 
 export const getCareerDetail = async (
   slug: string,
-): Promise<Partial<Requisition>> => {
+) => {
   try {
     const response = await axiosInstance.get(
       `/requisition/career?slug=${slug}`,

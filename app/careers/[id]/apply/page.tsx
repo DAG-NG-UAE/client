@@ -36,6 +36,7 @@ export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
   const searchParams = useSearchParams();
   const { id } = use(props.params);
   const [careerDetails, setCareerDetails] = useState<Partial<Requisition>>({});
+  const [requisitionPreference, setRequisitionPreference] = useState({})
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -46,7 +47,8 @@ export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
       if (!result || Object.keys(result).length === 0) {
         setNotFound(true);
       } else {
-        setCareerDetails(result);
+        setCareerDetails(result.requisition);
+        setRequisitionPreference(result.preference)
       }
     } catch (error) { 
       console.log("Error fetching career details");
@@ -263,6 +265,7 @@ export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
         onClose={() => setIsDrawerOpen(false)}
         requisitionId={id}
         careerDetails={careerDetails}
+        requisitionPreference={requisitionPreference}
       />
     </Box>
   );

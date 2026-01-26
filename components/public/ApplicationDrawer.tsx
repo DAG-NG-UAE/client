@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
-import { Requisition } from '@/interface/requisition';
+import { Requisition, RequisitionPreference } from '@/interface/requisition';
 import { apply } from '@/api/candidate';
 import { enqueueSnackbar } from 'notistack';
 
@@ -85,11 +85,13 @@ interface ApplicationDrawerProps {
   open: boolean;
   onClose: () => void;
   careerDetails: Partial<Requisition>;
+  requisitionPreference: Partial<RequisitionPreference>;
   requisitionId: string;
 }
 
-export default function ApplicationDrawer({ open, onClose, careerDetails, requisitionId }: ApplicationDrawerProps) {
+export default function ApplicationDrawer({ open, onClose, careerDetails, requisitionPreference, requisitionId }: ApplicationDrawerProps) {
   // Form field states
+  console.log(`requisition preference => ${JSON.stringify(requisitionPreference)}`)
   const [fullName, setFullName] = useState('Nekabari Isabella Kpai');
   const [emailAddress, setEmailAddress] = useState('isabellakpai@gmail.com');
   const [phoneNumber, setPhoneNumber] = useState('08100000000');
@@ -104,6 +106,14 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
   const [location, setLocation] = useState('');
   const [source, setSource] = useState('');
   const [otherSource, setOtherSource] = useState('');
+  const [preferenceValues, setPreferenceValues] = useState<Record<string, string>>({});
+
+  const handlePreferenceChange = (key: string, value: string) => {
+    setPreferenceValues(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -140,7 +150,12 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
     cvFile !== null &&
     privacyConsent &&
     source !== '' &&
-    (source === 'Other' ? otherSource !== '' : true);
+    (source === 'Other' ? otherSource !== '' : true) &&
+    (source === 'Other' ? otherSource !== '' : true) &&
+    (!requisitionPreference?.labels || requisitionPreference.labels.every((_, index) => {
+      const key = requisitionPreference.pref_key?.[index];
+      return key ? preferenceValues[key] && preferenceValues[key].trim() !== '' : true;
+    }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,6 +187,15 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       formData.append('cvFile', cvFile, cvFile.name);
     }
     formData.append('requisitionPositionSlot', location);
+    if (Object.keys(preferenceValues).length > 0) {
+      const formattedPreferences = Object.entries(preferenceValues).map(([key, value]) => ({
+        pref_key: key,
+        response_value: [value] // Wrap in array as requested: "response_value JSONB" e.g. ["Postgraduate"]
+      }));
+      formData.append('preferences', JSON.stringify(formattedPreferences));
+    }
+
+    console.log('form data =>', Object.fromEntries(formData.entries()));
 
     try {
       await apply(formData, requisitionId);
@@ -288,6 +312,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
 
               <FormInput label="Expected Salary" required placeholder="e.g., N120,000 - N140,000" value={expectedSalary} onChange={(e) => setExpectedSalary(e.target.value)} />
 
+{/* TODO:: Consider removing the experience field */}
               <Box mb={3}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
                   Experience <span style={{ color: '#d32f2f' }}>*</span>
@@ -366,8 +391,9 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                     <MenuItem value="" disabled>
                       <Typography color="#888">Select Location</Typography>
                     </MenuItem>
-                    {careerDetails?.requisition_positions?.map((loc) => (
-                      <MenuItem key={loc.position_slot_id} value={loc.position_slot_id}>{loc.location}</MenuItem>
+                    
+                    {careerDetails?.requisition_positions?.map((loc, index) => (
+                      <MenuItem key={loc.position_slot_id || `${loc.location}_${index}`} value={loc.position_slot_id || loc.location}>{loc.location}</MenuItem>
                     ))}
                   </Select>
               </Box>
@@ -420,6 +446,65 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                 onChange={(e) => setCoverLetter(e.target.value)}
               />
             </Box>
+
+            {requisitionPreference?.labels && requisitionPreference.labels.length > 0 && (
+              <>
+                 <Divider sx={{ my: 4, borderColor: '#e0e0e0' }} />
+                 <Box mb={4}>
+                  <SectionHeader title="Additional Information" />
+                  {requisitionPreference.labels.map((label, index) => {
+                    const type = requisitionPreference.fieldTypes?.[index] || 'text';
+                    const options = requisitionPreference.options?.[index];
+                    const prefKey = requisitionPreference.pref_key?.[index];
+                    
+                    if (!prefKey) return null;
+
+                    if (type === 'dropdown' && options) {
+                      return (
+                        <Box key={prefKey} mb={3}>
+                          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
+                            {label} <span style={{ color: '#d32f2f' }}>*</span>
+                          </Typography>
+                          <Select
+                            fullWidth
+                            displayEmpty
+                            value={preferenceValues[prefKey] || ''}
+                            onChange={(e) => handlePreferenceChange(prefKey, e.target.value)}
+                            sx={{ 
+                              borderRadius: 2, 
+                              bgcolor: '#ffffff',
+                              color: '#101828',
+                              '& .MuiOutlinedInput-notchedOutline': {
+                               borderColor: 'rgba(0,0,0,0.2)'
+                              }
+                            }}
+                          >
+                            <MenuItem value="" disabled>
+                              <Typography color="#888">Select {label}</Typography>
+                            </MenuItem>
+                            {options.map((opt) => (
+                              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                            ))}
+                          </Select>
+                        </Box>
+                      );
+                    }
+
+                    return (
+                      <FormInput
+                        key={prefKey}
+                        label={label}
+                        required
+                        type={type === 'number' ? 'number' : 'text'}
+                        value={preferenceValues[prefKey] || ''}
+                        onChange={(e) => handlePreferenceChange(prefKey, e.target.value)}
+                        placeholder={`Enter ${label}`}
+                      />
+                    );
+                  })}
+                 </Box>
+              </>
+            )}
 
             <Divider sx={{ my: 4, borderColor: '#e0e0e0' }} />
 
