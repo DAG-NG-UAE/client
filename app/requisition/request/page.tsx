@@ -107,16 +107,16 @@ const RequisitionRequest = () => {
     // Construct Preferences Summary
     let preferencesSummary: any[] = [];
     const activePreferences = preferences.filter(p => p.askCandidate);
-    
+    console.log("Active Preferences:", activePreferences);
     if(activePreferences.length > 0) {
 
         activePreferences.forEach((p) => {
-            // Check if value is array (for multi-select) or simple string
-            const valDisplay = Array.isArray(p.value) ? p.value.join(", ") : p.value;
             preferencesSummary.push({
-              id: p.id, 
-              preference: p.preference,
-              value: valDisplay
+              pref_key: p.pref_key,
+              min_required_rank: p.min_required_rank,
+              weight_score: p.weight_score,
+              ask_candidate: true,
+              skill_id: p.skill_id
             });
         });
     }

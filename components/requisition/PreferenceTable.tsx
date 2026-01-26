@@ -16,12 +16,12 @@ import {
   Button,
   CircularProgress,
   IconButton,
-  Grid,
-  Divider,
+  Chip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { getPreference } from "../../api/preference";
+import { useTheme } from "@mui/material/styles";
 
 // --- Types for API Data ---
 interface ApiRankingOption {
@@ -53,18 +53,26 @@ interface UserSelection {
   rankValue: string; // e.g., "Fluent" or "Bachelors"
   
   askCandidate: boolean;
+  
+  // New Priority Field
+  priority: string;
 }
 
 // --- Compatible Interface for Parent Component ---
 export interface PreferenceItem {
   id: string;
-  preference: string;
-  type: string; // kept for compatibility
+  preference?: string;
+ 
+  type?: string; // kept for compatibility
   options?: string[]; // kept for compatibility
-  value: string;
-  askCandidate: boolean;
-  // Extras that might be useful
+  value?: string;
+  askCandidate?: boolean;
+  // Extras
   skill_id?: number | null;
+   pref_key: string;
+  min_required_rank: string;
+  weight_score: number
+  priority?: string;
 }
 
 interface PreferenceTableProps {
@@ -74,12 +82,15 @@ interface PreferenceTableProps {
   loading?: boolean;
 }
 
+const PRIORITY_OPTIONS = ["Critical", "High", "Medium", "Low"];
+
 const PreferenceTable: React.FC<PreferenceTableProps> = ({
   recruitmentType,
   onBack,
   onSubmit,
   loading = false,
 }) => {
+  const theme = useTheme();
   const [fetching, setFetching] = useState(true);
   
   // Grouped API data: prefKey -> list of items
@@ -146,7 +157,8 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
                        skillId: null,
                        skillName: null,
                        rankValue: "", // Empty initially
-                       askCandidate: false
+                       askCandidate: false,
+                       priority: "Medium"
                    }];
                }
             }
@@ -174,7 +186,8 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
         skillId: null, // User needs to pick
         skillName: null,
         rankValue: "",
-        askCandidate: true // Default to true for manually added rows
+        askCandidate: true, // Default to true for manually added rows
+        priority: "Medium"
     };
 
     setSelections(prev => ({
@@ -205,7 +218,7 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
                     ...row,
                     skillId: selectedSkillId,
                     skillName: item?.skill_name || null,
-                    rankValue: "" // Reset rank if skill changes, as options might strictly depend on skill (though generic usually)
+                    rankValue: "" // Reset rank if skill changes
                 };
             }
             
@@ -225,15 +238,7 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
 
     Object.values(selections).forEach(groupRows => {
         groupRows.forEach(row => {
-            // Only include if value is selected (or if it's a meaningful boolean toggle?)
-            // Requirement says "preferencesSummary" is built from this.
-            // We should filter out incomplete rows? 
-            // For now, let's include them, maybe validation is needed.
-            // Or just filter out ones with empty rankValue if rank is required.
-            
-            // Construct ID: Needs to be unique.
-            // If skill present: `${prefKey}-${skillId}`
-            // Else: `${prefKey}`
+            // Include only if it has a value or it's implicitly true
             
             const id = row.skillId 
                 ? `${row.prefKey}-${row.skillId}` 
@@ -242,18 +247,29 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
             const preferenceName = row.skillName
                 ? `${row.categoryLabel} - ${row.skillName}`
                 : row.categoryLabel;
-
+            
+            let weightScore = 0;
+            if(row.priority === "Critical") {
+                weightScore = 100;
+            } else if(row.priority === "High") {
+                weightScore = 60;
+            } else if(row.priority === "Medium") {
+                weightScore = 40;
+            } else {
+                weightScore = 10;
+            }
             result.push({
                 id: id,
-                preference: preferenceName,
-                value: row.rankValue,
+                pref_key: row.prefKey,
+                min_required_rank: row.rankValue, 
+                weight_score: weightScore,
+                skill_id: row.skillId, 
                 askCandidate: row.askCandidate,
-                type: "text", // dummy
-                skill_id: row.skillId
             });
         });
     });
 
+    console.log(result);
     onSubmit(result);
   };
 
@@ -265,17 +281,25 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
     );
   }
 
+  // --- Sorting Keys for Display ---
+  // Single Select first, then Multi Select
+  const sortedKeys = Object.keys(availableGroups).sort((a, b) => {
+      const isMultiA = groupMeta[a]?.isMultiSkill ? 1 : 0;
+      const isMultiB = groupMeta[b]?.isMultiSkill ? 1 : 0;
+      return isMultiA - isMultiB;
+  });
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
         Candidate Preferences ({recruitmentType})
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Specify the skills and qualifications required for this role.
+        Specify the skills, qualifications, and their priority for this role.
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {Object.keys(availableGroups).map((prefKey) => {
+        {sortedKeys.map((prefKey) => {
              const meta = groupMeta[prefKey];
              const groupItems = availableGroups[prefKey];
              const groupSelections = selections[prefKey] || [];
@@ -312,9 +336,10 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
                          <Table size="small">
                              <TableHead>
                                  <TableRow>
-                                     {isMulti && <TableCell width="40%">Skill</TableCell>}
-                                     <TableCell width={isMulti ? "30%" : "50%"}>Proficiency / Level</TableCell>
-                                     <TableCell width="20%">Ask Candidate?</TableCell>
+                                     {isMulti && <TableCell width="30%">Skill</TableCell>}
+                                     <TableCell width={isMulti ? "25%" : "40%"}>Proficiency / Level</TableCell>
+                                     <TableCell width="20%">Priority</TableCell>
+                                     <TableCell width="15%">Ask Candidate?</TableCell>
                                      {isMulti && <TableCell width="10%"></TableCell>}
                                  </TableRow>
                              </TableHead>
@@ -325,7 +350,7 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
                                         ? groupItems.find(i => i.skill_id === row.skillId)
                                         : groupItems[0];
                                      
-                                     // Ranking options depend on the active item, or fallback to first item if skill not yet picked (but ideally we wait for skill)
+                                     // Ranking options depend on the active item
                                      const rankingOptions = activeItem ? activeItem.ranking_options : [];
 
                                      return (
@@ -366,6 +391,22 @@ const PreferenceTable: React.FC<PreferenceTableProps> = ({
                                                      ))}
                                                  </Select>
                                              </TableCell>
+
+                                            {/* Priority Column */}
+                                            <TableCell>
+                                                 <Select
+                                                     size="small"
+                                                     fullWidth
+                                                     value={row.priority}
+                                                     onChange={(e) => handleUpdateRow(prefKey, row.internalId, 'priority', e.target.value)}
+                                                 >
+                                                     {PRIORITY_OPTIONS.map((option) => (
+                                                         <MenuItem key={option} value={option}>
+                                                             {option}
+                                                         </MenuItem>
+                                                     ))}
+                                                 </Select>
+                                            </TableCell>
 
                                              <TableCell>
                                                  <Switch
