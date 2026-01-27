@@ -13,7 +13,9 @@ import {
   Stack,
   Divider,
   Drawer,
-  IconButton
+  IconButton,
+  Chip,
+  FormHelperText
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
@@ -85,13 +87,13 @@ interface ApplicationDrawerProps {
   open: boolean;
   onClose: () => void;
   careerDetails: Partial<Requisition>;
-  requisitionPreference: Partial<RequisitionPreference>;
+  requisitionPreference: RequisitionPreference; // It's an array now
   requisitionId: string;
 }
 
 export default function ApplicationDrawer({ open, onClose, careerDetails, requisitionPreference, requisitionId }: ApplicationDrawerProps) {
   // Form field states
-  console.log(`requisition preference => ${JSON.stringify(requisitionPreference)}`)
+  // console.log(`requisition preference => ${JSON.stringify(requisitionPreference)}`)
   const [fullName, setFullName] = useState('Nekabari Isabella Kpai');
   const [emailAddress, setEmailAddress] = useState('isabellakpai@gmail.com');
   const [phoneNumber, setPhoneNumber] = useState('08100000000');
@@ -106,12 +108,28 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
   const [location, setLocation] = useState('');
   const [source, setSource] = useState('');
   const [otherSource, setOtherSource] = useState('');
-  const [preferenceValues, setPreferenceValues] = useState<Record<string, string>>({});
+  
+  // Preference Values: Keyed by composite ID "${pref_key}_${index}"
+  // Value stores { skill?: number | string, value: string }
+  const [preferenceValues, setPreferenceValues] = useState<Record<string, { skill?: number | string, value?: string }>>({});
 
-  const handlePreferenceChange = (key: string, value: string) => {
+  const handlePreferenceSkillChange = (compositeKey: string, skillValue: number | string) => {
     setPreferenceValues(prev => ({
       ...prev,
-      [key]: value
+      [compositeKey]: {
+        ...prev[compositeKey],
+        skill: skillValue
+      }
+    }));
+  };
+
+  const handlePreferenceValueChange = (compositeKey: string, val: string) => {
+    setPreferenceValues(prev => ({
+      ...prev,
+      [compositeKey]: {
+        ...prev[compositeKey],
+        value: val
+      }
     }));
   };
   
@@ -151,10 +169,19 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
     privacyConsent &&
     source !== '' &&
     (source === 'Other' ? otherSource !== '' : true) &&
-    (source === 'Other' ? otherSource !== '' : true) &&
-    (!requisitionPreference?.labels || requisitionPreference.labels.every((_, index) => {
-      const key = requisitionPreference.pref_key?.[index];
-      return key ? preferenceValues[key] && preferenceValues[key].trim() !== '' : true;
+    // Check Preferences
+    (!requisitionPreference || requisitionPreference.every((item, index) => {
+        const key = `${item.pref_key}_${index}`;
+        const answer = preferenceValues[key];
+        
+        // If it requires a skill (has full_skill_list), check skill is selected
+        const needsSkill = item.full_skill_list && item.full_skill_list.length > 0;
+        if (needsSkill && (answer?.skill === undefined || answer?.skill === null || answer?.skill === '')) return false;
+
+        // Check value (proficiency/rank or text)
+        if (!answer?.value || answer.value.trim() === '') return false;
+        
+        return true;
     }));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -187,12 +214,37 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       formData.append('cvFile', cvFile, cvFile.name);
     }
     formData.append('requisitionPositionSlot', location);
-    if (Object.keys(preferenceValues).length > 0) {
-      const formattedPreferences = Object.entries(preferenceValues).map(([key, value]) => ({
-        pref_key: key,
-        response_value: [value] // Wrap in array as requested: "response_value JSONB" e.g. ["Postgraduate"]
-      }));
-      formData.append('preferences', JSON.stringify(formattedPreferences));
+    
+    // Format Preferences
+    // Format Preferences
+    if (requisitionPreference && requisitionPreference.length > 0) {
+        const formattedPreferences = requisitionPreference.map((item, index) => {
+            const key = `${item.pref_key}_${index}`;
+            const answer = preferenceValues[key];
+            
+            // User requested object structure: { skill_id: 1, rank: "Fluent" }
+            // Wrapping in array as response_value is typically an array/list in this system
+            
+            const valueObject: { skill_id?: number | string | null; rank: string } = {
+                rank: answer?.value || ''
+            };
+
+            if (answer?.skill !== undefined && answer?.skill !== null && answer?.skill !== '') {
+                valueObject.skill_id = answer.skill;
+            } else {
+                valueObject.skill_id = null; // Explicit null for non-skill preferences if needed, or just omit. 
+            }
+            
+            // Only include if there is a value
+            if (!valueObject.rank) return null;
+
+            return {
+                pref_key: item.pref_key,
+                response_value: [valueObject] 
+            };
+        }).filter(p => p !== null);
+        
+        formData.append('preferences', JSON.stringify(formattedPreferences));
     }
 
     console.log('form data =>', Object.fromEntries(formData.entries()));
@@ -212,6 +264,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       setLocation('');
       setSource('');
       setOtherSource('');
+      setPreferenceValues({});
       onClose(); // Close drawer on success
       // Reset form could be here
     } catch (error) {
@@ -447,59 +500,83 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
               />
             </Box>
 
-            {requisitionPreference?.labels && requisitionPreference.labels.length > 0 && (
+            {/* Additional Information / Preferences */}
+            {requisitionPreference && requisitionPreference.length > 0 && (
               <>
                  <Divider sx={{ my: 4, borderColor: '#e0e0e0' }} />
                  <Box mb={4}>
                   <SectionHeader title="Additional Information" />
-                  {requisitionPreference.labels.map((label, index) => {
-                    const type = requisitionPreference.fieldTypes?.[index] || 'text';
-                    const options = requisitionPreference.options?.[index];
-                    const prefKey = requisitionPreference.pref_key?.[index];
-                    
-                    if (!prefKey) return null;
-
-                    if (type === 'dropdown' && options) {
-                      return (
-                        <Box key={prefKey} mb={3}>
-                          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
-                            {label} <span style={{ color: '#d32f2f' }}>*</span>
-                          </Typography>
-                          <Select
-                            fullWidth
-                            displayEmpty
-                            value={preferenceValues[prefKey] || ''}
-                            onChange={(e) => handlePreferenceChange(prefKey, e.target.value)}
-                            sx={{ 
-                              borderRadius: 2, 
-                              bgcolor: '#ffffff',
-                              color: '#101828',
-                              '& .MuiOutlinedInput-notchedOutline': {
-                               borderColor: 'rgba(0,0,0,0.2)'
-                              }
-                            }}
-                          >
-                            <MenuItem value="" disabled>
-                              <Typography color="#888">Select {label}</Typography>
-                            </MenuItem>
-                            {options.map((opt) => (
-                              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                            ))}
-                          </Select>
-                        </Box>
-                      );
-                    }
+                  
+                  {requisitionPreference.map((item, index) => {
+                    const compositeKey = `${item.pref_key}_${index}`;
+                    const answer = preferenceValues[compositeKey] || {};
+                    const hasSkills = item.full_skill_list && item.full_skill_list.length > 0;
+                    const hasOptions = item.ranking_options && item.ranking_options.length > 0;
 
                     return (
-                      <FormInput
-                        key={prefKey}
-                        label={label}
-                        required
-                        type={type === 'number' ? 'number' : 'text'}
-                        value={preferenceValues[prefKey] || ''}
-                        onChange={(e) => handlePreferenceChange(prefKey, e.target.value)}
-                        placeholder={`Enter ${label}`}
-                      />
+                        <Box key={compositeKey} mb={3}>
+                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
+                                {item.category_label} <span style={{ color: '#d32f2f' }}>*</span>
+                            </Typography>
+                            
+                            {/* Skill Selection if available */}
+                            {hasSkills && (
+                                <Box mb={2}>
+                                    <Select
+                                        fullWidth
+                                        displayEmpty
+                                        value={answer.skill !== undefined ? answer.skill : ''}
+                                        onChange={(e) => handlePreferenceSkillChange(compositeKey, e.target.value)}
+                                        sx={{ 
+                                            borderRadius: 2, 
+                                            bgcolor: '#ffffff',
+                                            mb: 1
+                                        }}
+                                    >
+                                         <MenuItem value="" disabled>
+                                            <Typography color="#888">Select Specific Skill</Typography>
+                                        </MenuItem>
+                                        {item.full_skill_list?.map(skill => (
+                                            <MenuItem key={skill.id} value={skill.id}>
+                                                {skill.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </Box>
+                            )}
+
+                            {/* Rank/Option Selection (Pills) - Only show if skill selected (or no skill required) */}
+                            {(hasOptions && (!hasSkills || answer.skill)) ? (
+                                <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                                    {item.ranking_options?.map((opt) => (
+                                        <Chip
+                                            key={opt.rank}
+                                            label={opt.label}
+                                            clickable
+                                            color={answer.value === opt.label ? "primary" : "default"}
+                                            onClick={() => handlePreferenceValueChange(compositeKey, opt.label)}
+                                            sx={{
+                                                borderRadius: '8px',
+                                                '&:hover': { backgroundColor: answer.value === opt.label ? 'primary.dark' : '#e0e0e0' }
+                                            }}
+                                        />
+                                    ))}
+                                </Stack>
+                            ) : (
+                                /* Fallback if no ranking options but just text input */
+                                <TextField
+                                    fullWidth
+                                    value={answer.value || ''}
+                                    onChange={(e) => handlePreferenceValueChange(compositeKey, e.target.value)}
+                                    placeholder="Enter details"
+                                    sx={{ bgcolor: '#fff' }}
+                                />
+                            )}
+                            
+                            {(hasSkills && !answer.skill) && (
+                                <FormHelperText>Please select a specfic skill first.</FormHelperText>
+                            )}
+                        </Box>
                     );
                   })}
                  </Box>

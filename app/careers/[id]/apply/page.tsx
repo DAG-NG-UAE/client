@@ -15,7 +15,7 @@ import {
 import { DirectionsCar, LocalShipping, TwoWheeler, Flight, DirectionsBus, Commute, ArrowForward, SentimentVeryDissatisfied } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import { getCareerDetail } from '@/api/requisitionApi';
-import { Requisition } from '@/interface/requisition';
+import { Requisition, RequisitionPreference } from '@/interface/requisition';
 import ApplicationDrawer from '@/components/public/ApplicationDrawer';
 
 // Background Component with scattered vehicle icons - Designed for Hero Overlay
@@ -36,7 +36,8 @@ export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
   const searchParams = useSearchParams();
   const { id } = use(props.params);
   const [careerDetails, setCareerDetails] = useState<Partial<Requisition>>({});
-  const [requisitionPreference, setRequisitionPreference] = useState({})
+  const [requisitionPreference, setRequisitionPreference] = useState<RequisitionPreference>([])
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);

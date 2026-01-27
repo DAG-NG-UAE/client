@@ -68,11 +68,27 @@ export interface Requisition {
   requisition_positions?: RequisitionPosition[]; //! Delete this later
 }
 
-export interface RequisitionPreference {
-  labels: string[];
-  fieldTypes: string[];
-  options: (string[] | null)[];
-  pref_key: string[];
+// New Preference Structures
+export interface PreferenceSkill {
+  id: number;
+  name: string;
 }
+
+export interface PreferenceRankingOption {
+  rank: number;
+  label: string;
+}
+
+export interface RequisitionPreferenceItem {
+  pref_key: string;
+  field_type: string;
+  category_label: string;
+  full_skill_list: PreferenceSkill[] | null;
+  ranking_options: PreferenceRankingOption[] | null;
+  required_skill_id?: number | null;
+  min_required_rank?: number | string | null;
+}
+
+export type RequisitionPreference = RequisitionPreferenceItem[];
 
 export type RecruiterSelection = { userId: string; roleId: string };
