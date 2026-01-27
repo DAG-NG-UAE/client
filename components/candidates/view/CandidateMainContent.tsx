@@ -1,0 +1,110 @@
+import React, { useState } from 'react';
+import { Box, Tabs, Tab, Paper, Typography } from '@mui/material';
+import { CandidateProfile } from '@/interface/candidate';
+import CandidateRequirementDetail from '../CandidateRequirementDetail';
+import { API_BASE_URL } from '@/api/axiosInstance';
+
+interface Props {
+    candidate: CandidateProfile;
+}
+
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+function CustomTabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            {value === index && (
+                <Box sx={{ p: 3 }}>
+                    {children}
+                </Box>
+            )}
+        </div>
+    );
+}
+
+const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
+    const [value, setValue] = useState(0);
+
+    const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+        setValue(newValue);
+    };
+
+    // Construct Resume URL
+    let resumeUrl = null;
+    if (candidate.cv_path) {
+        // Assume format: C:\Users\...\server\uploads\application\filename.pdf
+        // We want: http://localhost:5000/uploads/application/filename.pdf
+        const parts = candidate.cv_path.split('uploads');
+        if (parts.length > 1) {
+             // Take the part after 'uploads' (incl. slash) and prepend /uploads
+             // e.g. \application\file.pdf -> /uploads/application/file.pdf
+             const relPath = parts[1].replace(/\\/g, '/');
+             resumeUrl = `${API_BASE_URL}/uploads${relPath}`;
+        }
+    }
+
+    return (
+        <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, minHeight: 600 }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}>
+                <Tabs value={value} onChange={handleChange} aria-label="candidate profile tabs">
+                    <Tab label="Resume" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                    <Tab label="Activity History" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                    <Tab label="Requirement Match" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                    <Tab label="Notes" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                </Tabs>
+            </Box>
+
+            {/* RESUME TAB */}
+            <CustomTabPanel value={value} index={0}>
+                {resumeUrl ? (
+                    <Box sx={{ height: '800px', width: '100%', bgcolor: '#eee', borderRadius: 1, overflow: 'hidden' }}>
+                        <iframe 
+                            src={resumeUrl} 
+                            width="100%" 
+                            height="100%" 
+                            style={{ border: 'none' }}
+                            title="Candidate Resume"
+                        />
+                    </Box>
+                ) : (
+                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                         <Typography color="text.secondary">No resume attached.</Typography>
+                    </Box>
+                )}
+            </CustomTabPanel>
+
+            {/* ACTIVITY HISTORY TAB */}
+            <CustomTabPanel value={value} index={1}>
+                <Typography color="text.secondary">Activity timeline will act here.</Typography>
+            </CustomTabPanel>
+
+            {/* REQUIREMENT MATCH TAB */}
+            <CustomTabPanel value={value} index={2}>
+                 <CandidateRequirementDetail 
+                    requirements={candidate.requirement_match} 
+                    candidateName={candidate.candidate_name}
+                    // No need for "View Full Profile" button here since we are ALREADY on the full profile
+                />
+            </CustomTabPanel>
+
+            {/* NOTES TAB */}
+            <CustomTabPanel value={value} index={3}>
+                 <Typography color="text.secondary">Notes section.</Typography>
+            </CustomTabPanel>
+        </Paper>
+    );
+};
+
+export default CandidateMainContent;

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, IconButton } from '@mui/material'; // Import IconButton
+import { useRouter } from 'next/navigation';
 
 import SummaryStats from '@/components/SummaryStats';
 import { AppRole, statusDetails } from '@/utils/constants';
@@ -30,6 +31,7 @@ const summaryData = [
 ];
 
 const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
+  const router = useRouter();
   const details = statusDetails[status] || { title: 'Candidates', subtitle: 'Manage all candidates.' };
 
   const {positions} = useSelector((state: RootState) => state.positions)
@@ -84,7 +86,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
             <AppliedActionsStub 
                 candidate={candidate}
                 onMove={(c) => handleRowClick(c)} // This opens the modal
-                onView={(c) => console.log('View', c)} // Placeholder or maybe toggle expansion?
+                onView={(c) => router.push(`/candidates/view/${c.candidate_id}`)}
                 onDelete={(c) => console.log('Delete', c)} // Placeholder
             />
         );
@@ -179,7 +181,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
                   <CandidateRequirementDetail 
                       requirements={row.requirement_match} 
                       candidateName={row.candidate_name}
-                      onViewProfile={() => handleRowClick(row)}
+                      onViewProfile={() => router.push(`/candidates/view/${row.candidate_id}`)}
                   />
               )}
               actions={hasActions ? renderActions : undefined}
