@@ -4,6 +4,7 @@ import { getFirstAndLastInitials } from "./transform";
 import { getStatusChipProps } from "./statusColorMapping";
 import { CandidateProfile } from "@/interface/candidate";
 import { TableColumn } from "@/interface/table";
+import MatchScore from "@/components/candidates/MatchScore";
 
 // Define common render functions to be reused
 const renderCandidateName = (candidate: Partial<CandidateProfile>) => {
@@ -45,6 +46,33 @@ const renderStatus = (candidate: Partial<CandidateProfile>) => {
 const renderDate = (dateString?: string | null) =>
   dateString ? new Date(dateString).toLocaleDateString() : "---";
 
+const renderKeySkills = (candidate: Partial<CandidateProfile>) => {
+    const matches = candidate.requirement_match;
+    if (!matches || matches.length === 0) return "---";
+  
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        {matches.map((req, index) => {
+          const label = req.skill_name || `${req.category_label}: ${req.required_label}`;
+          return (
+              <Chip 
+                  key={index} 
+                  label={label} 
+                  size="small" 
+                  variant="outlined"
+                  sx={{ 
+                      maxWidth: 'fit-content',
+                      fontSize: '0.7rem',
+                      height: '24px',
+                      borderColor: 'divider'
+                  }} 
+              />
+          );
+        })}
+      </Box>
+    );
+  };
+
 // Main configuration object
 export const columnConfig: {
   [key: string]: TableColumn<Partial<CandidateProfile>>[];
@@ -53,6 +81,12 @@ export const columnConfig: {
     { key: "candidate_name", label: "Candidate Name", render: renderCandidateName },
     { key: "contact", label: "Contact", render: renderContact },
     { key: "role_applied_for", label: "Position" },
+    { 
+      key: "match_score", 
+      label: "Match Score", 
+      render: (c) => <MatchScore score={c.match_score || 0} requirements={c.requirement_match} /> 
+    }, 
+    { key: "requirement_match", label: "Key Skills", render: renderKeySkills},
     { key: "submitted_date", label: "Applied", render: (c) => renderDate(c.submitted_date) },
     { key: "source", label: "Source" },
     { key: "current_status", label: "Status", render: renderStatus },
@@ -61,6 +95,12 @@ export const columnConfig: {
     { key: "candidate_name", label: "Candidate Name", render: renderCandidateName },
     { key: "contact", label: "Contact", render: renderContact },
     { key: "role_applied_for", label: "Position" },
+    { 
+      key: "match_score", 
+      label: "Match Score", 
+      render: (c) => <MatchScore score={c.match_score || 0} requirements={c.requirement_match} /> 
+    },
+    { key: "requirement_match", label: "Key Skills", render: renderKeySkills},
     { key: "submitted_date", label: "Applied", render: (c) => renderDate(c.submitted_date) },
     { key: "source", label: "Source" },
     { key: "current_status", label: "Status", render: renderStatus },
