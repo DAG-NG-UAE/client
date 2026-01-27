@@ -15,6 +15,7 @@ import { dispatch } from '@/redux/dispatchHandle';
 import CandidateModal from './CandidateModal';
 import { FillInterviewFormButton, PingHiringManagersButton, GenerateOfferLetterButton } from './CandidateRowActions';
 import Filters from '../Filters';
+import CandidateRequirementDetail from './CandidateRequirementDetail';
 
 
 interface CandidateStatusPageProps {
@@ -160,7 +161,14 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
             <TableComponent
               columns={getColumnsForStatus(status)}
               data={candidates}
-              onRowClick={handleRowClick}
+              // onRowClick={handleRowClick}
+              renderDetailPanel={(row) => (
+                  <CandidateRequirementDetail 
+                      requirements={row.requirement_match} 
+                      candidateName={row.candidate_name}
+                      onViewProfile={() => handleRowClick(row)}
+                  />
+              )}
               actions={hasActions ? renderActions : undefined}
               keyExtractor={(candidates) => candidates.candidate_id}
               totalCount={meta?.total || 0}
