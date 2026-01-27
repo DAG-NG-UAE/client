@@ -13,7 +13,7 @@ import { getColumnsForStatus } from '@/utils/candidateColumnConfig';
 import { CandidateProfile } from '@/interface/candidate';
 import { dispatch } from '@/redux/dispatchHandle';
 import CandidateModal from './CandidateModal';
-import { FillInterviewFormButton, PingHiringManagersButton, GenerateOfferLetterButton } from './CandidateRowActions';
+import { FillInterviewFormButton, PingHiringManagersButton, GenerateOfferLetterButton, AppliedActionsStub } from './CandidateRowActions';
 import Filters from '../Filters';
 import CandidateRequirementDetail from './CandidateRequirementDetail';
 
@@ -63,6 +63,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   const hasActions = React.useMemo(() => {
     if (status === 'pending_feedback') return true;
     if (status === 'approved_for_offer' && user?.role_name === AppRole.HeadOfHr) return true;
+    if (status === 'applied') return true;
     return false;
   }, [status, user?.role_name]);
 
@@ -77,6 +78,18 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   }
 
   const renderActions = (candidate: Partial<CandidateProfile>) => {
+    // Status: Applied
+    if (status === 'applied') {
+        return (
+            <AppliedActionsStub 
+                candidate={candidate}
+                onMove={(c) => handleRowClick(c)} // This opens the modal
+                onView={(c) => console.log('View', c)} // Placeholder or maybe toggle expansion?
+                onDelete={(c) => console.log('Delete', c)} // Placeholder
+            />
+        );
+    }
+
     // Status: Pending Feedback
     if (status === 'pending_feedback') {
       if (user?.role_name === AppRole.Recruiter) {

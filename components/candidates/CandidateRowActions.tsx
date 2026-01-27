@@ -1,6 +1,6 @@
 import { CandidateProfile } from "@/interface/candidate";
-import { Button } from "@mui/material";
-import { Email, Assignment, Description } from "@mui/icons-material";
+import { Button, IconButton, Tooltip, Box } from "@mui/material";
+import { Email, Assignment, Description, Visibility, MoveDown, Delete } from "@mui/icons-material";
 import React from "react";
 import Link from 'next/link';
 import { fetchSingleCandidate } from "@/redux/slices/candidates";
@@ -55,3 +55,47 @@ export const GenerateOfferLetterButton = ({ candidate }: { candidate: Partial<Ca
     );
 };
 
+
+// New Actions for Applied Status
+interface AppliedActionsProps {
+    candidate: Partial<CandidateProfile>;
+    onView?: (candidate: Partial<CandidateProfile>) => void;
+    onMove?: (candidate: Partial<CandidateProfile>) => void;
+    onDelete?: (candidate: Partial<CandidateProfile>) => void;
+}
+
+export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete }: AppliedActionsProps) => {
+    return (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title="View Profile">
+                <IconButton 
+                    size="small" 
+                    onClick={(e) => { e.stopPropagation(); onView && onView(candidate); }}
+                    sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                >
+                    <Visibility fontSize="small" />
+                </IconButton>
+            </Tooltip>
+            
+            <Tooltip title="Move Candidate">
+                <IconButton 
+                    size="small" 
+                    onClick={(e) => { e.stopPropagation(); onMove && onMove(candidate); }}
+                   sx={{ color: 'text.secondary', '&:hover': { color: 'info.main' } }}
+                >
+                    <MoveDown fontSize="small" />
+                </IconButton>
+            </Tooltip>
+
+             <Tooltip title="Delete Candidate">
+                <IconButton 
+                    size="small" 
+                    onClick={(e) => { e.stopPropagation(); onDelete && onDelete(candidate); }}
+                    sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                >
+                    <Delete fontSize="small" />
+                </IconButton>
+            </Tooltip>
+        </Box>
+    );
+};
