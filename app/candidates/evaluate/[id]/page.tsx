@@ -203,16 +203,16 @@ const EvaluationPage = () => {
       );
   }
 
-  if (error) {
-    return (
-        <Container maxWidth="md" sx={{ mt: 8 }}>
-            <Alert severity="error" variant="outlined" sx={{ mb: 2 }}>
-                Something went wrong. Please try again later.
-            </Alert>
-            <Button variant="outlined" onClick={() => router.back()}>Go Back</Button>
-        </Container>
-    );
-  }
+//   if (error) {
+//     return (
+//         <Container maxWidth="md" sx={{ mt: 8 }}>
+//             <Alert severity="error" variant="outlined" sx={{ mb: 2 }}>
+//                 Something went wrong. Please try again later.
+//             </Alert>
+//             <Button variant="outlined" onClick={() => router.back()}>Go Back</Button>
+//         </Container>
+//     );
+//   }
 
   if (submitted) {
       return (

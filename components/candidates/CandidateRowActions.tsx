@@ -8,50 +8,49 @@ import { fetchSingleCandidate } from "@/redux/slices/candidates";
 
 export const PingHiringManagersButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
     return (
-        <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Email fontSize="small" />}
-            component={Link}
-            href={`/candidates/ping/${candidate.candidate_id}`}
-            onClick={(e) => e.stopPropagation()}
-            sx={{ mr: 1, textTransform: 'none' }}
-        >
-            Ping Hiring Managers
-        </Button>
+        <Tooltip title="Ping Hiring Manager">
+            <IconButton
+                size="small"
+                component={Link}
+                href={`/candidates/ping/${candidate.candidate_id}`}
+                onClick={(e) => e.stopPropagation()}
+                sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+            >
+                <Email fontSize="small" />
+            </IconButton>
+        </Tooltip>
     );
 };
 
 export const FillInterviewFormButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
     return (
-        <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Assignment fontSize="small" />}
-            component={Link}
-            href={`/candidates/evaluate/${candidate.candidate_id}`}
-            onClick={(e) => e.stopPropagation()} // Keep this to prevent the table's row click
-            sx={{ textTransform: 'none' }}
-        >
-            Fill Interview Form
-        </Button>
+        <Tooltip title="Fill Interview Form">
+            <IconButton
+                size="small"
+                component={Link}
+                href={`/candidates/evaluate/${candidate.candidate_id}`}
+                onClick={(e) => e.stopPropagation()}
+                sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+            >
+                <Assignment fontSize="small" />
+            </IconButton>
+        </Tooltip>
     );
 };
 
 export const GenerateOfferLetterButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
     return (
-        <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            startIcon={<Description fontSize="small" />}
-            component={Link}
-            href={`/candidates/offer/${candidate.candidate_id}`}
-            onClick={(e) => e.stopPropagation()}
-            sx={{ textTransform: 'none' }}
-        >
-            Generate Offer Letter
-        </Button>
+        <Tooltip title="Generate Offer Letter">
+            <IconButton
+                size="small"
+                component={Link}
+                href={`/candidates/offer/${candidate.candidate_id}`}
+                onClick={(e) => e.stopPropagation()}
+                sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+            >
+                <Description fontSize="small" />
+            </IconButton>
+        </Tooltip>
     );
 };
 
@@ -62,12 +61,13 @@ interface AppliedActionsProps {
     onView?: (candidate: Partial<CandidateProfile>) => void;
     onMove?: (candidate: Partial<CandidateProfile>) => void;
     onDelete?: (candidate: Partial<CandidateProfile>) => void;
+    children?: React.ReactNode;
 }
 
-export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete }: AppliedActionsProps) => {
-    console.log(`candidate in the applied actions stub => ${JSON.stringify(candidate)}`)
+export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, children }: AppliedActionsProps) => {
     return (
         <Box sx={{ display: 'flex', gap: 1 }}>
+            {children}
             <Tooltip title="View Profile">
                 <IconButton 
                     size="small" 

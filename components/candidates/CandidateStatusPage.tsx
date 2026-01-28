@@ -62,12 +62,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
     })),
   ];
 
-  const hasActions = React.useMemo(() => {
-    if (status === 'pending_feedback') return true;
-    if (status === 'approved_for_offer' && user?.role_name === AppRole.HeadOfHr) return true;
-    if (status === 'applied') return true;
-    return false;
-  }, [status, user?.role_name]);
+  const hasActions = true;
 
   const allYears = [
     { text: 'All years', value: 'all'}, 
@@ -80,36 +75,33 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   }
 
   const renderActions = (candidate: Partial<CandidateProfile>) => {
-    // Status: Applied
-    if (status === 'applied') {
-        return (
-            <AppliedActionsStub 
-                candidate={candidate}
-                onMove={(c) => handleRowClick(c)} // This opens the modal
-                onView={(c) =>{
-                  dispatch(setSelectedCandidate(c))
-                  router.push(`/candidates/view/${c.candidate_id}`)
-                }}
-                onDelete={(c) => console.log('Delete', c)} // Placeholder
-            />
-        );
-    }
+    let specificAction = null;
 
-    // Status: Pending Feedback
+    // Determine specific action based on status and role
     if (status === 'pending_feedback') {
       if (user?.role_name === AppRole.Recruiter) {
-        return <PingHiringManagersButton candidate={candidate}/>;
+        specificAction = <PingHiringManagersButton candidate={candidate}/>;
       } else {
-        return <FillInterviewFormButton candidate={candidate}/>; 
+        specificAction = <FillInterviewFormButton candidate={candidate}/>; 
       }
+    } else if (status === 'approved_for_offer' && user?.role_name === AppRole.HeadOfHr) {
+       specificAction = <GenerateOfferLetterButton candidate={candidate} />;
     }
 
-    // Status: Approved for Offer (Head of HR only)
-    if (status === 'approved_for_offer' && user?.role_name === AppRole.HeadOfHr) {
-       return <GenerateOfferLetterButton candidate={candidate} />;
-    }
-
-    return null;
+    // Always render the base actions (View, Move, Delete) with the specific action injected
+    return (
+        <AppliedActionsStub 
+            candidate={candidate}
+             onMove={(c) => handleRowClick(c)} // This opens the modal
+             onView={(c) =>{
+               dispatch(setSelectedCandidate(c))
+               router.push(`/candidates/view/${c.candidate_id}`)
+             }}
+             onDelete={(c) => console.log('Delete', c)} // Placeholder
+        >
+            {specificAction}
+        </AppliedActionsStub>
+    );
   };
 
   const handleYearChange = async(year: string) => {

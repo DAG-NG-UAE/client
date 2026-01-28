@@ -7,7 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CandidateModal from '../CandidateModal';
 import { dispatch } from '@/redux/dispatchHandle';
-import { setSelectedCandidate } from '@/redux/slices/candidates';
+import { fetchSingleCandidate, setSelectedCandidate } from '@/redux/slices/candidates';
 
 interface Props {
     candidate: CandidateProfile;
@@ -19,6 +19,8 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
     
     const handleCloseModal = () => {
         setIsModalOpen(false);
+        //when the modal closes we want to refetch the candidate data
+        fetchSingleCandidate(candidate.candidate_id)
       };
 
     const handleRowClick = (candidate:Partial<CandidateProfile>) =>{
@@ -64,6 +66,7 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
                     color="inherit"
                     startIcon={<CalendarMonthIcon />}
                     sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.primary' }}
+                    onClick={() => handleRowClick(candidate)}
                  >
                     Schedule
                  </Button>

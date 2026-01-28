@@ -25,7 +25,6 @@ const CandidateActivityHistory: React.FC<Props> = ({ candidateId }) => {
             if (!candidateId) return;
             try {
                 setLoading(true);
-                // Cast the response since the API might be typed differently elsewhere
                 const data = await getCandidateActivity(candidateId) as unknown as CandidateStatusHistory[];
                 setActivities(data);
             } catch (err) {
