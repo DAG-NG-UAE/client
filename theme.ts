@@ -22,7 +22,7 @@ declare module "@mui/material/styles" {
 
 // Define common design tokens from tailwindstyle.css
 const typography = {
-  fontFamily: '"Geist Sans", sans-serif',
+  fontFamily: '"Plus Jakarta Sans", sans-serif',
   h1: {
     fontSize: "2rem",
     fontWeight: 500,

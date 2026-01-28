@@ -96,3 +96,21 @@ export interface RequirementMatch {
   required_label: string;
   candidate_label: string;
 }
+
+export interface CandidateStatusHistory {
+    history_id: number;
+    candidate_id: string;
+    requisition_id: string;
+    old_status: string;
+    new_status: string;
+    changed_date: string;
+    changed_by: string | null;
+    notes: string | null;
+}
+
+export interface CandidateEvaluationPayload {
+    interviewer_id: string;
+    interviewer_name: string;
+    interviewer_grand_total: string;
+    candidate_overall_avg: string; 
+}

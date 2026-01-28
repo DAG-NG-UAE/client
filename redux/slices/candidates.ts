@@ -5,8 +5,12 @@ import {
   getSingleCandidate,
   updateCandidateStatus,
   scheduleInterview,
+  getCandidateTotalEvaluation,
 } from "@/api/candidate";
-import { CandidateProfile } from "@/interface/candidate";
+import {
+  CandidateEvaluationPayload,
+  CandidateProfile,
+} from "@/interface/candidate";
 import { dispatch } from "../dispatchHandle";
 import { enqueueSnackbar } from "notistack";
 import { PaginationMeta } from "./requisition";
@@ -15,6 +19,7 @@ export interface CandidateState {
   candidates: Partial<CandidateProfile>[];
   meta: PaginationMeta | null;
   selectedCandidate: Partial<CandidateProfile> | null;
+  candidateTotalEvaluation: CandidateEvaluationPayload[] | null;
   loading: boolean;
   error: string | null;
 }
@@ -23,6 +28,7 @@ const initialState: CandidateState = {
   candidates: [],
   meta: null,
   selectedCandidate: null,
+  candidateTotalEvaluation: null,
   loading: false,
   error: null,
 };
@@ -59,6 +65,13 @@ export const candidateSlice = createSlice({
         ...action.payload,
       };
     },
+    setCandidateTotalEvaluation: (
+      state,
+      action: PayloadAction<CandidateEvaluationPayload[]>,
+    ) => {
+      state.loading = false;
+      state.candidateTotalEvaluation = action.payload;
+    },
     clearSelectedCandidate: (state) => {
       state.selectedCandidate = null;
     },
@@ -70,6 +83,9 @@ export const candidateSlice = createSlice({
     },
     clearCandidates(state) {
       state.candidates = [];
+      state.selectedCandidate = null;
+      state.candidateTotalEvaluation = null;
+      state.error = null;
     },
   },
 });
@@ -79,6 +95,7 @@ export const {
   hasError,
   setCandidates,
   setSelectedCandidate,
+  setCandidateTotalEvaluation,
   clearSelectedCandidate,
   clearError,
   stopLoading,
@@ -169,6 +186,18 @@ export const callScheduleInterview = async (interviewData: {
     fetchAllCandidates(undefined, "shortlisted");
     dispatch(stopLoading());
     // Optionally refetch candidate or update state directly
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callGetCandidateTotalEvaluation = async (candidateId: string) => {
+  try {
+    dispatch(startLoading());
+    const response = await getCandidateTotalEvaluation(candidateId);
+    dispatch(setCandidateTotalEvaluation(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   } finally {

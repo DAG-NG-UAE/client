@@ -3,6 +3,7 @@ import { Box, Tabs, Tab, Paper, Typography } from '@mui/material';
 import { CandidateProfile } from '@/interface/candidate';
 import CandidateRequirementDetail from '../CandidateRequirementDetail';
 import { API_BASE_URL } from '@/api/axiosInstance';
+import CandidateActivityHistory from './CandidateActivityHistory';
 
 interface Props {
     candidate: CandidateProfile;
@@ -52,6 +53,7 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
              // e.g. \application\file.pdf -> /uploads/application/file.pdf
              const relPath = parts[1].replace(/\\/g, '/');
              resumeUrl = `${API_BASE_URL}/uploads${relPath}`;
+             console.log(resumeUrl);
         }
     }
 
@@ -70,8 +72,8 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
             <CustomTabPanel value={value} index={0}>
                 {resumeUrl ? (
                     <Box sx={{ height: '800px', width: '100%', bgcolor: '#eee', borderRadius: 1, overflow: 'hidden' }}>
-                        <iframe 
-                            src={resumeUrl} 
+                <iframe 
+                            src={`${resumeUrl}#zoom=100`} 
                             width="100%" 
                             height="100%" 
                             style={{ border: 'none' }}
@@ -87,7 +89,7 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
 
             {/* ACTIVITY HISTORY TAB */}
             <CustomTabPanel value={value} index={1}>
-                <Typography color="text.secondary">Activity timeline will act here.</Typography>
+                <CandidateActivityHistory candidateId={candidate.candidate_id} />
             </CustomTabPanel>
 
             {/* REQUIREMENT MATCH TAB */}

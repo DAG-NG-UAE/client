@@ -62,9 +62,7 @@ const EvaluationPage = () => {
   // Derivations
   const isRecruiter = user?.role_name === AppRole.Recruiter;
   
-  // NOTE: REPLACE THIS HARDCODED 'Digital' WITH ACTUAL LOGIC WHEN READY
   const candidateDepartment = selectedCandidate?.department;
-//   const candidateDepartment = 'Digital'; 
 
   // Initial Fetch Candidate
   useEffect(() => {

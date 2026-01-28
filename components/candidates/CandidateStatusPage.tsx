@@ -86,7 +86,10 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
             <AppliedActionsStub 
                 candidate={candidate}
                 onMove={(c) => handleRowClick(c)} // This opens the modal
-                onView={(c) => router.push(`/candidates/view/${c.candidate_id}`)}
+                onView={(c) =>{
+                  dispatch(setSelectedCandidate(c))
+                  router.push(`/candidates/view/${c.candidate_id}`)
+                }}
                 onDelete={(c) => console.log('Delete', c)} // Placeholder
             />
         );

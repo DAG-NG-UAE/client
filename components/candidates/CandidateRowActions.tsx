@@ -65,6 +65,7 @@ interface AppliedActionsProps {
 }
 
 export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete }: AppliedActionsProps) => {
+    console.log(`candidate in the applied actions stub => ${JSON.stringify(candidate)}`)
     return (
         <Box sx={{ display: 'flex', gap: 1 }}>
             <Tooltip title="View Profile">

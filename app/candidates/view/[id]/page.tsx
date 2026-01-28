@@ -1,41 +1,31 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Box, CircularProgress, Container, Typography } from '@mui/material';
 import { useParams } from 'next/navigation';
-import { getSingleCandidate } from '@/api/candidate';
+import { callGetCandidateTotalEvaluation, fetchSingleCandidate } from '@/redux/slices/candidates';
 import { CandidateProfile } from '@/interface/candidate';
 import CandidateProfileHeader from '@/components/candidates/view/CandidateProfileHeader';
 import CandidateMainContent from '@/components/candidates/view/CandidateMainContent';
 import CandidateRightSidebar from '@/components/candidates/view/CandidateRightSidebar';
+import { RootState, useSelector } from '@/redux/store';
 
 
 const CandidateViewPage = () => {
     const params = useParams();
     const id = params?.id as string;
     
-    const [candidate, setCandidate] = useState<CandidateProfile | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { selectedCandidate, loading, candidateTotalEvaluation } = useSelector((state: RootState) => state.candidates);
+    const hasCandidate = selectedCandidate && selectedCandidate.candidate_id === id;
 
     useEffect(() => {
-        const fetchCandidate = async () => {
-            if (!id) return;
-            try {
-                setLoading(true);
-                const data = await getSingleCandidate(id);
-                // The API might return it wrapped or directly. Based on api/candidate.ts it returns response.data.data
-                setCandidate(data); 
-            } catch (error) {
-                console.error("Failed to load candidate", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCandidate();
+        if (id) {
+            fetchSingleCandidate(id);
+            callGetCandidateTotalEvaluation(id);
+        }
     }, [id]);
 
-    if (loading) {
+    if (loading && !hasCandidate) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <CircularProgress />
@@ -43,19 +33,23 @@ const CandidateViewPage = () => {
         );
     }
 
-    if (!candidate) {
+    if (!hasCandidate && !loading) {
         return (
             <Box sx={{ p: 3 }}>
                 <Typography variant="h6">Candidate not found</Typography>
             </Box>
         );
     }
+    
+    // We cast to CandidateProfile because we expect the data to be sufficient or eventual consistent
+    // This resolves the "Partial<CandidateProfile>" mismatch error
+    const candidate = selectedCandidate as CandidateProfile;
 
     return (
         <Box sx={{ bgcolor: '#F5F6F8', minHeight: '100vh', pb: 4 }}>
              {/* Header */}
              <Box sx={{ bgcolor: 'white', borderBottom: '1px solid', borderColor: 'divider', px: 4, py: 2, mb: 3 }}>
-                <CandidateProfileHeader candidate={candidate} />
+                {candidate && <CandidateProfileHeader candidate={candidate} />}
              </Box>
 
              <Container maxWidth="xl">
@@ -67,12 +61,12 @@ const CandidateViewPage = () => {
 
                     {/* Main Content (Tabs) */}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <CandidateMainContent candidate={candidate} />
+                        {candidate && <CandidateMainContent candidate={candidate} />}
                     </Box>
 
                     {/* Right Sidebar */}
                     <Box sx={{ width: 320, flexShrink: 0 }}>
-                         <CandidateRightSidebar candidate={candidate} />
+                         {candidate && <CandidateRightSidebar candidate={candidate} evaluations={candidateTotalEvaluation || []}/>}
                     </Box>
                 </Box>
              </Container>

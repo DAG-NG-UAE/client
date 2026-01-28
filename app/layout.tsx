@@ -1,6 +1,6 @@
 "use client"
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
@@ -17,7 +17,7 @@ import {store, persistor} from '../redux/store'
 import { PersistGate } from 'redux-persist/integration/react';
 import { NotistackProvider } from "@/components/NotistackProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 const drawerWidth = 240;
 
@@ -42,7 +42,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={plusJakartaSans.className}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <ReduxProvider store={store}>
             <PersistGate loading={null} persistor={persistor}>

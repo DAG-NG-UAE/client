@@ -163,3 +163,27 @@ export const pingHiringManager = async (payload: {
     throw error;
   }
 };
+
+export const getCandidateActivity = async (candidateId: string) => {
+  try {
+    const response = await axiosInstance.get(
+      `/candidate/activity?candidateId=${candidateId}`,
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching candidate activity", error);
+    throw error;
+  }
+};
+
+export const getCandidateTotalEvaluation = async (candidateId: string) => {
+  try {
+    const response = await axiosInstance.get(
+      `/candidate/evaluation?candidateId=${candidateId}`,
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching candidate evaluation", error);
+    throw error;
+  }
+};

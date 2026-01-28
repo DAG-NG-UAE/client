@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Button, Chip } from '@mui/material';
 import { CandidateProfile } from '@/interface/candidate';
 import { getStatusChipProps } from '@/utils/statusColorMapping';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CandidateModal from '../CandidateModal';
+import { dispatch } from '@/redux/dispatchHandle';
+import { setSelectedCandidate } from '@/redux/slices/candidates';
 
 interface Props {
     candidate: CandidateProfile;
@@ -12,8 +15,21 @@ interface Props {
 
 const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
     const statusProps = getStatusChipProps(candidate.current_status);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+      };
+
+    const handleRowClick = (candidate:Partial<CandidateProfile>) =>{
+        dispatch(setSelectedCandidate(candidate))
+        setIsModalOpen(true);
+      }
+
+    console.log(`candidate in the candidate profile header => ${JSON.stringify(candidate)}`)
 
     return (
+        <>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.5 }}>
@@ -42,6 +58,7 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
                  >
                     Reject
                  </Button>
+                 {candidate.current_status == "shortlisted" && (
                  <Button 
                     variant="outlined" 
                     color="inherit"
@@ -50,16 +67,25 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
                  >
                     Schedule
                  </Button>
+                 )}
                  <Button 
                     variant="contained" 
                     color="primary"
                     endIcon={<ArrowForwardIcon />}
                     sx={{ textTransform: 'none', fontWeight: 600, px: 3 }}
+                    onClick={() => handleRowClick(candidate)}
                  >
                     Move Stage
                  </Button>
             </Box>
         </Box>
+        <CandidateModal
+          open={isModalOpen}
+          onClose={handleCloseModal}
+          candidate={candidate}
+        />
+        </>
+        
     );
 };
 
