@@ -187,3 +187,15 @@ export const getCandidateTotalEvaluation = async (candidateId: string) => {
     throw error;
   }
 };
+
+export const getCandidateEvaluationDetails = async (candidateId: string) => {
+  try {
+    const response = await axiosInstance.get(
+      `/candidate/evaluation/details?candidateId=${candidateId}`,
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching candidate evaluation details", error);
+    throw error;
+  }
+};

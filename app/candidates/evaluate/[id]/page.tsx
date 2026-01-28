@@ -159,10 +159,6 @@ const EvaluationPage = () => {
         console.error('Form is invalid');
         return;
     }
-
-    // Since isFormValid is true, we know every item in ratings (corresponding to form) is valid.
-    // However, ratings might have extra keys (unlikely) or TS doesn't know for sure.
-    // We cast it to the expected type for the API call.
     const finalEvaluation = ratings as Record<string, { rating: number, comment: string }>;
 
     console.log({
@@ -408,9 +404,9 @@ const EvaluationPage = () => {
                                         label="Recommendation"
                                         onChange={(e: SelectChangeEvent) => setRecommendation(e.target.value)}
                                     >
-                                        <MenuItem value="approved_for_offer">Proceed to Offer</MenuItem>
-                                        <MenuItem value="shortlisted">Needs Another Round</MenuItem>
-                                        <MenuItem value="Hold">Hold</MenuItem>
+                                        <MenuItem value="strong_hire">Strong Hire</MenuItem>
+                                        <MenuItem value="hire">Hire</MenuItem>
+                                        <MenuItem value="no_hire">No Hire</MenuItem>
                                         <MenuItem value="rejected">Reject</MenuItem>
                                     </Select>
                                 </FormControl>

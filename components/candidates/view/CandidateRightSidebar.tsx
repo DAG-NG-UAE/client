@@ -1,11 +1,11 @@
-import React from 'react';
-import { Box, Typography, Paper, Avatar, Rating } from '@mui/material';
+import { Box, Typography, Paper, Avatar, Rating, Button } from '@mui/material';
 import { CandidateEvaluationPayload, CandidateProfile } from '@/interface/candidate';
 import MatchScore from '../MatchScore';
 import EventIcon from '@mui/icons-material/Event';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DownloadIcon from '@mui/icons-material/Download';
 import { getFirstAndLastInitials } from '@/utils/transform';
+import { useRouter } from 'next/navigation';
 
 interface Props {
     candidate: CandidateProfile;
@@ -13,6 +13,7 @@ interface Props {
 }
 
 const CandidateRightSidebar: React.FC<Props> = ({ candidate, evaluations }) => {
+    const router = useRouter();
     
     // Calculate overall average
     const calculateOverallAverage = () => {
@@ -50,6 +51,16 @@ const CandidateRightSidebar: React.FC<Props> = ({ candidate, evaluations }) => {
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ letterSpacing: 1 }}>
                         REVIEWER RATINGS
                     </Typography>
+                     <Button 
+                        size="small" 
+                        sx={{ textTransform: 'none', fontSize: '0.75rem', p: 0, minWidth: 'auto' }}
+                        onClick={() => router.push(`/candidates/evaluations/${candidate.candidate_id}`)}
+                     >
+                        View Details
+                     </Button>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">Overall Average</Typography>
                      <Typography variant="body2" fontWeight={700}>{calculateOverallAverage()}</Typography>
                 </Box>
                 

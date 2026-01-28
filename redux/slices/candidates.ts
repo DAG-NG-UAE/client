@@ -1,16 +1,18 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
+  CandidateEvaluationPayload,
+  CandidateProfile,
+  CandidateEvaluationSession,
+} from "@/interface/candidate";
+import {
   getAllCandidates,
   getCandidatesForRequisition,
   getSingleCandidate,
   updateCandidateStatus,
   scheduleInterview,
   getCandidateTotalEvaluation,
+  getCandidateEvaluationDetails,
 } from "@/api/candidate";
-import {
-  CandidateEvaluationPayload,
-  CandidateProfile,
-} from "@/interface/candidate";
 import { dispatch } from "../dispatchHandle";
 import { enqueueSnackbar } from "notistack";
 import { PaginationMeta } from "./requisition";
@@ -20,6 +22,7 @@ export interface CandidateState {
   meta: PaginationMeta | null;
   selectedCandidate: Partial<CandidateProfile> | null;
   candidateTotalEvaluation: CandidateEvaluationPayload[] | null;
+  candidateEvaluationDetails: CandidateEvaluationSession[] | null;
   loading: boolean;
   error: string | null;
 }
@@ -29,6 +32,7 @@ const initialState: CandidateState = {
   meta: null,
   selectedCandidate: null,
   candidateTotalEvaluation: null,
+  candidateEvaluationDetails: null,
   loading: false,
   error: null,
 };
@@ -72,6 +76,13 @@ export const candidateSlice = createSlice({
       state.loading = false;
       state.candidateTotalEvaluation = action.payload;
     },
+    setCandidateEvaluationDetails: (
+      state,
+      action: PayloadAction<CandidateEvaluationSession[]>,
+    ) => {
+      state.loading = false;
+      state.candidateEvaluationDetails = action.payload;
+    },
     clearSelectedCandidate: (state) => {
       state.selectedCandidate = null;
     },
@@ -85,6 +96,7 @@ export const candidateSlice = createSlice({
       state.candidates = [];
       state.selectedCandidate = null;
       state.candidateTotalEvaluation = null;
+      state.candidateEvaluationDetails = null;
       state.error = null;
     },
   },
@@ -96,6 +108,7 @@ export const {
   setCandidates,
   setSelectedCandidate,
   setCandidateTotalEvaluation,
+  setCandidateEvaluationDetails,
   clearSelectedCandidate,
   clearError,
   stopLoading,
@@ -198,6 +211,20 @@ export const callGetCandidateTotalEvaluation = async (candidateId: string) => {
     dispatch(startLoading());
     const response = await getCandidateTotalEvaluation(candidateId);
     dispatch(setCandidateTotalEvaluation(response));
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callGetCandidateEvaluationDetails = async (
+  candidateId: string,
+) => {
+  try {
+    dispatch(startLoading());
+    const response = await getCandidateEvaluationDetails(candidateId);
+    dispatch(setCandidateEvaluationDetails(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   } finally {

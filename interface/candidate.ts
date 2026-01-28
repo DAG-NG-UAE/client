@@ -98,19 +98,35 @@ export interface RequirementMatch {
 }
 
 export interface CandidateStatusHistory {
-    history_id: number;
-    candidate_id: string;
-    requisition_id: string;
-    old_status: string;
-    new_status: string;
-    changed_date: string;
-    changed_by: string | null;
-    notes: string | null;
+  history_id: number;
+  candidate_id: string;
+  requisition_id: string;
+  old_status: string;
+  new_status: string;
+  changed_date: string;
+  changed_by: string | null;
+  notes: string | null;
 }
 
 export interface CandidateEvaluationPayload {
-    interviewer_id: string;
-    interviewer_name: string;
-    interviewer_grand_total: string;
-    candidate_overall_avg: string; 
+  interviewer_id: string;
+  interviewer_name: string;
+  interviewer_grand_total: string;
+  candidate_overall_avg: string;
+}
+
+export interface EvaluationCriterion {
+  score: number;
+  comments: string;
+  criteria: string;
+}
+
+export interface CandidateEvaluationSession {
+  interviewer_name: string;
+  interviewer_id: string;
+  evaluation_date: string;
+  evaluation_details: EvaluationCriterion[];
+  day_grand_total: string;
+  day_average: string;
+  recommendation?: string; // Keeping this optional as it might be useful or inferred
 }
