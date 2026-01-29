@@ -126,12 +126,36 @@ export const createEmployee = async (
   }
 };
 
-export const resolveRequisition = async(offerId: string) => { 
-    try {
-        const response = await axiosInstance.patch(`offer/revision/resolve?offerId=${offerId}`);
-        return response.data.data;
-    } catch (error) {
-        console.error("Error resolving requisition", error);
-        throw error;
-    }
-}
+export const resolveRequisition = async (offerId: string) => {
+  try {
+    const response = await axiosInstance.patch(
+      `offer/revision/resolve?offerId=${offerId}`,
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error resolving requisition", error);
+    throw error;
+  }
+};
+
+export const savePreOfferDocs = async (payload: any) => {
+  try {
+    const response = await axiosInstance.post(`offer/pre`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error saving pre-offer docs", error);
+    throw error;
+  }
+};
+
+export const fetchPreOfferDocs = async (candidateId: string) => {
+  try {
+    const response = await axiosInstance.get(
+      `offer/pre/docs?candidateId=${candidateId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching pre-offer docs", error);
+    throw error;
+  }
+};

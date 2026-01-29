@@ -4,6 +4,8 @@ import {
   Guarantor,
   JoiningDetails,
   Offer,
+  PreOfferDocument,
+  SavePreOfferDocsRequest,
 } from "@/interface/offer";
 import { PaginationMeta } from "./requisition";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -17,6 +19,8 @@ import {
   getOfferById,
   getOfferLetter,
   resolveRequisition,
+  savePreOfferDocs,
+  fetchPreOfferDocs,
 } from "@/api/offer";
 import { enqueueSnackbar } from "notistack";
 
@@ -28,6 +32,7 @@ export interface OfferState {
   guarantor: Partial<Guarantor> | null;
   currentOffer: Partial<Offer> | null;
   selectedClauses: ExtendedClause[];
+  preOfferDocs: PreOfferDocument[];
   loading: boolean;
   error: string | null;
 }
@@ -40,6 +45,7 @@ const initialState: OfferState = {
   guarantor: null,
   currentOffer: null,
   selectedClauses: [],
+  preOfferDocs: [],
   loading: false,
   error: null,
 };
@@ -92,6 +98,9 @@ export const offerSlice = createSlice({
     setGuarantor(state, action: PayloadAction<Partial<Guarantor>>) {
       state.guarantor = action.payload;
     },
+    setPreOfferDocs(state, action: PayloadAction<PreOfferDocument[]>) {
+      state.preOfferDocs = action.payload;
+    },
     clearOfferState(state) {
       state.masterClauses = [];
       state.currentOffer = null;
@@ -100,6 +109,7 @@ export const offerSlice = createSlice({
       state.guarantor = null;
       state.error = null;
       state.loading = false;
+      state.preOfferDocs = [];
     },
   },
 });
@@ -115,6 +125,7 @@ export const {
   setCurrentOffer,
   setJoiningDetails,
   setGuarantor,
+  setPreOfferDocs,
   clearOfferState,
   stopLoading,
 } = offerSlice.actions;
@@ -210,10 +221,10 @@ export const callCreateEmployee = async (
   try {
     dispatch(startLoading());
     const response = await createEmployee(requisitionId, candidateId);
-    enqueueSnackbar('Employee created successfully', { variant: 'success' });
+    enqueueSnackbar("Employee created successfully", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
-    enqueueSnackbar('Failed to create employee', { variant: 'error' });
+    enqueueSnackbar("Failed to create employee", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -223,10 +234,45 @@ export const callResolveRequisition = async (offerId: string) => {
   try {
     dispatch(startLoading());
     const response = await resolveRequisition(offerId);
-    enqueueSnackbar('Requisition marked as resolved', { variant: 'success' });
+    enqueueSnackbar("Requisition marked as resolved", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
-    enqueueSnackbar('Failed to mark requisition as resolved', { variant: 'error' });
+    enqueueSnackbar("Failed to mark requisition as resolved", {
+      variant: "error",
+    });
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callSavePreOfferDocs = async (
+  payload: SavePreOfferDocsRequest,
+) => {
+  try {
+    dispatch(startLoading());
+    await savePreOfferDocs(payload);
+    enqueueSnackbar("Pre-offer documents saved", { variant: "success" });
+    await callFetchPreOfferDocs(payload.candidateId);
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar(
+      error?.response?.data?.message || "Failed to save pre-offer docs",
+      { variant: "error" },
+    );
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callFetchPreOfferDocs = async (candidateId: string) => {
+  try {
+    dispatch(startLoading());
+    const response = await fetchPreOfferDocs(candidateId);
+    if (response.success) {
+      dispatch(setPreOfferDocs(response.data));
+    }
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
   } finally {
     dispatch(stopLoading());
   }

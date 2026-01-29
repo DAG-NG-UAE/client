@@ -28,6 +28,7 @@ import PersonOffIcon from '@mui/icons-material/PersonOff';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import EditNoteIcon from '@mui/icons-material/EditNote';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import { styled, useTheme } from '@mui/material/styles';
 import { useRouter, usePathname } from 'next/navigation'; // Import useRouter and usePathname
 import { useSelector } from 'react-redux';
@@ -96,6 +97,10 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
     { text: 'Approved for Offer', path: '/candidates/approved_for_offer', icon: <HowToRegIcon /> },
     { text: 'Rejected', path: '/candidates/rejected', icon: <PersonOffIcon /> },
   ];
+
+  if (user && (user.role_name === AppRole.HeadOfHr || user.role_name === AppRole.HrManager)) {
+    candidateSubItems.splice(6, 0, { text: 'Pre Offer', path: '/candidates/pre_offer', icon: <AssignmentIcon /> });
+  }
 
   const offerSubItems = [
     { text: 'All', path: '/offers/all', icon: <ListAltIcon /> },

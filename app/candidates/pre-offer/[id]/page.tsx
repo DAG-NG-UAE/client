@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Box, Typography, Button, Paper, Divider, Stack, Checkbox, 
     FormControlLabel, IconButton, Chip, Dialog, DialogTitle, 
@@ -15,43 +15,83 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/Pending';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { callFetchPreOfferDocs, callSavePreOfferDocs } from '@/redux/slices/offer';
+import { fetchSingleCandidate } from '@/redux/slices/candidates';
 
-// Mock Data for UI Skeleton
-const MOCK_DOCUMENTS = [
-    { id: 1, name: "ID Proof (Passport/National ID)", required: true, uploaded: true, status: 'approved', fileName: "Passport_AlexRivera.pdf", date: "Sep 12, 2024" },
-    { id: 2, name: "Previous 3 Months Pay Slips", required: true, uploaded: true, status: 'approved', fileName: "Payslips_Combined.pdf", date: "Sep 12, 2024" },
-    { id: 3, name: "Degree Certificate & Transcripts", required: true, uploaded: true, status: 'approved', fileName: "Master_Degree_Original.png", date: "Sep 13, 2024" },
-    { id: 4, name: "Background Check Consent Form", required: true, uploaded: true, status: 'pending', fileName: "BG_Consent_Signed.pdf", date: "Sep 13, 2024" },
-    { id: 5, name: "Signed NDA & Ethics Agreement", required: false, uploaded: false, status: 'missing', fileName: null, date: null },
+const STANDARD_DOCUMENTS = [
+    { 
+        id: 'employment_record_proof', 
+        displayName: "Employment Record Proof", 
+        status: 'awaiting_upload', 
+        type: 'standard', 
+        url: null 
+    }
 ];
 
 const PreOfferVerificationPage = () => {
     const params = useParams();
     const router = useRouter();
     const id = params?.id as string;
+    const dispatch = useDispatch<any>();
+
+    const { selectedCandidate } = useSelector((state: RootState) => state.candidates);
+    const { preOfferDocs } = useSelector((state: RootState) => state.offers);
     
+    // Determine which docs to show/use
+    const currentDocs = preOfferDocs && preOfferDocs.length > 0 ? preOfferDocs : STANDARD_DOCUMENTS;
+
     // UI State
     const [copied, setCopied] = useState(false);
-    const [documents, setDocuments] = useState(MOCK_DOCUMENTS);
     const [openAddModal, setOpenAddModal] = useState(false);
     const [newItemName, setNewItemName] = useState('');
     const [commChannel, setCommChannel] = useState('email');
 
-    const handleAddItem = () => {
-        if (!newItemName) return;
-        const newDoc = { 
-            id: Date.now(), 
-            name: newItemName, 
-            required: true, 
-            uploaded: false, 
-            status: 'missing', 
-            fileName: null, 
-            date: null 
+    useEffect(() => {
+        if (id) {
+            if (!selectedCandidate || selectedCandidate.candidate_id !== id) {
+                fetchSingleCandidate(id);
+            }
+            callFetchPreOfferDocs(id);
+        }
+    }, [id]);
+
+    const handleAddItem = async () => {
+        if (!newItemName || !selectedCandidate) return;
+        
+        const newDocId = newItemName.trim().toLowerCase().replace(/\s+/g, '_');
+        
+        const newDoc = {
+            id: newDocId,
+            displayName: newItemName,
+            status: 'awaiting_upload',
+            type: 'standard',
+            url: null
         };
-        // Just for UI demo, strictly mapped types would be needed in real app
-        setDocuments([...documents, newDoc as any]); 
+
+        // Use currentDocs as base so we include standard docs if this is the first add
+        const updatedDocs = [...currentDocs, newDoc];
+
+        const payload = {
+            candidateId: id,
+            requisitionId: selectedCandidate.requisition_id || '',
+            requestedDocs: updatedDocs as any
+        };
+
+        await dispatch(callSavePreOfferDocs(payload));
         setNewItemName('');
         setOpenAddModal(false);
+    };
+
+    const handleGenerateLink = async () => {
+        if (!selectedCandidate) return;
+        const payload = {
+            candidateId: id,
+            requisitionId: selectedCandidate.requisition_id || '',
+            requestedDocs: currentDocs as any
+        };
+        await callSavePreOfferDocs(payload);
     };
 
     const handleCopyLink = () => {
@@ -60,6 +100,8 @@ const PreOfferVerificationPage = () => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
+
+    const allApproved = currentDocs.length > 0 && currentDocs.every((d: any) => d.status === 'approved');
 
     return (
         <Box sx={{ bgcolor: '#F5F6F8', minHeight: '100vh', p: { xs: 2, md: 4 } }}>
@@ -74,15 +116,22 @@ const PreOfferVerificationPage = () => {
                         Back to Evaluation
                     </Button>
                     <Typography variant="h4" fontWeight={700}>Pre-Offer Document Verification</Typography>
-                    <Typography variant="body2" color="text.secondary">Alex Rivera • HR-2024-092 (Senior Product Manager)</Typography>
+                    <Typography variant="body2" color="text.secondary">{selectedCandidate?.candidate_name} • {selectedCandidate?.role_applied_for}  </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button variant="outlined" sx={{ textTransform: 'none', fontWeight: 600, bgcolor: 'white' }}>Save Draft</Button>
+                    <Button 
+                        variant="outlined" 
+                        sx={{ textTransform: 'none', fontWeight: 600, bgcolor: 'white' }}
+                        onClick={handleGenerateLink}
+                    >
+                        Generate Pre Offer Link
+                    </Button>
                     <Button 
                         variant="contained" 
                         color="primary" 
                         sx={{ textTransform: 'none', fontWeight: 600 }}
                         onClick={() => router.push(`/candidates/offer/${id}`)}
+                        disabled={!allApproved}
                     >
                         All Documents Verified - Generate Offer
                     </Button>
@@ -104,11 +153,11 @@ const PreOfferVerificationPage = () => {
                         </Typography>
 
                         <Stack spacing={1}>
-                            {documents.map(doc => (
+                            {currentDocs.map((doc: any) => (
                                 <FormControlLabel 
                                     key={doc.id}
-                                    control={<Checkbox defaultChecked={doc.required} size="small" />} 
-                                    label={<Typography variant="body2">{doc.name}</Typography>} 
+                                    control={<Checkbox defaultChecked={true} size="small" />} 
+                                    label={<Typography variant="body2">{doc.displayName}</Typography>} 
                                 />
                             ))}
                             <Button 
@@ -177,15 +226,19 @@ const PreOfferVerificationPage = () => {
                     <Box sx={{ display: 'flex', gap: 3 }}>
                         <Paper elevation={0} sx={{ flex: 1, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                             <Typography variant="caption" color="text.secondary">Total Requested</Typography>
-                            <Typography variant="h4" fontWeight={700}>5</Typography>
+                            <Typography variant="h4" fontWeight={700}>{currentDocs.length}</Typography>
                         </Paper>
                          <Paper elevation={0} sx={{ flex: 1, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                             <Typography variant="caption" color="text.secondary">Uploaded</Typography>
-                             <Typography variant="h4" fontWeight={700}>4</Typography>
+                             <Typography variant="h4" fontWeight={700}>{currentDocs.filter((d: any) => d.url || (d.status !== 'awaiting_upload' && d.status !== 'missing')).length}</Typography>
                         </Paper>
-                        <Paper elevation={0} sx={{ flex: 1, p: 2, border: '1px solid', borderColor: 'success.light', bgcolor: '#E6F4EA', borderRadius: 2 }}>
-                            <Typography variant="caption" color="success.main" fontWeight={700}>Verification Status</Typography>
-                            <Typography variant="h5" fontWeight={700} color="success.dark">Ready for Offer</Typography>
+                        <Paper elevation={0} sx={{ flex: 1, p: 2, border: '1px solid', 
+                            borderColor: allApproved ? 'success.light' : 'warning.light', 
+                            bgcolor: allApproved ? '#E6F4EA' : '#FFF8E1', 
+                            borderRadius: 2 
+                        }}>
+                            <Typography variant="caption" color={allApproved ? "success.main" : "warning.dark"} fontWeight={700}>Verification Status</Typography>
+                            <Typography variant="h5" fontWeight={700} color={allApproved ? "success.dark" : "warning.dark"}>{allApproved ? "Ready for Offer" : "Pending Verification"}</Typography>
                         </Paper>
                     </Box>
 
@@ -208,12 +261,12 @@ const PreOfferVerificationPage = () => {
                             </Box>
                             
                             {/* Rows */}
-                            {MOCK_DOCUMENTS.map((doc, index) => (
+                            {currentDocs.map((doc: any, index: number) => (
                                 <Box key={doc.id} sx={{ 
                                     display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', 
                                     gap: 2, alignItems: 'center', 
                                     px: 2, py: 2.5, 
-                                    borderBottom: index !== MOCK_DOCUMENTS.length - 1 ? '1px solid' : 'none',
+                                    borderBottom: index !== currentDocs.length - 1 ? '1px solid' : 'none',
                                     borderColor: 'divider'
                                 }}>
                                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -221,17 +274,20 @@ const PreOfferVerificationPage = () => {
                                             <PictureAsPdfIcon />
                                         </Box>
                                         <Box>
-                                            <Typography variant="body2" fontWeight={600}>{doc.fileName || "Pending Upload..."}</Typography>
-                                            <Typography variant="caption" color="text.secondary">{doc.name}</Typography>
+                                            <Typography variant="body2" fontWeight={600}>{doc.url ? 'Document Uploaded' : 'Pending Upload...'}</Typography>
+                                            <Typography variant="caption" color="text.secondary">{doc.displayName}</Typography>
                                         </Box>
                                     </Box>
 
-                                    <Typography variant="body2" color="text.secondary">{doc.date || "-"}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : "-"}
+                                    </Typography>
 
                                     <Box>
                                         {doc.status === 'approved' && <Chip label="Approved" size="small" color="success" icon={<CheckCircleIcon />} sx={{ fontWeight: 600, bgcolor: '#E6F4EA', color: '#1E4620' }} />}
-                                        {doc.status === 'pending' && <Chip label="Pending Review" size="small" color="primary" icon={<PendingIcon />} sx={{ fontWeight: 600, bgcolor: '#E3F2FD', color: '#0D47A1' }} />}
-                                        {doc.status === 'missing' && <Chip label="Missing" size="small" color="default" sx={{ fontWeight: 600 }} />}
+                                        {doc.status === 'pending_review' && <Chip label="Pending Review" size="small" color="primary" icon={<PendingIcon />} sx={{ fontWeight: 600, bgcolor: '#E3F2FD', color: '#0D47A1' }} />}
+                                        {(doc.status === 'missing' || doc.status === 'awaiting_upload') && <Chip label="Missing" size="small" color="default" sx={{ fontWeight: 600 }} />}
+                                        {doc.status === 'rejected' && <Chip label="Rejected" size="small" color="error" icon={<CancelIcon />} sx={{ fontWeight: 600 }} />}
                                     </Box>
 
                                     <Box sx={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: 1 }}>

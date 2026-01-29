@@ -14,7 +14,7 @@ export interface ExtendedClause extends Clauses {
 export interface Offer {
   offer_id: string;
   candidate_id: string;
-  current_status: string, //this is the candidate current status 
+  current_status: string; //this is the candidate current status
   requisition_id: string;
   position: string;
   location: string;
@@ -74,11 +74,11 @@ export interface Reference {
   contact_no: string;
 }
 
-export interface NegotiationDetails { 
+export interface NegotiationDetails {
   sender: string;
-  candidateName: string; 
-  message: string; 
-  timestamp: string
+  candidateName: string;
+  message: string;
+  timestamp: string;
 }
 
 export interface JoiningDetails {
@@ -146,9 +146,9 @@ export interface JoiningDetails {
   employment_history: EmploymentHistory[];
   educational_history: EducationalHistory[];
   trainings_certifications: TrainingCertification[];
-  negotiation_history?: NegotiationDetails[]
-  preferred_email?: string; 
-  preferred_number?: string
+  negotiation_history?: NegotiationDetails[];
+  preferred_email?: string;
+  preferred_number?: string;
 }
 
 export interface Guarantor {
@@ -176,4 +176,30 @@ export interface Guarantor {
   declaration_agreed: boolean;
   digital_signature: string;
   declaration_date: string | null;
+}
+
+export interface PreOfferDocument {
+  id: string;
+  url: string | null;
+  type: string;
+  status:
+    | "awaiting_upload"
+    | "pending_review"
+    | "approved"
+    | "rejected"
+    | "missing";
+  updatedAt?: string;
+  displayName: string;
+}
+
+export interface SavePreOfferDocsRequest {
+  candidateId: string;
+  requisitionId: string;
+  requestedDocs: PreOfferDocument[];
+}
+
+export interface FetchPreOfferDocsResponse {
+  success: boolean;
+  message: string;
+  data: PreOfferDocument[];
 }
