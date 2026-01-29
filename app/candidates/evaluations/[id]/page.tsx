@@ -289,8 +289,14 @@ const CandidateEvaluationsPage = () => {
 
                 {(user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
                 <Box sx={{ mt: 'auto' }}>
-                    <Button variant="contained" color="primary" fullWidth sx={{ mb: 2, py: 1.5, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.9rem' }}>
-                        Advance to Offer
+                    <Button 
+                        variant="contained" 
+                        color="primary" 
+                        fullWidth 
+                        onClick={() => router.push(`/candidates/pre-offer/${id}`)}
+                        sx={{ mb: 2, py: 1.5, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.9rem' }}
+                    >
+                        Begin Pre Offer Process
                     </Button>
                     <Button variant="outlined" color="error" fullWidth sx={{ py: 1.5, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.9rem' }}>
                         Reject Candidate
