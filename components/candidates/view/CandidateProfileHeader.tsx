@@ -8,6 +8,9 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CandidateModal from '../CandidateModal';
 import { dispatch } from '@/redux/dispatchHandle';
 import { fetchSingleCandidate, setSelectedCandidate } from '@/redux/slices/candidates';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { AppRole } from '@/utils/constants';
 
 interface Props {
     candidate: CandidateProfile;
@@ -16,6 +19,7 @@ interface Props {
 const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
     const statusProps = getStatusChipProps(candidate.current_status);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const {user} = useSelector((state: RootState) => state.auth);
     
     const handleCloseModal = () => {
         setIsModalOpen(false);
@@ -51,6 +55,7 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
                 </Typography>
             </Box>
 
+            {(user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
             <Box sx={{ display: 'flex', gap: 1.5 }}>
                  <Button 
                     variant="outlined" 
@@ -81,6 +86,7 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
                     Move Stage
                  </Button>
             </Box>
+            )}
         </Box>
         <CandidateModal
           open={isModalOpen}

@@ -139,7 +139,7 @@ export const evaluateCandidate = async (
     );
     return response.data.data;
   } catch (error) {
-    console.error("Error inserting candidate evaluation");
+    console.log("Error inserting candidate evaluation");
     throw error;
   }
 };

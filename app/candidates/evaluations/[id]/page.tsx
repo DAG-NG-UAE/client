@@ -16,31 +16,8 @@ import { getFirstAndLastInitials } from '@/utils/transform';
 import { CandidateEvaluationSession, CandidateProfile } from '@/interface/candidate';
 import dayjs from 'dayjs';
 import { RecommendationBadge } from '@/components/candidates/interview rating/badge';
+import { AppRole } from '@/utils/constants';
 
-// --- Components ---
-
-
-
-const ScoreBar = ({ label, score }: { label: string, score: number }) => (
-    <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography variant="body2" fontWeight={500}>{label}</Typography>
-            <Typography variant="body2" fontWeight={700}>{score}/5</Typography>
-        </Box>
-        <LinearProgress 
-            variant="determinate" 
-            value={(score / 5) * 100} 
-            sx={{ 
-                height: 6, borderRadius: 3, 
-                bgcolor: '#F0F2F5',
-                '& .MuiLinearProgress-bar': {
-                    bgcolor: score >= 4 ? 'success.main' : score >= 3 ? 'warning.main' : 'error.main',
-                    borderRadius: 3
-                }
-            }} 
-        />
-    </Box>
-);
 
 const CandidateEvaluationsPage = () => {
     const params = useParams();
@@ -49,6 +26,7 @@ const CandidateEvaluationsPage = () => {
     const [activeSessionIndex, setActiveSessionIndex] = React.useState(0);
 
     const { selectedCandidate, candidateEvaluationDetails, loading } = useSelector((state: RootState) => state.candidates);
+    const {user} = useSelector((state: RootState) => state.auth);
 
     useEffect(() => {
         if (id) {
@@ -121,22 +99,52 @@ const CandidateEvaluationsPage = () => {
 
                 {/* Candidate Info Header */}
                 <Paper elevation={0} sx={{ p: 4, border: '1px solid', borderColor: 'divider' }}>
-                <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', mb: 5 }}>
-                    <Avatar 
-                        sx={{ width: 64, height: 64, bgcolor: 'primary.main', fontSize: '1.5rem', fontWeight: 600 }}
-                    >
-                        {getFirstAndLastInitials(candidate.candidate_name)}
-                    </Avatar>
-                    <Box>
-                        <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>{candidate.candidate_name}</Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                            {candidate.role_applied_for}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <Rating readOnly value={overallAverageScore} precision={0.1} size="small" />
-                            <Typography variant="body2" fontWeight={700}>{overallAverageScore.toFixed(1)}/5.0</Typography>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: 'center', mb: 5, gap: 3 }}>
+                     <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                        <Avatar 
+                            sx={{ width: 64, height: 64, bgcolor: 'primary.main', fontSize: '1.5rem', fontWeight: 600 }}
+                        >
+                            {getFirstAndLastInitials(candidate.candidate_name)}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>{candidate.candidate_name}</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                {candidate.role_applied_for}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                <Rating readOnly value={overallAverageScore} precision={0.1} size="small" />
+                                <Typography variant="body2" fontWeight={700}>{overallAverageScore.toFixed(1)}/5.0</Typography>
+                                <Chip 
+                                    label={overallAverageScore >= 4.5 ? "High Fit" : overallAverageScore >= 3.5 ? "Good Fit" : overallAverageScore >= 2.5 ? "Moderate Fit" : "Low Fit"} 
+                                    size="small" 
+                                    color={overallAverageScore >= 3.5 ? "success" : overallAverageScore >= 2.5 ? "warning" : "error"} 
+                                    sx={{ fontWeight: 700, borderRadius: 1, height: 20, fontSize: '0.65rem' }} 
+                                />
+                            </Box>
                         </Box>
-                    </Box>
+                     </Box>
+
+                     {/* Recommendation Percentage Card */}
+                     <Box sx={{ 
+                         bgcolor: '#ffffff', 
+                         p: 2, 
+                         borderRadius: 2, 
+                         border: '1px solid', 
+                         borderColor: 'divider',
+                         boxShadow: '0px 4px 12px rgba(0,0,0,0.05)',
+                         minWidth: 140,
+                         textAlign: 'center'
+                     }}>
+                         <Typography variant="caption" fontWeight={700} color="primary.main" sx={{ display: 'block', mb: 0.5, letterSpacing: 0.5 }}>
+                             RECOMMENDATION
+                         </Typography>
+                         <Typography variant="h4" fontWeight={800} color="primary.main" sx={{ lineHeight: 1 }}>
+                             {stats.hireRate}%
+                         </Typography>
+                         <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                            Hire Rate
+                         </Typography>
+                     </Box>
                 </Box>
                 </Paper>
 
@@ -146,89 +154,93 @@ const CandidateEvaluationsPage = () => {
                          <NoteIcon fontSize="small" color="primary" /> Detailed Interviewer Feedback
                     </Typography>
 
-                    {activeSession ? (
-                        <Paper elevation={0} sx={{ p: 4, border: '1px solid', borderColor: 'divider' }}>
-                            {/* Session Header */}
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-                                <Box sx={{ display: 'flex', gap: 2 }}>
-                                    <Avatar sx={{ bgcolor: 'secondary.main', width: 48, height: 48, fontSize: '1rem' }}>
-                                        {getFirstAndLastInitials(activeSession.interviewer_name)}
-                                    </Avatar>
-                                    <Box>
-                                        <Typography variant="subtitle1" fontWeight={700}>{activeSession.interviewer_name}</Typography>
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                            Interviewed {dayjs(activeSession.evaluation_date).format('MMM D, YYYY')}
-                                        </Typography>
-                                        <Typography variant="caption" fontWeight={600} color="primary.main">
-                                            Avg Score: {activeSession.day_average}
-                                        </Typography>
+                    {sessions.length > 0 ? (
+                        <Stack spacing={4}>
+                            {sessions.map((session, index) => (
+                                <Paper key={index} elevation={0} sx={{ p: 4, border: '1px solid', borderColor: 'divider' }}>
+                                    {/* Session Header */}
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+                                        <Box sx={{ display: 'flex', gap: 2 }}>
+                                            <Avatar sx={{ bgcolor: 'secondary.main', width: 48, height: 48, fontSize: '1rem' }}>
+                                                {getFirstAndLastInitials(session.interviewer_name)}
+                                            </Avatar>
+                                            <Box>
+                                                <Typography variant="subtitle1" fontWeight={700}>{session.interviewer_name}</Typography>
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                                    Interviewed {dayjs(session.evaluation_date).format('MMM D, YYYY')}
+                                                </Typography>
+                                                <Typography variant="caption" fontWeight={600} color="primary.main">
+                                                    Avg Score: {session.day_average}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                        <RecommendationBadge type={
+                                            session.recommendation === 'strong_hire' ? 'Strong Hire' :
+                                            session.recommendation === 'hire' ? 'Hire' :
+                                            (session.recommendation === 'no_hire' || session.recommendation === 'rejected') ? 'No Hire' :
+                                            (parseFloat(session.day_average?.split('/')[0] || "0") >= 4.5 ? 'Strong Hire' : 
+                                             parseFloat(session.day_average?.split('/')[0] || "0") >= 3.5 ? 'Hire' : 'No Hire')
+                                        } />
                                     </Box>
-                                </Box>
-                                {/* We can infer recommendation for this specific session to show a badge if desired */}
-                                {/* For now, let's show the same logic as stats */}
-                                <RecommendationBadge type={
-                                    activeSession.recommendation === 'strong_hire' ? 'Strong Hire' :
-                                    activeSession.recommendation === 'hire' ? 'Hire' :
-                                    (activeSession.recommendation === 'no_hire' || activeSession.recommendation === 'rejected') ? 'No Hire' :
-                                    (parseFloat(activeSession.day_average?.split('/')[0] || "0") >= 4.5 ? 'Strong Hire' : 
-                                     parseFloat(activeSession.day_average?.split('/')[0] || "0") >= 3.5 ? 'Hire' : 'No Hire')
-                                } />
-                            </Box>
 
-                            <Divider sx={{ mb: 4 }} />
+                                    <Divider sx={{ mb: 4 }} />
 
-                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 6 }}>
-                                {/* Scorecard */}
-                                <Box sx={{ flex: 1 }}>
-                                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 2, display: 'block', letterSpacing: 1 }}>
-                                        SCORECARD BREAKDOWN
-                                    </Typography>
-                                    {activeSession.evaluation_details?.map((detail, i) => (
-                                        <ScoreBar key={i} label={detail.criteria} score={detail.score} />
-                                    ))}
-                                </Box>
+                                    {/* Criteria Grid */}
+                                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 3 }}>
+                                        {session.evaluation_details?.map((detail, i) => (
+                                            <Box key={i} sx={{ 
+                                                p: 2, 
+                                                border: '1px solid', 
+                                                borderColor: 'divider', 
+                                                borderRadius: 2,
+                                                bgcolor: '#fff',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 2
+                                            }}>
+                                                {/* Header: Criteria & Score */}
+                                                <Box>
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                                        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ letterSpacing: 0.5 }}>
+                                                            {detail.criteria.toUpperCase()}
+                                                        </Typography>
+                                                        <Typography variant="caption" fontWeight={800} color="text.primary">
+                                                            {detail.score}/5
+                                                        </Typography>
+                                                    </Box>
+                                                    <LinearProgress 
+                                                        variant="determinate" 
+                                                        value={(detail.score / 5) * 100} 
+                                                        sx={{ 
+                                                            height: 6, borderRadius: 3, 
+                                                            bgcolor: '#F0F2F5',
+                                                            '& .MuiLinearProgress-bar': {
+                                                                bgcolor: detail.score >= 4 ? 'success.main' : detail.score >= 3 ? 'warning.main' : 'error.main',
+                                                                borderRadius: 3
+                                                            }
+                                                        }} 
+                                                    />
+                                                </Box>
 
-                                {/* Comments */}
-                                <Box sx={{ flex: 1 }}>
-                                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 2, display: 'block', letterSpacing: 1 }}>
-                                        INTERVIEWER NOTES
-                                    </Typography>
-                                    <Box sx={{ bgcolor: '#F8F9FA', p: 3, borderRadius: 2 }}>
-                                        <ul style={{ paddingLeft: '20px', margin: 0 }}>
-                                            {activeSession.evaluation_details?.map((detail, i) => (
-                                                <li key={i} style={{ marginBottom: '12px' }}>
-                                                    <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
-                                                        <strong>{detail.criteria}:</strong> {detail.comments || "No comments."}
+                                                {/* Comment */}
+                                                <Box sx={{ bgcolor: '#F8F9FA', p: 1.5, borderRadius: 1.5, flex: 1 }}>
+                                                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5, fontSize: '0.65rem' }}>
+                                                        NOTES
                                                     </Typography>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                                    <Typography variant="body2" color="text.primary" sx={{ fontSize: '0.8rem', lineHeight: 1.4 }}>
+                                                        {detail.comments || "No comments provided."}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        ))}
                                     </Box>
-                                </Box>
-                            </Box>
-                        </Paper>
+                                </Paper>
+                            ))}
+                        </Stack>
                     ) : (
                         <Paper sx={{ p: 4, textAlign: 'center' }}>
                             <Typography color="text.secondary">No evaluation feedback available.</Typography>
                         </Paper>
-                    )}
-
-                    {/* Slider Controls */}
-                    {sessions.length > 1 && (
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 3 }}>
-                            {sessions.map((_, index) => (
-                                <IconButton 
-                                    key={index}
-                                    size="small"
-                                    onClick={() => setActiveSessionIndex(index)}
-                                    sx={{ 
-                                        width: 12, height: 12, p: 0,
-                                        bgcolor: activeSessionIndex === index ? 'primary.main' : 'action.disabledBackground',
-                                        '&:hover': { bgcolor: activeSessionIndex === index ? 'primary.dark' : 'action.disabled' }
-                                    }}
-                                />
-                            ))}
-                        </Box>
                     )}
                 </Box>
             </Box>
@@ -253,7 +265,7 @@ const CandidateEvaluationsPage = () => {
                     <Box sx={{ mb: 3 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="caption" fontWeight={700} color="success.main">STRONG HIRE</Typography>
-                            <Typography variant="caption" fontWeight={700} color="text.secondary">{stats.StrongHire} REVIEWERS</Typography>
+                            <Typography variant="caption" fontWeight={700} color="text.secondary">{stats.StrongHire} INTERVIEWERS</Typography>
                         </Box>
                         <LinearProgress variant="determinate" value={stats.Total > 0 ? (stats.StrongHire/stats.Total)*100 : 0} color="success" sx={{ height: 6, borderRadius: 3, bgcolor: '#E6F4EA' }} />
                     </Box>
@@ -261,7 +273,7 @@ const CandidateEvaluationsPage = () => {
                     <Box sx={{ mb: 3 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="caption" fontWeight={700} color="primary.main">HIRE</Typography>
-                            <Typography variant="caption" fontWeight={700} color="text.secondary">{stats.Hire} REVIEWERS</Typography>
+                            <Typography variant="caption" fontWeight={700} color="text.secondary">{stats.Hire} INTERVIEWERS</Typography>
                         </Box>
                         <LinearProgress variant="determinate" value={stats.Total > 0 ? (stats.Hire/stats.Total)*100 : 0} color="primary" sx={{ height: 6, borderRadius: 3, bgcolor: '#E3F2FD' }} />
                     </Box>
@@ -269,21 +281,22 @@ const CandidateEvaluationsPage = () => {
                     <Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="caption" fontWeight={700} color="error.main">NO HIRE</Typography>
-                            <Typography variant="caption" fontWeight={700} color="text.secondary">{stats.NoHire} REVIEWERS</Typography>
+                            <Typography variant="caption" fontWeight={700} color="text.secondary">{stats.NoHire} INTERVIEWERS</Typography>
                         </Box>
                         <LinearProgress variant="determinate" value={stats.Total > 0 ? (stats.NoHire/stats.Total)*100 : 0} color="error" sx={{ height: 6, borderRadius: 3, bgcolor: '#FFEBEE' }} />
                     </Box>
                 </Box>
 
-                 {/* Spacer to push Actions to bottom if we want sticky footer effect, but user just said "inside this card" (column) */}
-                 <Box sx={{ mt: 'auto' }}>
-                     <Button variant="contained" color="primary" fullWidth sx={{ mb: 2, py: 1.5, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.9rem' }}>
-                         Advance to Offer
-                     </Button>
-                     <Button variant="outlined" color="error" fullWidth sx={{ py: 1.5, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.9rem' }}>
-                         Reject Candidate
-                     </Button>
-                 </Box>
+                {(user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
+                <Box sx={{ mt: 'auto' }}>
+                    <Button variant="contained" color="primary" fullWidth sx={{ mb: 2, py: 1.5, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.9rem' }}>
+                        Advance to Offer
+                    </Button>
+                    <Button variant="outlined" color="error" fullWidth sx={{ py: 1.5, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.9rem' }}>
+                        Reject Candidate
+                    </Button>
+                </Box>
+                )}
             </Box>
         </Box>
     );
