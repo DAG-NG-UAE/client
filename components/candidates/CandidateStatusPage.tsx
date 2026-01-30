@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, IconButton } from '@mui/material'; // Import IconButton
+import { Box, Typography, IconButton, Tooltip } from '@mui/material'; // Import IconButton
 import { useRouter } from 'next/navigation';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 import SummaryStats from '@/components/SummaryStats';
 import { AppRole, statusDetails } from '@/utils/constants';
@@ -86,6 +87,20 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
       }
     } else if (status === 'approved_for_offer' && user?.role_name === AppRole.HeadOfHr) {
        specificAction = <GenerateOfferLetterButton candidate={candidate} />;
+    } else if (status === 'pre_offer') {
+       specificAction = (
+           <Tooltip title="Pre-Offer Documents">
+             <IconButton 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/candidates/pre-offer/${candidate.candidate_id}`);
+                }}
+                color="primary"
+             >
+               <AssignmentIcon />
+             </IconButton>
+           </Tooltip>
+       );
     }
 
     // Always render the base actions (View, Move, Delete) with the specific action injected

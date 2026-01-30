@@ -159,3 +159,28 @@ export const fetchPreOfferDocs = async (candidateId: string) => {
     throw error;
   }
 };
+
+export const fetchInternalSalaryOffer = async (candidateId: string) => {
+  try {
+    const response = await axiosInstance.get(
+      `offer/internal/salary?candidateId=${candidateId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching internal salary offer", error);
+    throw error;
+  }
+};
+
+export const sendInternalSalaryOffer = async (payload: any) => {
+  try {
+    const response = await axiosInstance.post(
+      `offer/internal/salary/send`,
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error sending internal salary offer", error);
+    throw error;
+  }
+};

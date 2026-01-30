@@ -254,3 +254,64 @@ const getDesignTokens = (mode: PaletteMode) => ({
 
 export const getAppTheme = (mode: PaletteMode) =>
   responsiveFontSizes(createTheme(getDesignTokens(mode)));
+
+export const getApprovalTheme = () =>
+  responsiveFontSizes(
+    createTheme({
+      palette: {
+        mode: "dark", // The reference image is dark
+        primary: {
+          main: "#135bec",
+        },
+        background: {
+          default: "#101622",
+          paper: "#1e293b", // Slightly lighter than background-dark for cards, mimicking the image cards
+        },
+        text: {
+          primary: "#ffffff",
+          secondary: "#94a3b8",
+        },
+      },
+      typography: {
+        fontFamily: '"Inter", "Plus Jakarta Sans", sans-serif',
+        h1: {
+          fontSize: "1.75rem",
+          fontWeight: 700,
+        },
+        h2: {
+          fontSize: "1.5rem",
+          fontWeight: 600,
+        },
+        h3: {
+          fontSize: "1.25rem",
+          fontWeight: 600,
+        },
+      },
+      components: {
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              borderRadius: "0.5rem", // lg
+              textTransform: "none",
+            },
+          },
+        },
+        MuiPaper: {
+          styleOverrides: {
+            root: {
+              backgroundImage: "none", // Remove default MUI dark mode gradient
+            },
+          },
+        },
+        MuiCard: {
+          styleOverrides: {
+            root: {
+              borderRadius: "0.75rem", // xl
+              backgroundColor: "#1e293b", // Keeping card bg distinct
+              border: "1px solid #334155", // Subtle border
+            },
+          },
+        },
+      },
+    }),
+  );

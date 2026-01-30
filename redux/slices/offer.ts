@@ -6,6 +6,8 @@ import {
   Offer,
   PreOfferDocument,
   SavePreOfferDocsRequest,
+  InternalSalaryOffer,
+  SendInternalOfferRequest,
 } from "@/interface/offer";
 import { PaginationMeta } from "./requisition";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -21,6 +23,8 @@ import {
   resolveRequisition,
   savePreOfferDocs,
   fetchPreOfferDocs,
+  fetchInternalSalaryOffer,
+  sendInternalSalaryOffer,
 } from "@/api/offer";
 import { enqueueSnackbar } from "notistack";
 
@@ -33,6 +37,7 @@ export interface OfferState {
   currentOffer: Partial<Offer> | null;
   selectedClauses: ExtendedClause[];
   preOfferDocs: PreOfferDocument[];
+  internalOffer: Partial<InternalSalaryOffer> | null;
   loading: boolean;
   error: string | null;
 }
@@ -46,6 +51,7 @@ const initialState: OfferState = {
   currentOffer: null,
   selectedClauses: [],
   preOfferDocs: [],
+  internalOffer: null,
   loading: false,
   error: null,
 };
@@ -101,6 +107,12 @@ export const offerSlice = createSlice({
     setPreOfferDocs(state, action: PayloadAction<PreOfferDocument[]>) {
       state.preOfferDocs = action.payload;
     },
+    setInternalOffer(
+      state,
+      action: PayloadAction<Partial<InternalSalaryOffer> | null>,
+    ) {
+      state.internalOffer = action.payload;
+    },
     clearOfferState(state) {
       state.masterClauses = [];
       state.currentOffer = null;
@@ -126,6 +138,7 @@ export const {
   setJoiningDetails,
   setGuarantor,
   setPreOfferDocs,
+  setInternalOffer,
   clearOfferState,
   stopLoading,
 } = offerSlice.actions;
@@ -273,6 +286,41 @@ export const callFetchPreOfferDocs = async (candidateId: string) => {
     }
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callFetchInternalSalaryOffer = async (candidateId: string) => {
+  try {
+    dispatch(startLoading());
+    const response = await fetchInternalSalaryOffer(candidateId);
+    if (response.success && response.data && response.data.length > 0) {
+      dispatch(setInternalOffer(response.data[0]));
+    } else {
+      dispatch(setInternalOffer(null));
+    }
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    dispatch(setInternalOffer(null));
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callSendInternalSalaryOffer = async (
+  payload: SendInternalOfferRequest,
+) => {
+  try {
+    dispatch(startLoading());
+    await sendInternalSalaryOffer(payload);
+    enqueueSnackbar("Internal offer sent for approval", { variant: "success" });
+    await callFetchInternalSalaryOffer(payload.candidateId);
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar(error?.response?.data?.message || "Failed to send offer", {
+      variant: "error",
+    });
   } finally {
     dispatch(stopLoading());
   }

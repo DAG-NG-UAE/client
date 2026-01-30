@@ -130,10 +130,10 @@ const PreOfferVerificationPage = () => {
                         variant="contained" 
                         color="primary" 
                         sx={{ textTransform: 'none', fontWeight: 600 }}
-                        onClick={() => router.push(`/candidates/offer/${id}`)}
+                        onClick={() => router.push(`/candidates/internal-approval/${id}`)}
                         disabled={!allApproved}
                     >
-                        All Documents Verified - Generate Offer
+                        All Documents Verified - Begin Internal Approval Process
                     </Button>
                 </Box>
             </Box>
@@ -238,7 +238,7 @@ const PreOfferVerificationPage = () => {
                             borderRadius: 2 
                         }}>
                             <Typography variant="caption" color={allApproved ? "success.main" : "warning.dark"} fontWeight={700}>Verification Status</Typography>
-                            <Typography variant="h5" fontWeight={700} color={allApproved ? "success.dark" : "warning.dark"}>{allApproved ? "Ready for Offer" : "Pending Verification"}</Typography>
+                            <Typography variant="h5" fontWeight={700} color={allApproved ? "success.dark" : "warning.dark"}>{allApproved ? "Ready for Internal Approval" : "Pending Verification"}</Typography>
                         </Paper>
                     </Box>
 

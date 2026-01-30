@@ -203,3 +203,50 @@ export interface FetchPreOfferDocsResponse {
   message: string;
   data: PreOfferDocument[];
 }
+
+export interface BhaBreakdown {
+  basic: number;
+  housing: number;
+  transport: number;
+  other_allowances: number;
+}
+
+export interface InternalBenefit {
+  name: string;
+}
+
+export interface InternalApproval {
+  id: string;
+  email: string;
+  status: string;
+  notes: string | null;
+  token: string;
+  expires_at: string;
+  responded_at: string | null;
+  is_expired: boolean;
+}
+
+export interface InternalSalaryOffer {
+  internal_salary_offer_id?: string;
+  candidate_id: string;
+  annual_gross: number | string;
+  monthly_net: number | string;
+  bha_breakdown: BhaBreakdown;
+  benefits: InternalBenefit[];
+  currency: string;
+  candidate_name?: string;
+  approvals: InternalApproval[];
+}
+
+export interface SendInternalOfferRequest {
+  candidateId: string;
+  requisitionId: string;
+  emails: string[];
+  internalSalaryOffer: {
+    annual_salary: number;
+    monthly_net: number;
+    currency: string;
+    bha_breakdown: BhaBreakdown | any;
+    benefits: InternalBenefit[];
+  };
+}

@@ -1,6 +1,6 @@
 "use client"
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google"; // Import Inter
 import "./globals.css";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
@@ -18,6 +18,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { NotistackProvider } from "@/components/NotistackProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: '--font-inter' }); // Configure Inter
 
 const drawerWidth = 240;
 
@@ -38,11 +39,11 @@ export default function RootLayout({
   const theme = getAppTheme(isDarkMode ? 'dark' : 'light');
 
   const isLoginPage = pathname === '/login';
-  const isPublicPage = pathname?.startsWith('/careers');
+  const isPublicPage = pathname?.startsWith('/careers') || pathname?.startsWith('/salary-proposal'); // Add salary-proposal
 
   return (
     <html lang="en">
-      <body className={plusJakartaSans.className}>
+      <body className={`${plusJakartaSans.className} ${inter.variable}`}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <ReduxProvider store={store}>
             <PersistGate loading={null} persistor={persistor}>
