@@ -144,9 +144,9 @@ Best regards, HR Team, ${offerDetails.company_name}`;
           borderRadius: '8px 8px 0 0'
         }}
       >
-        <IconButton onClick={onBack} size="small">
+        {/* <IconButton onClick={onBack} size="small">
             <ArrowBackIcon />
-        </IconButton>
+        </IconButton> */}
         <Typography variant="h6" fontWeight="bold">
             Send Offer
         </Typography>

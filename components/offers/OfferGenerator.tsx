@@ -70,6 +70,7 @@ import { generateOffer, updateOffer } from '@/api/offer';
 import { enqueueSnackbar } from 'notistack';
 import { getAllSignatures } from '@/api/signature';
 import { Signature } from '@/interface/signature';
+import { fetchApprovedSalaryProposalForCandidate } from '@/redux/slices/salaryProposal';
 
 function SortableClause({ id, title, content, onRemove, isPreviewMode }: { id: string, title: string, content: React.ReactNode, onRemove?: () => void, isPreviewMode?: boolean }) {
     const {
@@ -138,14 +139,25 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
   
   const {selectedCandidate} = useSelector((state:RootState) => state.candidates)
   const {masterClauses, selectedClauses, currentOffer} = useSelector((state:RootState) => state.offers)
+  const {proposalData} = useSelector((state:RootState) => state.salaryProposals)
 
+  const currencySymbol = React.useMemo(() => {
+    const cur = proposalData?.currency || 'Naira';
+    const lowered = cur.toLowerCase();
+    if(lowered === 'naira') return 'N';
+    if(lowered === 'usd') return 'USD';
+    if(lowered === 'inr') return 'INR';
+    return cur;
+  }, [proposalData]);
+
+  console.log(proposalData)
 
   
   // Signatures
   const [signatories, setSignatories] = useState<Signature[]>([]);
 
   // State for form fields
-  const [salary, setSalary] = useState('145000');
+  const [salary, setSalary] = useState(proposalData?.monthly_net || '');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [probation, setProbation] = useState('6');
   const [noticePeriod, setNoticePeriod] = useState(4);
@@ -247,6 +259,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
 
      if (candidateId) {
          fetchSingleCandidate(candidateId);
+         fetchApprovedSalaryProposalForCandidate(candidateId);
      }
 
      if (existingOfferId) {
@@ -261,6 +274,16 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
           fetchSingleCandidate(currentOffer.candidate_id);
       }
   }, [currentOffer, candidateId]);
+
+  useEffect(() => { 
+    if(proposalData){ 
+        setSalary(proposalData.monthly_net?.toString() || '');
+        setBreakdownBasic(proposalData.bha_breakdown?.basic?.toString() || '');
+        setBreakdownHousing(proposalData.bha_breakdown?.housing?.toString() || '');
+        setBreakdownTransport(proposalData.bha_breakdown?.transport?.toString() || '');
+        setBreakdownAllowance(proposalData.bha_breakdown?.other_allowances?.toString() || '');
+    }
+  }, [proposalData])
 
   // Populate form with existing offer details if available
   useEffect(() => {
@@ -390,7 +413,8 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
         monthly_housing: breakdownHousing || null,
         monthly_transport: breakdownTransport || null,
         other_allowance: breakdownAllowance || null,
-        status: existingOfferId ? 'pending' : undefined
+        status: existingOfferId ? 'pending' : undefined, 
+        approved_salary_proposal_id: proposalData?.id,
       }
 
       console.log(`payload: ${JSON.stringify(payload)}`)
@@ -424,7 +448,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
           '{{work_time}}': <Highlight text={`${weekdayStartTime} - ${weekdayEndTime}${weekendIncluded ? ` (${weekendDays.length > 0 ? 'Weekends: ' + weekendDays.join(', ') : ''}: ${weekendStartTime} - ${weekendEndTime})` : ''}`} />,
           '{{leave_days}}': <Highlight text={leaveDays} />,
 
-          '{{salary_net}}': <Highlight text={`N${salary}`} />,
+          '{{salary_net}}': <Highlight text={`${currencySymbol}${salary}`} />,
           '{{start_date}}': <Highlight text={formatOfferDate(startDate)} />,
           '{{probation_period}}': <Highlight text={probation} />,
           '{{notice_period}}': <Highlight text={`${noticePeriod} ${noticeUnit}`} />,
@@ -709,7 +733,8 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                             type="number"
                             value={breakdownBasic}
                             onChange={(e) => setBreakdownBasic(e.target.value)}
-                            InputProps={{ startAdornment: <InputAdornment position="start">N</InputAdornment> }}
+                            InputProps={{ startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment> }}
+                            disabled={!!proposalData}
                        />
                     </Box>
                     <Box>
@@ -719,7 +744,8 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                             type="number"
                             value={breakdownHousing}
                             onChange={(e) => setBreakdownHousing(e.target.value)}
-                             InputProps={{ startAdornment: <InputAdornment position="start">N</InputAdornment> }}
+                             InputProps={{ startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment> }}
+                             disabled={!!proposalData}
                        />
                     </Box>
                     <Box>
@@ -729,7 +755,8 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                             type="number"
                             value={breakdownTransport}
                             onChange={(e) => setBreakdownTransport(e.target.value)}
-                             InputProps={{ startAdornment: <InputAdornment position="start">N</InputAdornment> }}
+                             InputProps={{ startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment> }}
+                             disabled={!!proposalData}
                        />
                     </Box>
                     <Box>
@@ -739,7 +766,8 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                             type="number"
                             value={breakdownAllowance}
                             onChange={(e) => setBreakdownAllowance(e.target.value)}
-                             InputProps={{ startAdornment: <InputAdornment position="start">N</InputAdornment> }}
+                             InputProps={{ startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment> }}
+                             disabled={!!proposalData}
                        />
                     </Box>
                 </Box>
@@ -754,9 +782,10 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                     value={salary} 
                     onChange={(e) => setSalary(e.target.value)}
                     InputProps={{
-                      startAdornment: <InputAdornment position="start">N</InputAdornment>,
+                      startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
                     }}
                     size="small"
+                    disabled={!!proposalData}
                   />
                 </Box>
 

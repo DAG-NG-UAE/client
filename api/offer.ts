@@ -209,3 +209,15 @@ export const updateInternalSalaryProposal = async (id: string[], candidateId: st
     throw error;
   }
 }
+
+export const approvedInternalSalaryProposal = async (candidateId: string) => { 
+  try {
+    const response = await axiosInstance.get(
+      `offer/internal/salary/approved?candidateId=${candidateId}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error approved internal salary proposal", error);
+    throw error;
+  }
+}

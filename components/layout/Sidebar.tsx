@@ -96,6 +96,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
     { text: 'Interviewed', path: '/candidates/interviewed', icon: <QuestionAnswerIcon /> },
     { text: 'Internal Approval', path: '/candidates/internal_salary_proposal', icon: <HowToRegIcon /> },
     { text: 'Approved for Offer', path: '/candidates/approved_for_offer', icon: <HowToRegIcon /> },
+    { text: 'Offer Extended', path: '/candidates/offer_extended', icon: <HowToRegIcon /> },
     { text: 'Rejected', path: '/candidates/rejected', icon: <PersonOffIcon /> },
   ];
 

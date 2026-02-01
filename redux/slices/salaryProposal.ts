@@ -1,7 +1,7 @@
 import { VerifyInternalSalaryOfferResponse } from "@/interface/offer";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { dispatch } from "../dispatchHandle";
-import { updateInternalSalaryProposal, verifyInternalSalaryToken } from "@/api/offer";
+import { approvedInternalSalaryProposal, updateInternalSalaryProposal, verifyInternalSalaryToken } from "@/api/offer";
 
 export interface SalaryProposal {
     proposalData: VerifyInternalSalaryOfferResponse | null;
@@ -54,6 +54,18 @@ export const updateSalaryProposal = async (approvalIds: string[], candidateId: s
         startLoading();
         const response = await updateInternalSalaryProposal(approvalIds, candidateId, status)
         fetchSalaryProposal(token)
+    }catch(error: any){ 
+        dispatch(hasError(error?.response?.data || error));
+    }finally{
+        dispatch(stopLoading());
+    }
+}
+
+export const fetchApprovedSalaryProposalForCandidate = async (candidateId: string) =>{
+    try{ 
+        startLoading();
+        const response = await approvedInternalSalaryProposal(candidateId)
+        dispatch(setProposalData(response.data[0]))
     }catch(error: any){ 
         dispatch(hasError(error?.response?.data || error));
     }finally{
