@@ -130,7 +130,7 @@ const PreOfferVerificationPage = () => {
                         variant="contained" 
                         color="primary" 
                         sx={{ textTransform: 'none', fontWeight: 600 }}
-                        onClick={() => router.push(`/candidates/internal-approval/${id}`)}
+                        onClick={() => router.push(`/candidates/internal-salary-proposal/${id}`)}
                         disabled={!allApproved}
                     >
                         All Documents Verified - Begin Internal Approval Process

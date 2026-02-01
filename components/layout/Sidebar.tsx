@@ -94,6 +94,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
     { text: 'Interview Scheduled', path: '/candidates/interview_scheduled', icon: <CalendarMonthIcon /> },
     { text: 'Pending Feedback', path: '/candidates/pending_feedback', icon: <HourglassEmptyIcon /> },
     { text: 'Interviewed', path: '/candidates/interviewed', icon: <QuestionAnswerIcon /> },
+    { text: 'Internal Approval', path: '/candidates/internal_salary_proposal', icon: <HowToRegIcon /> },
     { text: 'Approved for Offer', path: '/candidates/approved_for_offer', icon: <HowToRegIcon /> },
     { text: 'Rejected', path: '/candidates/rejected', icon: <PersonOffIcon /> },
   ];

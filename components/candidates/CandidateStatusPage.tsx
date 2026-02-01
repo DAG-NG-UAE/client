@@ -101,6 +101,20 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
              </IconButton>
            </Tooltip>
        );
+    } else if (status === 'internal_salary_proposal') {
+       specificAction = (
+           <Tooltip title="Internal Salary Proposal">
+             <IconButton 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/candidates/internal-salary-proposal/${candidate.candidate_id}`);
+                }}
+                color="primary"
+             >
+               <AssignmentIcon />
+             </IconButton>
+           </Tooltip>
+       );
     }
 
     // Always render the base actions (View, Move, Delete) with the specific action injected

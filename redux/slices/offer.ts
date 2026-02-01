@@ -25,6 +25,7 @@ import {
   fetchPreOfferDocs,
   fetchInternalSalaryOffer,
   sendInternalSalaryOffer,
+  updateInternalSalaryProposal,
 } from "@/api/offer";
 import { enqueueSnackbar } from "notistack";
 

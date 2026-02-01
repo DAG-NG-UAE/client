@@ -142,7 +142,7 @@ const EditPackagePage = () => {
             }
         };
         await callSendInternalSalaryOffer(payload);
-        router.push(`/candidates/internal-approval/${id}`);
+        router.push(`/candidates/internal-salary-proposal/${id}`);
     };
 
     return (

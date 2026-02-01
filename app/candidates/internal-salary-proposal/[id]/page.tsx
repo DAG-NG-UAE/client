@@ -73,6 +73,8 @@ const InternalApprovalPage = () => {
     
     // Derived Data from Internal Offer
     const hasApprovals = activeOffer?.approvals && activeOffer.approvals.length > 0;
+    //if all offers has been approved
+    const approvalsAccepted = activeOffer?.approvals?.every(approval => approval.status === 'approved');
     
     const salaryData = activeOffer ? {
         annualGross: Number(activeOffer.annual_gross),
@@ -95,13 +97,13 @@ const InternalApprovalPage = () => {
 
     const handleEditPackage = () => {
         if (!hasApprovals) {
-            router.push(`/candidates/internal-approval/edit/${id}`);
+            router.push(`/candidates/internal-salary-approval/edit/${id}`);
         }
     };
 
     const handleCreateNewVersion = () => {
         // Navigate to edit page to create a new version
-        router.push(`/candidates/internal-approval/edit/${id}`);
+        router.push(`/candidates/internal-salary-proposal/edit/${id}`);
     };
 
     return (
@@ -134,10 +136,6 @@ const InternalApprovalPage = () => {
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 4, textAlign: 'right' }}>
-                        <Box>
-                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block' }}>PROPOSED START DATE</Typography>
-                            <Typography variant="body2" fontWeight={600}>Nov 12, 2024</Typography>
-                        </Box>
                         
                          <Box>
                             <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block' }}>LOCATION</Typography>
@@ -325,7 +323,7 @@ const InternalApprovalPage = () => {
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                             <Typography variant="subtitle2" fontWeight={700} color={isArchived ? 'text.secondary' : 'text.primary'}>{approval.email}</Typography>
                                             <Chip 
-                                                label={approval.is_expired ? "EXPIRED" : (isArchived ? "ARCHIVED" : "ACTIVE")} 
+                                                label={approval.is_expired || approvalsAccepted ? "EXPIRED" : (isArchived ? "ARCHIVED" : "ACTIVE")} 
                                                 size="small" 
                                                 color={approval.is_expired ? "error" : (isArchived ? "default" : "success")}
                                                 variant="outlined"
@@ -341,7 +339,7 @@ const InternalApprovalPage = () => {
                                             </Box>
                                             {!isArchived && (
                                                 <Tooltip title="Refresh Token">
-                                                    <IconButton color="primary" size="small" sx={{ border: '1px solid', borderColor: 'divider' }}>
+                                                    <IconButton color="primary" size="small" sx={{ border: '1px solid', borderColor: 'divider' }} disabled={approval.is_expired || approvalsAccepted}>
                                                         <RefreshIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
@@ -411,7 +409,7 @@ const InternalApprovalPage = () => {
                                 fullWidth 
                                 startIcon={<SendIcon />}
                                 sx={{ mt: 4, mb: 2, bgcolor: '#0D47A1', textTransform: 'none', py: 1.5, fontWeight: 600 }}
-                                disabled={!hasApprovals}
+                                disabled={!hasApprovals || approvalsAccepted}
                             >
                                 Resend Notifications
                             </Button>
@@ -429,6 +427,7 @@ const InternalApprovalPage = () => {
                                     fullWidth 
                                     startIcon={<FlashOnIcon />}
                                     sx={{ textTransform: 'none', fontWeight: 700, borderStyle: 'dashed' }}
+                                    disabled={!hasApprovals || approvalsAccepted}
                                 >
                                     FORCE APPROVE
                                 </Button>

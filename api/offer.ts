@@ -196,3 +196,16 @@ export const verifyInternalSalaryToken = async (token: string) => {
     throw error;
   }
 };
+
+export const updateInternalSalaryProposal = async (id: string[], candidateId: string, status: string) => { 
+  try {
+    const response = await axiosInstance.post(
+      `offer/internal/salary/status`,
+      { approvalIds: id, candidateId, status },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating internal salary proposal", error);
+    throw error;
+  }
+}

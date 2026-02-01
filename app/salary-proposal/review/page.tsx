@@ -40,8 +40,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { verifyInternalSalaryToken } from '@/api/offer';
-import { VerifyInternalSalaryOfferResponse } from '@/interface/offer';
+import { fetchSalaryProposal, updateSalaryProposal } from '@/redux/slices/salaryProposal';
+import { RootState, useSelector } from '@/redux/store';
 
 // Interface for the view data
 interface SalaryReviewData {
@@ -93,8 +93,14 @@ export default function SalaryProposalReview() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<VerifyInternalSalaryOfferResponse | null>(null);
+  const { proposalData: data, loading: reduxLoading, error: salaryProposalError } = useSelector((state: RootState) => state.salaryProposals);
   const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+     if(data?.is_expired){
+       setIsExpired(true);
+     }
+  }, [data])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,15 +115,7 @@ export default function SalaryProposalReview() {
       
       if (token) {
         try {
-            const response = await verifyInternalSalaryToken(token);
-            if (response.success && response.data) {
-                setData(response.data);
-                if (response.data.is_expired) {
-                    setIsExpired(true);
-                }
-            } else {
-                setError(response.message || "Failed to verify token");
-            }
+            await fetchSalaryProposal(token);
         } catch (err) {
             console.error(err);
             setError("Failed to verify token");
@@ -162,6 +160,17 @@ export default function SalaryProposalReview() {
       (Number(data.bha_breakdown?.other_allowances) || 0)
   ) : 237000; // Mock fallback matches image text
 
+  const handleApprove = async () => { 
+    // we want to call the endpoint with the id of the proposal
+    if(data?.id && data?.candidate_id && token){
+      await updateSalaryProposal([data?.id], data?.candidate_id, "approved", token);
+    }
+  }
+  const handleReject = async () => { 
+    if(data?.id && data?.candidate_id && token){
+      await updateSalaryProposal([data?.id], data?.candidate_id, "rejected", token);
+    }
+  }
   if (loading) {
       return (
          <ThemeProvider theme={theme}>
@@ -267,7 +276,21 @@ export default function SalaryProposalReview() {
                     <Typography variant="h1" gutterBottom sx={{ mt: 1 }}>Financial Summary</Typography>
                     <Typography variant="body1" color="text.secondary">Proposed Compensation Package for {displayData.role} Role</Typography>
                 </Box>
-                <Chip label="AWAITING FINAL APPROVAL" color="warning" sx={{ borderRadius: 1 }} />
+                <Chip 
+                    label={
+                        data?.status === 'approved' ? "APPROVED" :
+                        data?.status === 'rejected' ? "REJECTED" :
+                        data?.status === 'pending' ? "AWAITING YOUR APPROVAL" :
+                        "PROPOSAL REJECTED" // Fallback/Bypassed
+                    } 
+                    color={
+                        data?.status === 'approved' ? "success" :
+                        data?.status === 'rejected' ? "error" :
+                        data?.status === 'pending' ? "warning" :
+                        "error"
+                    } 
+                    sx={{ borderRadius: 1 }} 
+                />
             </Box>
 
             <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -341,6 +364,7 @@ export default function SalaryProposalReview() {
             </Card>
         </Box>
 
+
         {/* Right Sidebar - Actions */}
         <Box sx={{ width: 320, borderLeft: '1px solid', borderColor: 'divider', p: 3, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom>Final Decision</Typography>
@@ -378,10 +402,12 @@ export default function SalaryProposalReview() {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 4 }}>
                 
+                {data?.status === 'pending' && (
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button variant="contained" size="large" fullWidth sx={{ py: 1.5, fontSize: '1rem' }} startIcon={<CheckCircleIcon />}>Approve Request</Button>
-                    <Button variant="outlined" fullWidth color="error" sx={{ borderColor: 'rgba(211, 47, 47, 0.5)' }}>Reject</Button>
+                    <Button variant="contained" size="large" fullWidth sx={{ py: 1.5, fontSize: '1rem' }} startIcon={<CheckCircleIcon />} onClick={handleApprove}>Approve Request</Button>
+                    <Button variant="outlined" fullWidth color="error" sx={{ borderColor: 'rgba(211, 47, 47, 0.5)' }} onClick={handleReject}>Reject</Button>
                 </Box>
+                )}
             </Box>
             <Typography variant="caption" align="center" color="text.secondary" sx={{ mt: 2, fontSize: '0.65rem' }}>ACTION WILL BE LOGGED IN AUDIT TRAIL</Typography>
         </Box>
@@ -495,10 +521,12 @@ export default function SalaryProposalReview() {
           </Box>
           
           {/* Bottom Sticky Action Bar */}
+          {data?.status === 'pending' && (
           <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, bgcolor: '#0f172a', borderTop: '1px solid #334155', display: 'flex', gap: 2, zIndex: 100 }}>
              <Button variant="outlined" color="error" sx={{ flex: 1, borderRadius: 2, height: 48, borderColor: '#ef4444', color: '#ef4444' }} startIcon={<CloseIcon />}>Reject</Button>
              <Button variant="contained" sx={{ flex: 2, borderRadius: 2, bgcolor: '#10b981', height: 48, '&:hover': { bgcolor: '#059669' }, color: 'white', fontWeight: 'bold' }} startIcon={<CheckIcon />}>APPROVE REQUEST</Button>
           </Box>
+          )}
 
       </Box>
 
