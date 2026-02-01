@@ -236,6 +236,7 @@ export interface InternalSalaryOffer {
   currency: string;
   candidate_name?: string;
   approvals: InternalApproval[];
+  internal_approval_status?: string | null;
 }
 
 export interface SendInternalOfferRequest {

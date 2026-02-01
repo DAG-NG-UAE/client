@@ -38,6 +38,7 @@ export interface OfferState {
   selectedClauses: ExtendedClause[];
   preOfferDocs: PreOfferDocument[];
   internalOffer: Partial<InternalSalaryOffer> | null;
+  internalOffersHistory: Partial<InternalSalaryOffer>[];
   loading: boolean;
   error: string | null;
 }
@@ -52,6 +53,7 @@ const initialState: OfferState = {
   selectedClauses: [],
   preOfferDocs: [],
   internalOffer: null,
+  internalOffersHistory: [],
   loading: false,
   error: null,
 };
@@ -113,6 +115,12 @@ export const offerSlice = createSlice({
     ) {
       state.internalOffer = action.payload;
     },
+    setInternalOffersHistory(
+      state,
+      action: PayloadAction<Partial<InternalSalaryOffer>[]>,
+    ) {
+      state.internalOffersHistory = action.payload;
+    },
     clearOfferState(state) {
       state.masterClauses = [];
       state.currentOffer = null;
@@ -139,6 +147,7 @@ export const {
   setGuarantor,
   setPreOfferDocs,
   setInternalOffer,
+  setInternalOffersHistory,
   clearOfferState,
   stopLoading,
 } = offerSlice.actions;
@@ -297,12 +306,15 @@ export const callFetchInternalSalaryOffer = async (candidateId: string) => {
     const response = await fetchInternalSalaryOffer(candidateId);
     if (response.success && response.data && response.data.length > 0) {
       dispatch(setInternalOffer(response.data[0]));
+      dispatch(setInternalOffersHistory(response.data));
     } else {
       dispatch(setInternalOffer(null));
+      dispatch(setInternalOffersHistory([]));
     }
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
     dispatch(setInternalOffer(null));
+    dispatch(setInternalOffersHistory([]));
   } finally {
     dispatch(stopLoading());
   }
