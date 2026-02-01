@@ -340,19 +340,28 @@ export const callSendInternalSalaryOffer = async (
   }
 };
 
-export const callUpdateJoiningDocsStatus = async (documentId: string, status: string, comment: string, offerId: string) => {
+export const callUpdateJoiningDocsStatus = async (
+  documentId: string,
+  status: string,
+  comment: string,
+  offerId: string,
+  category: string,
+) => {
   try {
     dispatch(startLoading());
-    await updateJoiningDocsStatus(documentId, status, comment);
+    await updateJoiningDocsStatus(documentId, status, comment, category);
     enqueueSnackbar("Joining documents status updated", { variant: "success" });
     await fetchOfferById(offerId);
     await fetchCandidateJoiningDetails(offerId);
     await fetchGuarantor(offerId);
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
-    enqueueSnackbar(error?.response?.data?.message || "Failed to update joining docs status", {
-      variant: "error",
-    });
+    enqueueSnackbar(
+      error?.response?.data?.message || "Failed to update joining docs status",
+      {
+        variant: "error",
+      },
+    );
   } finally {
     dispatch(stopLoading());
   }

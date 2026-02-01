@@ -197,20 +197,25 @@ export const verifyInternalSalaryToken = async (token: string) => {
   }
 };
 
-export const updateInternalSalaryProposal = async (id: string[], candidateId: string, status: string) => { 
+export const updateInternalSalaryProposal = async (
+  id: string[],
+  candidateId: string,
+  status: string,
+) => {
   try {
-    const response = await axiosInstance.post(
-      `offer/internal/salary/status`,
-      { approvalIds: id, candidateId, status },
-    );
+    const response = await axiosInstance.post(`offer/internal/salary/status`, {
+      approvalIds: id,
+      candidateId,
+      status,
+    });
     return response.data;
   } catch (error) {
     console.error("Error updating internal salary proposal", error);
     throw error;
   }
-}
+};
 
-export const approvedInternalSalaryProposal = async (candidateId: string) => { 
+export const approvedInternalSalaryProposal = async (candidateId: string) => {
   try {
     const response = await axiosInstance.get(
       `offer/internal/salary/approved?candidateId=${candidateId}`,
@@ -220,16 +225,24 @@ export const approvedInternalSalaryProposal = async (candidateId: string) => {
     console.error("Error approved internal salary proposal", error);
     throw error;
   }
-}
+};
 
-export const updateJoiningDocsStatus = async ( documentId: string, status: string, comment: string ) => { 
+export const updateJoiningDocsStatus = async (
+  documentId: string,
+  status: string,
+  comment: string,
+  category: string,
+) => {
   try {
-    const response = await axiosInstance.patch(
-      `offer/docs/status`, { documentId, status, comment },
-    );
+    const response = await axiosInstance.patch(`offer/docs/status`, {
+      documentId,
+      status,
+      comment,
+      category,
+    });
     return response.data;
   } catch (error) {
     console.error("Error updating joining docs status", error);
     throw error;
   }
-}
+};

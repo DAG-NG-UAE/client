@@ -117,26 +117,24 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
         setExpanded(isExpanded ? panel : false);
     };
 
-    const handleVerifyDoc = async (doc: JoiningDocumentItem) => {
-        // TODO: Implement API for verifying joining documents
+    const handleVerifyDoc = async (doc: JoiningDocumentItem & { docType: string }) => {
         console.log("Verify doc", doc);
-        // Optimistic update
-        callUpdateJoiningDocsStatus(doc._id, 'APPROVED', '', id);
+        callUpdateJoiningDocsStatus(doc._id, 'APPROVED', '', id, doc.docType);
     };
 
-    const handleRejectDoc = async (doc: JoiningDocumentItem) => {
-        // TODO: Implement API for rejecting joining documents
+    const handleRejectDoc = async (doc: JoiningDocumentItem & { docType: string }) => {
         console.log("Reject doc", doc);
-        // Optimistic update
-        callUpdateJoiningDocsStatus(doc._id, 'REJECTED', '', id);
+        callUpdateJoiningDocsStatus(doc._id, 'REJECTED', '', id, doc.docType);
     };
 
-    // const handleVerifyAll = async () => {
-    //     // TODO: Implement API for verifying all joining documents
-    //     console.log("Verify all docs");
-    //     // Optimistic update
-    //     setJoiningDocs(prev => prev.map(d => ({ ...d, status: 'approved' })));
-    // };
+    const groupedDocs = useMemo(() => {
+        return joiningDocs.reduce((acc, doc) => {
+            const key = doc.docType;
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(doc);
+            return acc;
+        }, {} as Record<string, typeof joiningDocs>);
+    }, [joiningDocs]);
 
     const progress = useMemo(() => {
         if (!joiningDocs || joiningDocs.length === 0) return 0;
@@ -145,20 +143,23 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
     }, [joiningDocs]);
 
     const getDocIcon = (type: string) => {
-        if (type.includes('pdf')) return <PictureAsPdfIcon color="error" />;
-        if (type.includes('image')) return <ImageIcon color="primary" />;
+        if (type.toLowerCase().includes('pdf')) return <PictureAsPdfIcon color="error" />;
+        if (type.toLowerCase().includes('image') || type.toLowerCase().includes('jpg') || type.toLowerCase().includes('png')) return <ImageIcon color="primary" />;
         return <ArticleIcon />;
     };
 
     const getStatusChip = (status: string) => {
-        switch (status) {
-            case 'approved':
+        const s = status.toUpperCase();
+        switch (s) {
+            case 'APPROVED':
+            case 'VERIFIED':
                 return <Chip label="Verified" color="success" size="small" icon={<VerifiedIcon />} />;
-            case 'rejected':
+            case 'REJECTED':
                 return <Chip label="Rejected" color="error" size="small" />;
-            case 'pending_review':
+            case 'PENDING':
+            case 'PENDING_REVIEW':
                 return <Chip label="Pending Review" color="warning" size="small" />;
-            case 'awaiting_upload':
+            case 'AWAITING_UPLOAD':
                 return <Chip label="Awaiting Upload" color="default" size="small" />;
             default:
                 return <Chip label={status} size="small" />;
@@ -169,6 +170,65 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
 
     const fullName = selectedCandidate? `${selectedCandidate.candidate_name}` : 'Associate';
     
+    const renderDocList = (docs: typeof joiningDocs) => (
+        <Stack spacing={2}>
+            {docs.map((doc, index) => (
+                <Card key={doc._id || index} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'grey.100' }}>
+                            {getDocIcon(doc.url || '')}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="subtitle2" fontWeight="medium">{doc.title}</Typography>
+                            <Typography variant="caption" color="text.secondary">{doc.fileName}</Typography>
+                        </Box>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {getStatusChip(doc.status)}
+                        
+                        {doc.url && (
+                            <Tooltip title="View Document">
+                                <IconButton href={`http://localhost:5000${doc.url}`} target="_blank" size="small">
+                                    <Box component="span" sx={{ fontSize: 20 }}>👁️</Box>
+                                </IconButton>
+                            </Tooltip>
+                        )}
+
+                        <Stack direction="row" spacing={1}>
+                            <IconButton 
+                                size="small" 
+                                color="success" 
+                                onClick={() => handleVerifyDoc(doc)}
+                                disabled={doc.status === 'approved' || doc.status === 'APPROVED'}
+                                sx={{ 
+                                    bgcolor: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'success.main' : 'success.light', 
+                                    color: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'white' : 'success.dark',
+                                    '&:hover': { bgcolor: 'success.main', color: 'white' }
+                                }}
+                            >
+                                <CheckIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton 
+                                size="small" 
+                                color="error"
+                                onClick={() => handleRejectDoc(doc)}
+                                disabled={doc.status === 'rejected' || doc.status === 'REJECTED'}
+                                sx={{ 
+                                    bgcolor: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'error.main' : 'error.light', 
+                                    color: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'white' : 'error.dark',
+                                    '&:hover': { bgcolor: 'error.main', color: 'white' }
+                                }}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        </Stack>
+                    </Box>
+                </Card>
+            ))}
+        </Stack>
+    );
+
     return (
         <Box sx={{ p: 3, maxWidth: 1200, margin: '0 auto' }}>
             {/* Header Card */}
@@ -317,64 +377,20 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Stack spacing={2}>
-                            {joiningDocs && joiningDocs.length > 0 ? (
-                                joiningDocs.map((doc, index) => (
-                                    <Card key={doc._id || index} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <Avatar sx={{ bgcolor: 'grey.100' }}>
-                                                {getDocIcon(doc.url || '')}
-                                            </Avatar>
-                                            <Box>
-                                                <Typography variant="subtitle2" fontWeight="medium">{doc.title}</Typography>
-                                                <Typography variant="caption" color="text.secondary">{doc.fileName}</Typography>
-                                                {/* <Typography variant="caption" color="text.secondary">Last updated: {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : '---'}</Typography> */}
-                                            </Box>
-                                        </Box>
-                                        
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            {getStatusChip(doc.status)}
-                                            
-                                            {doc.url && (
-                                                <Tooltip title="View Document">
-                                                    <IconButton href={`http://localhost:5000${doc.url}`} target="_blank" size="small">
-                                                        <Box component="span" sx={{ fontSize: 20 }}>👁️</Box>
-                                                    </IconButton>
-                                                </Tooltip>
-                                            )}
-
-                                            <Stack direction="row" spacing={1}>
-                                                <IconButton 
-                                                    size="small" 
-                                                    color="success" 
-                                                    onClick={() => handleVerifyDoc(doc)}
-                                                    disabled={doc.status === 'approved' || doc.status === 'APPROVED'}
-                                                    sx={{ 
-                                                        bgcolor: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'success.main' : 'success.light', 
-                                                        color: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'white' : 'success.dark',
-                                                        '&:hover': { bgcolor: 'success.main', color: 'white' }
-                                                    }}
-                                                >
-                                                    <CheckIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton 
-                                                    size="small" 
-                                                    color="error"
-                                                    onClick={() => handleRejectDoc(doc)}
-                                                    disabled={doc.status === 'rejected' || doc.status === 'REJECTED'}
-                                                    sx={{ 
-                                                        bgcolor: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'error.main' : 'error.light', 
-                                                        color: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'white' : 'error.dark',
-                                                        '&:hover': { bgcolor: 'error.main', color: 'white' }
-                                                    }}
-                                                >
-                                                    <CloseIcon fontSize="small" />
-                                                </IconButton>
-                                            </Stack>
-                                        </Box>
-                                    </Card>
-                                ))
-                            ) : (
+                        <Stack spacing={4}>
+                            {['passport', 'certificate', 'proof'].map((type) => {
+                                const docs = groupedDocs[type];
+                                if (!docs || docs.length === 0) return null;
+                                return (
+                                    <Box key={type}>
+                                        <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ mb: 2, textTransform: 'uppercase' }}>
+                                            {type === 'passport' ? 'Passport' : type === 'certificate' ? 'Certificates' : 'Proof of Identity'}
+                                        </Typography>
+                                        {renderDocList(docs)}
+                                    </Box>
+                                );
+                            })}
+                            {joiningDocs.length === 0 && (
                                 <Typography color="text.secondary" textAlign="center" py={4}>No documents uploaded yet.</Typography>
                             )}
                         </Stack>
