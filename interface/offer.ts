@@ -250,3 +250,22 @@ export interface SendInternalOfferRequest {
     benefits: InternalBenefit[];
   };
 }
+
+export interface VerifyInternalSalaryOfferResponse {
+  id: string;
+  candidate_id: string;
+  token: string;
+  email: string;
+  status: string;
+  expires_at: string;
+  notes: string | null;
+  annual_gross: string;
+  monthly_net: string;
+  bha_breakdown: BhaBreakdown;
+  benefits: InternalBenefit[];
+  currency: string;
+  candidate_name: string;
+  role_applied_for: string;
+  department: string;
+  is_expired: boolean;
+}

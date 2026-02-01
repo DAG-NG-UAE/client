@@ -1,5 +1,5 @@
 "use client"
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -18,7 +18,10 @@ import {
   LinearProgress,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  CircularProgress,
+  Backdrop,
+  Paper
 } from '@mui/material';
 import { getApprovalTheme } from '@/theme';
 import { useSearchParams } from 'next/navigation';
@@ -36,29 +39,45 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { verifyInternalSalaryToken } from '@/api/offer';
+import { VerifyInternalSalaryOfferResponse } from '@/interface/offer';
 
-// Mock Data matching the screenshot
-const candidateData = {
+// Interface for the view data
+interface SalaryReviewData {
+  name: string;
+  role: string;
+  image: string;
+  proposedGross: string;
+  monthlyNet: string;
+  baseSalary: string;
+  housingAllowance: string;
+  transportation: string;
+  otherAllowances: string;
+  peerMax: string;
+  peerProposed: string;
+  department: string;
+  benefits: { name: string }[];
+}
+
+// Mock Data matching the screenshot (for fallbacks)
+const defaultCandidateData: SalaryReviewData = {
   name: "Jane Doe",
   role: "Senior Software Architect",
   image: "/placeholder-avatar.jpg", // We don't have this, will rely on Initials or empty
-  experience: "12+ Years",
-  currentRole: "Tech Lead, TechCorp",
-  noticePeriod: "30 Days",
-  requestId: "#44219",
   proposedGross: "$245,000",
   monthlyNet: "$14,800",
   baseSalary: "$180,000",
   housingAllowance: "$45,000",
   transportation: "$12,000",
-  topALimit: "10th percentile",
-  performanceBonus: "Up to 20%",
-  equity: "$50,000",
-  joiningBonus: "$8,000",
-  annualEstimate: "$40,000",
-  peerMin: "$190k",
+  otherAllowances: "$15,000",
   peerMax: "$280k",
-  peerProposed: "$245k"
+  peerProposed: "$245k",
+  department: "Engineering",
+  benefits: [
+    { name: "Health Insurance" },
+    { name: "Gym Membership" }
+  ]
 };
 
 const approvalSteps = [
@@ -72,10 +91,115 @@ export default function SalaryProposalReview() {
   const token = searchParams.get('token');
   const theme = getApprovalTheme();
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<VerifyInternalSalaryOfferResponse | null>(null);
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // If no token is present, we might want to show an error or just load mock data?
+      // For now, let's assume token is required as per user request.
+      if (!token) {
+         // setError("No token provided");
+         // setLoading(false);
+         // For development/mock purposes if needed, but user asked to call API.
+         // Let's try to call it even if null, likely handle error.
+      }
+      
+      if (token) {
+        try {
+            const response = await verifyInternalSalaryToken(token);
+            if (response.success && response.data) {
+                setData(response.data);
+                if (response.data.is_expired) {
+                    setIsExpired(true);
+                }
+            } else {
+                setError(response.message || "Failed to verify token");
+            }
+        } catch (err) {
+            console.error(err);
+            setError("Failed to verify token");
+        } finally {
+            setLoading(false);
+        }
+      } else {
+          setLoading(false); 
+      }
+    };
+
+    fetchData();
+  }, [token]);
+
+  const formatCurrency = (amount: string | number | undefined, currency: string = 'USD') => {
+    if (amount === undefined || amount === null) return '0.00';
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    // Basic currency formatting
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency === 'Naira' ? 'NGN' : currency }).format(num);
+  };
+
+  const displayData: SalaryReviewData = data ? {
+      name: data.candidate_name,
+      role: data.role_applied_for,
+      image: defaultCandidateData.image, // Still placeholder
+      proposedGross: formatCurrency(data.annual_gross, data.currency),
+      monthlyNet: formatCurrency(data.monthly_net, data.currency),
+      baseSalary: formatCurrency(data.bha_breakdown?.basic, data.currency),
+      housingAllowance: formatCurrency(data.bha_breakdown?.housing, data.currency),
+      transportation: formatCurrency(data.bha_breakdown?.transport, data.currency),
+      otherAllowances: formatCurrency(data.bha_breakdown?.other_allowances, data.currency),
+      peerMax: defaultCandidateData.peerMax,
+      peerProposed: defaultCandidateData.peerProposed,
+      department: data.department || "General",
+      benefits: data.benefits || []
+  } : defaultCandidateData;
+
+  const totalBHA = data ? (
+      (Number(data.bha_breakdown?.basic) || 0) +
+      (Number(data.bha_breakdown?.housing) || 0) +
+      (Number(data.bha_breakdown?.transport) || 0) +
+      (Number(data.bha_breakdown?.other_allowances) || 0)
+  ) : 237000; // Mock fallback matches image text
+
+  if (loading) {
+      return (
+         <ThemeProvider theme={theme}>
+            <CssBaseline />
+             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: 'background.default' }}>
+                <CircularProgress color="primary" />
+             </Box>
+         </ThemeProvider>
+      );
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       
+       {/* Expired Token Overlay */}
+       <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1, backdropFilter: 'blur(5px)' }}
+        open={isExpired}
+      >
+          <Paper sx={{ p: 4, textAlign: 'center', maxWidth: 400, bgcolor: 'background.paper', borderRadius: 2 }}>
+              <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
+              <Typography variant="h5" gutterBottom color="text.primary" fontWeight="bold">Link Expired</Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                  This salary proposal link has expired and is no longer valid. Please request a new link from the HR department.
+              </Typography>
+          </Paper>
+      </Backdrop>
+
+      {/* Error State */}
+      {!isExpired && error && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: 'background.default' }}>
+            <Typography color="error" variant="h6">{error}</Typography>
+          </Box>
+      )}
+
+      {!isExpired && !error && (
+      <>
       {/* DESKTOP VIEW */}
       <Box sx={{ display: { xs: 'none', md: 'flex' }, minHeight: '100vh', bgcolor: 'background.default', fontFamily: 'Inter' }}>
         
@@ -97,28 +221,28 @@ export default function SalaryProposalReview() {
           <Card sx={{ mb: 3, textAlign: 'center', p: 2, bgcolor: 'background.paper' }}>
              <Avatar 
                 sx={{ width: 80, height: 80, margin: '0 auto', mb: 2 }} 
-                src={candidateData.image}
-              >JD</Avatar>
-             <Typography variant="h6">{candidateData.name}</Typography>
-             <Typography variant="body2" color="text.secondary" gutterBottom>{candidateData.role}</Typography>
+                src={displayData.image}
+              >{displayData.name.charAt(0)}</Avatar>
+             <Typography variant="h6">{displayData.name}</Typography>
+             <Typography variant="body2" color="text.secondary" gutterBottom>{displayData.role}</Typography>
              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 1 }}>
                 <Chip label="HIGH PRIORITY" size="small" color="primary" sx={{ borderRadius: 1, height: 20, fontSize: '0.65rem' }} />
-                <Chip label="ENGINEERING" size="small" sx={{ borderRadius: 1, height: 20, fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.1)' }} />
+                <Chip label={displayData.department?.toUpperCase() || "ENGINEERING"} size="small" sx={{ borderRadius: 1, height: 20, fontSize: '0.65rem', bgcolor: 'rgba(255,255,255,0.1)' }} />
              </Box>
           </Card>
 
           {/* <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">Experience</Typography>
-                <Typography variant="body2" fontWeight="bold">{candidateData.experience}</Typography>
+                <Typography variant="body2" fontWeight="bold">{displayData.experience}</Typography>
              </Box>
              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">Current Role</Typography>
-                <Typography variant="body2" fontWeight="bold">{candidateData.currentRole}</Typography>
+                <Typography variant="body2" fontWeight="bold">{displayData.currentRole}</Typography>
              </Box>
              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">Notice Period</Typography>
-                <Typography variant="body2" fontWeight="bold">{candidateData.noticePeriod}</Typography>
+                <Typography variant="body2" fontWeight="bold">{displayData.noticePeriod}</Typography>
              </Box>
           </Box> */}
 {/* 
@@ -132,16 +256,16 @@ export default function SalaryProposalReview() {
           </Button> */}
 
         
+        
 
         </Box>
 
         {/* Main Content Desktop */}
         <Box sx={{ flexGrow: 1, p: 4, overflow: 'auto' }}>
-            <Typography variant="caption" color="text.secondary">Approvals &gt; Salary Request {candidateData.requestId}</Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
                 <Box>
                     <Typography variant="h1" gutterBottom sx={{ mt: 1 }}>Financial Summary</Typography>
-                    <Typography variant="body1" color="text.secondary">Proposed Compensation Package for {candidateData.role} Role</Typography>
+                    <Typography variant="body1" color="text.secondary">Proposed Compensation Package for {displayData.role} Role</Typography>
                 </Box>
                 <Chip label="AWAITING FINAL APPROVAL" color="warning" sx={{ borderRadius: 1 }} />
             </Box>
@@ -150,14 +274,13 @@ export default function SalaryProposalReview() {
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Card sx={{ p: 3, height: '100%' }}>
                         <Typography variant="body2" color="text.secondary" gutterBottom>Proposed Annual Gross</Typography>
-                        <Typography variant="h2" color="primary.main" gutterBottom sx={{ fontWeight: 800, fontSize: '3rem' }}>{candidateData.proposedGross}</Typography>
-                        <Typography variant="caption" color="text.secondary" fontStyle="italic">Competitive for region (Top {candidateData.topALimit})</Typography>
+                        <Typography variant="h2" color="primary.main" gutterBottom sx={{ fontWeight: 800, fontSize: '3rem' }}>{displayData.proposedGross}</Typography>
                     </Card>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Card sx={{ p: 3, height: '100%' }}>
                         <Typography variant="body2" color="text.secondary" gutterBottom>Estimated Monthly Net</Typography>
-                        <Typography variant="h2" color="white" gutterBottom sx={{ fontWeight: 800, fontSize: '3rem' }}>{candidateData.monthlyNet}</Typography>
+                        <Typography variant="h2" color="white" gutterBottom sx={{ fontWeight: 800, fontSize: '3rem' }}>{displayData.monthlyNet}</Typography>
                         <Typography variant="caption" color="text.secondary" fontStyle="italic">Excl. annual performance bonus calculations</Typography>
                     </Card>
                 </Grid>
@@ -174,51 +297,44 @@ export default function SalaryProposalReview() {
                         <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ display: 'block', mb: 2 }}>BASE & HOUSING (BHA)</Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="body2">Basic Salary</Typography>
-                            <Typography variant="body2" fontWeight="bold">{candidateData.baseSalary}</Typography>
+                            <Typography variant="body2" fontWeight="bold">{displayData.baseSalary}</Typography>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="body2">Housing Allowance</Typography>
-                            <Typography variant="body2" fontWeight="bold">{candidateData.housingAllowance}</Typography>
+                            <Typography variant="body2" fontWeight="bold">{displayData.housingAllowance}</Typography>
+                        </Box>
+                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2">Transportation</Typography>
+                            <Typography variant="body2" fontWeight="bold">{displayData.transportation}</Typography>
                         </Box>
                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                            <Typography variant="body2">Transportation</Typography>
-                            <Typography variant="body2" fontWeight="bold">{candidateData.transportation}</Typography>
+                            <Typography variant="body2">Other Allowances</Typography>
+                            <Typography variant="body2" fontWeight="bold">{displayData.otherAllowances}</Typography>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                             <Typography variant="body1" fontWeight="bold">Total BHA</Typography>
-                            <Typography variant="body1" fontWeight="bold" color="primary.main">$237,000</Typography>
+                            <Typography variant="body1" fontWeight="bold" color="primary.main">{formatCurrency(totalBHA, data?.currency)}</Typography>
                         </Box>
                     </Grid>
                     {/* Column 3 - Non Cash Benefits */}
                     <Grid size={{ xs: 12, md: 6 }} sx={{ p: 3 }}>
                         <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ display: 'block', mb: 2 }}>NON-CASH BENEFITS</Typography>
                         <Stack spacing={2}>
-                            <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Box sx={{ p: 0.5, bgcolor: 'primary.main', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <CheckCircleIcon sx={{ fontSize: 12 }} />
-                                </Box>
-                                <Box>
-                                    <Typography variant="body2" fontWeight="bold">Premium Medical</Typography>
-                                    <Typography variant="caption" color="text.secondary">(Global)</Typography>
-                                </Box>
-                            </Box>
-                            <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Box sx={{ p: 0.5, bgcolor: 'primary.main', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <CheckCircleIcon sx={{ fontSize: 12 }} />
-                                </Box>
-                                <Box>
-                                    <Typography variant="body2" fontWeight="bold">Executive Car Lease</Typography>
-                                </Box>
-                            </Box>
-                             <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Box sx={{ p: 0.5, bgcolor: 'primary.main', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <CheckCircleIcon sx={{ fontSize: 12 }} />
-                                </Box>
-                                <Box>
-                                    <Typography variant="body2" fontWeight="bold">L&D Budget</Typography>
-                                    <Typography variant="caption" color="text.secondary">($5k/yr)</Typography>
-                                </Box>
-                            </Box>
+                            {displayData.benefits.length > 0 ? (
+                                displayData.benefits.map((benefit: any, index: number) => (
+                                    <Box key={index} sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{ p: 0.5, bgcolor: 'primary.main', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <CheckCircleIcon sx={{ fontSize: 12 }} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="body2" fontWeight="bold">{benefit.name}</Typography>
+                                            {/* <Typography variant="caption" color="text.secondary">(Global)</Typography> */}
+                                        </Box>
+                                    </Box>
+                                ))
+                            ) : (
+                                <Typography variant="caption" color="text.secondary">No benefits listed</Typography>
+                            )}
                         </Stack>
                     </Grid>
                 </Grid>
@@ -240,7 +356,7 @@ export default function SalaryProposalReview() {
                 sx={{ mb: 4, bgcolor: 'rgba(255,255,255,0.05)' }}
             />
 
-            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ mb: 2, display: 'block' }}>APPROVAL WORKFLOW</Typography>
+            {/* <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ mb: 2, display: 'block' }}>APPROVAL WORKFLOW</Typography>
             <Stack spacing={3} sx={{ mb: 'auto' }}>
                 {approvalSteps.map((step, index) => (
                     <Box key={index} sx={{ display: 'flex', gap: 2 }}>
@@ -258,12 +374,12 @@ export default function SalaryProposalReview() {
                         </Box>
                     </Box>
                 ))}
-            </Stack>
+            </Stack> */}
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 4 }}>
-                <Button variant="contained" size="large" fullWidth sx={{ py: 1.5, fontSize: '1rem' }} startIcon={<CheckCircleIcon />}>Approve Request</Button>
+                
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button variant="outlined" fullWidth sx={{ color: 'text.primary', borderColor: 'rgba(255,255,255,0.2)' }}>Re-evaluate</Button>
+                    <Button variant="contained" size="large" fullWidth sx={{ py: 1.5, fontSize: '1rem' }} startIcon={<CheckCircleIcon />}>Approve Request</Button>
                     <Button variant="outlined" fullWidth color="error" sx={{ borderColor: 'rgba(211, 47, 47, 0.5)' }}>Reject</Button>
                 </Box>
             </Box>
@@ -277,26 +393,26 @@ export default function SalaryProposalReview() {
           {/* Top Card */}
           <Card sx={{ m: 2, p: 2, bgcolor: '#1e293b', borderRadius: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                  <Avatar src={candidateData.image} sx={{ width: 64, height: 64, border: '2px solid #3b82f6' }}>JD</Avatar>
+                  <Avatar src={displayData.image} sx={{ width: 64, height: 64, border: '2px solid #3b82f6' }}>{displayData.name.charAt(0)}</Avatar>
                   <Box>
-                      <Typography variant="h6" fontWeight="bold">{candidateData.name}</Typography>
-                      <Typography variant="body2" color="text.secondary">Senior Software Architect</Typography> {/* Hardcoded for match with image */}
+                      <Typography variant="h6" fontWeight="bold">{displayData.name}</Typography>
+                      <Typography variant="body2" color="text.secondary">{displayData.role}</Typography> {/* Hardcoded for match with image */}
                   </Box>
               </Box>
 
               <Box sx={{ bgcolor: '#0f172a', borderRadius: 2, p: 3 }}>
                   <Typography variant="caption" color="text.secondary" fontWeight="bold" sx={{ letterSpacing: 1 }}>ANNUAL GROSS SALARY</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 3 }}>
-                      <Typography variant="h4" fontWeight="bold" color="white">{candidateData.proposedGross}</Typography>
+                      <Typography variant="h4" fontWeight="bold" color="white">{displayData.proposedGross}</Typography>
                       <Typography variant="body2" color="text.secondary">/yr</Typography>
                   </Box>
 
                   <Typography variant="caption" color="primary.main" fontWeight="bold" sx={{ letterSpacing: 1 }}>ESTIMATED MONTHLY NET</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-                      <Typography variant="h4" fontWeight="bold" color="white">{candidateData.monthlyNet}</Typography> {/* Visual match: actually image implies 16420, used data match */}
+                      <Typography variant="h4" fontWeight="bold" color="white">{displayData.monthlyNet}</Typography> {/* Visual match: actually image implies 16420, used data match */}
                       <Typography variant="body2" color="text.secondary">/mo</Typography>
                   </Box>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Tax calculated for California region</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>Tax calculated for region</Typography>
               </Box>
           </Card>
 
@@ -316,15 +432,19 @@ export default function SalaryProposalReview() {
                   <AccordionDetails>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                           <Typography variant="body2" color="text.secondary">Basic Salary</Typography>
-                          <Typography variant="body2" fontWeight="bold">{candidateData.baseSalary}</Typography>
+                          <Typography variant="body2" fontWeight="bold">{displayData.baseSalary}</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                           <Typography variant="body2" color="text.secondary">Housing Allowance</Typography>
-                          <Typography variant="body2" fontWeight="bold">{candidateData.housingAllowance}</Typography>
+                          <Typography variant="body2" fontWeight="bold">{displayData.housingAllowance}</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                           <Typography variant="body2" color="text.secondary">Transport Allowance</Typography>
-                          <Typography variant="body2" fontWeight="bold">{candidateData.transportation}</Typography>
+                          <Typography variant="body2" fontWeight="bold">{displayData.transportation}</Typography>
+                      </Box>
+                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography variant="body2" color="text.secondary">Other Allowances</Typography>
+                          <Typography variant="body2" fontWeight="bold">{displayData.otherAllowances}</Typography>
                       </Box>
                   </AccordionDetails>
               </Accordion>
@@ -341,32 +461,20 @@ export default function SalaryProposalReview() {
                   </AccordionSummary>
                   <AccordionDetails>
                       <Stack spacing={2}>
-                          <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <Box sx={{ p: 0.5, bgcolor: 'primary.main', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <CheckCircleIcon sx={{ fontSize: 12 }} />
-                              </Box>
-                              <Box>
-                                  <Typography variant="body2" fontWeight="bold">Premium Medical</Typography>
-                                  <Typography variant="caption" color="text.secondary">(Global)</Typography>
-                              </Box>
-                          </Box>
-                          <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <Box sx={{ p: 0.5, bgcolor: 'primary.main', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <CheckCircleIcon sx={{ fontSize: 12 }} />
-                              </Box>
-                              <Box>
-                                  <Typography variant="body2" fontWeight="bold">Executive Car Lease</Typography>
-                              </Box>
-                          </Box>
-                           <Box sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <Box sx={{ p: 0.5, bgcolor: 'primary.main', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <CheckCircleIcon sx={{ fontSize: 12 }} />
-                              </Box>
-                              <Box>
-                                  <Typography variant="body2" fontWeight="bold">L&D Budget</Typography>
-                                  <Typography variant="caption" color="text.secondary">($5k/yr)</Typography>
-                              </Box>
-                          </Box>
+                           {displayData?.benefits?.length > 0 ? (
+                                displayData.benefits.map((benefit: any, index: number) => (
+                                    <Box key={index} sx={{ p: 1.5, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{ p: 0.5, bgcolor: 'primary.main', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <CheckCircleIcon sx={{ fontSize: 12 }} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="body2" fontWeight="bold">{benefit.name}</Typography>
+                                        </Box>
+                                    </Box>
+                                ))
+                            ) : (
+                                <Typography variant="caption" color="text.secondary">No benefits listed</Typography>
+                            )}
                       </Stack>
                   </AccordionDetails>
               </Accordion>
@@ -393,6 +501,9 @@ export default function SalaryProposalReview() {
           </Box>
 
       </Box>
+
+      </>
+      )}
 
     </ThemeProvider>
   );
