@@ -124,6 +124,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
           <IconButton 
             onClick={(e) => {
               e.stopPropagation();
+              dispatch(setSelectedCandidate(candidate))
               router.push(`/offers/view/${candidate.offer_id}`);
             }}
             color="primary"

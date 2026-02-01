@@ -4,29 +4,37 @@ import { Guarantor } from '@/interface/offer';
 
 interface GuarantorDetailsViewProps {
     details: Partial<Guarantor> | null;
-    onBack: () => void;
+    onBack?: () => void;
+    embedded?: boolean;
 }
 
-const GuarantorDetailsView = ({ details, onBack }: GuarantorDetailsViewProps) => {
+const GuarantorDetailsView = ({ details, onBack, embedded = false }: GuarantorDetailsViewProps) => {
     if (!details) {
+        if (embedded) return <Typography color="text.secondary">No guarantor details available.</Typography>;
         return (
             <Box sx={{ p: 3 }}>
-                <IconButton onClick={onBack} sx={{ mb: 2 }}>
-                    <ArrowBack />
-                </IconButton>
+                {onBack && (
+                    <IconButton onClick={onBack} sx={{ mb: 2 }}>
+                        <ArrowBack />
+                    </IconButton>
+                )}
                 <Typography>No guarantor details available.</Typography>
             </Box>
         );
     }
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-                <IconButton onClick={onBack} sx={{ mr: 2 }}>
-                    <ArrowBack />
-                </IconButton>
-                <Typography variant="h4">Guarantor Details</Typography>
-            </Box>
+        <Box sx={{ p: embedded ? 0 : 3 }}>
+            {!embedded && (
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                    {onBack && (
+                         <IconButton onClick={onBack} sx={{ mr: 2 }}>
+                            <ArrowBack />
+                        </IconButton>
+                    )}
+                    <Typography variant="h4">Guarantor Details</Typography>
+                </Box>
+            )}
 
             <Stack spacing={4}>
                 {/* Basic Information */}

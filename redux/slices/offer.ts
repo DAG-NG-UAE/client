@@ -26,6 +26,7 @@ import {
   fetchInternalSalaryOffer,
   sendInternalSalaryOffer,
   updateInternalSalaryProposal,
+  updateJoiningDocsStatus,
 } from "@/api/offer";
 import { enqueueSnackbar } from "notistack";
 
@@ -332,6 +333,24 @@ export const callSendInternalSalaryOffer = async (
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
     enqueueSnackbar(error?.response?.data?.message || "Failed to send offer", {
+      variant: "error",
+    });
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callUpdateJoiningDocsStatus = async (documentId: string, status: string, comment: string, offerId: string) => {
+  try {
+    dispatch(startLoading());
+    await updateJoiningDocsStatus(documentId, status, comment);
+    enqueueSnackbar("Joining documents status updated", { variant: "success" });
+    await fetchOfferById(offerId);
+    await fetchCandidateJoiningDetails(offerId);
+    await fetchGuarantor(offerId);
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar(error?.response?.data?.message || "Failed to update joining docs status", {
       variant: "error",
     });
   } finally {

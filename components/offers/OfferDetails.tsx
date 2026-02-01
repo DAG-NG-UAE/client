@@ -1,220 +1,388 @@
-import { useEffect, useState } from 'react';
+
+import { useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { fetchOfferById, fetchCandidateJoiningDetails, fetchGuarantor, fetchOfferLetter } from '@/redux/slices/offer';
-import { Box, Button, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
-import { ContentCopy, Edit, Visibility, Description, AssignmentInd } from '@mui/icons-material';
-import { formatOfferDate } from '@/utils/transform';
+import { 
+    fetchOfferById, 
+    fetchCandidateJoiningDetails, 
+    fetchGuarantor, 
+    callFetchPreOfferDocs,
+    callSavePreOfferDocs,
+    callUpdateJoiningDocsStatus
+} from '@/redux/slices/offer';
+import { 
+    Box, 
+    Button, 
+    Card, 
+    Typography, 
+    Accordion, 
+    AccordionSummary, 
+    AccordionDetails, 
+    Avatar, 
+    LinearProgress, 
+    Stack,
+    IconButton,
+    Chip,
+    Tooltip,
+    useTheme
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import DownloadIcon from '@mui/icons-material/Download';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import HistoryIcon from '@mui/icons-material/History';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import ArticleIcon from '@mui/icons-material/Article';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
 import JoiningDetailsView from './JoiningDetailsView';
 import GuarantorDetailsView from './GuarantorDetailsView';
-import OfferLetterView from './OfferLetterView';
+import { JoiningDocuments, JoiningDocumentItem } from '@/interface/offer';
 
 interface OfferDetailsProps {
     id: string;
 }
 
 const OfferDetails = ({ id }: OfferDetailsProps) => {
-    const { currentOffer: offer, joiningDetails, guarantor, loading } = useSelector((state: RootState) => state.offers);
-    const [viewMode, setViewMode] = useState<'offer' | 'joining' | 'guarantor' | 'letter'>('offer');
+    const theme = useTheme();
+    const { 
+        currentOffer: offer, 
+        joiningDetails, 
+        guarantor, 
+        preOfferDocs,
+        loading 
+    } = useSelector((state: RootState) => state.offers);
+    const {selectedCandidate} = useSelector((state: RootState) => state.candidates);
+
+    const [expanded, setExpanded] = useState<string | false>('panel1');
+    const [joiningDocs, setJoiningDocs] = useState<(JoiningDocumentItem & { title: string, docType: string })[]>([]);
 
     useEffect(() => {
         if (id) {
             fetchOfferById(id);
-            console.log('we are fetching order by id')
-        }
-    }, []);
-
-    const handleViewJoiningDetails = () => {
-        if (id) {
             fetchCandidateJoiningDetails(id);
-            setViewMode('joining');
-        }
-    };
-
-    const handleViewGuarantorDetails = () => {
-        if (id) {
             fetchGuarantor(id);
-            setViewMode('guarantor');
+        }
+    }, [id]);
+
+    useEffect(() => {
+        if (joiningDetails?.documents) {
+            try {
+                const docs: JoiningDocuments = typeof joiningDetails.documents === 'string' 
+                    ? JSON.parse(joiningDetails.documents) 
+                    : joiningDetails.documents;
+                
+                const list: (JoiningDocumentItem & { title: string, docType: string })[] = [];
+                
+                if (docs.passport) {
+                    list.push({ 
+                        ...docs.passport, 
+                        title: 'Passport', 
+                        docType: 'passport' 
+                    });
+                }
+                
+                if (docs.certificates && Array.isArray(docs.certificates)) {
+                    docs.certificates.forEach((cert, index) => {
+                        list.push({ 
+                            ...cert, 
+                            title: cert.fileName || `Certificate ${index + 1}`,
+                            docType: 'certificate'
+                        });
+                    });
+                }
+
+                if (docs.proof && Array.isArray(docs.proof)) {
+                    docs.proof.forEach((cert, index) => {
+                        list.push({ 
+                            ...cert, 
+                            title: cert.fileName || `Proof ${index + 1}`,
+                            docType: 'proof'
+                        });
+                    });
+                }
+                
+                setJoiningDocs(list);
+            } catch (error) {
+                console.error("Error parsing joining documents:", error);
+                setJoiningDocs([]);
+            }
+        }
+    }, [joiningDetails]);
+
+    const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+        setExpanded(isExpanded ? panel : false);
+    };
+
+    const handleVerifyDoc = async (doc: JoiningDocumentItem) => {
+        // TODO: Implement API for verifying joining documents
+        console.log("Verify doc", doc);
+        // Optimistic update
+        callUpdateJoiningDocsStatus(doc._id, 'APPROVED', '', id);
+    };
+
+    const handleRejectDoc = async (doc: JoiningDocumentItem) => {
+        // TODO: Implement API for rejecting joining documents
+        console.log("Reject doc", doc);
+        // Optimistic update
+        callUpdateJoiningDocsStatus(doc._id, 'REJECTED', '', id);
+    };
+
+    // const handleVerifyAll = async () => {
+    //     // TODO: Implement API for verifying all joining documents
+    //     console.log("Verify all docs");
+    //     // Optimistic update
+    //     setJoiningDocs(prev => prev.map(d => ({ ...d, status: 'approved' })));
+    // };
+
+    const progress = useMemo(() => {
+        if (!joiningDocs || joiningDocs.length === 0) return 0;
+        const verifiedCount = joiningDocs.filter(d => d.status === 'approved' || d.status === 'APPROVED' || d.status === 'Verified').length;
+        return Math.round((verifiedCount / joiningDocs.length) * 100);
+    }, [joiningDocs]);
+
+    const getDocIcon = (type: string) => {
+        if (type.includes('pdf')) return <PictureAsPdfIcon color="error" />;
+        if (type.includes('image')) return <ImageIcon color="primary" />;
+        return <ArticleIcon />;
+    };
+
+    const getStatusChip = (status: string) => {
+        switch (status) {
+            case 'approved':
+                return <Chip label="Verified" color="success" size="small" icon={<VerifiedIcon />} />;
+            case 'rejected':
+                return <Chip label="Rejected" color="error" size="small" />;
+            case 'pending_review':
+                return <Chip label="Pending Review" color="warning" size="small" />;
+            case 'awaiting_upload':
+                return <Chip label="Awaiting Upload" color="default" size="small" />;
+            default:
+                return <Chip label={status} size="small" />;
         }
     };
 
-    const handleViewOfferLetter = () => {
-        if (id) {
-            fetchOfferLetter(id);
-            setViewMode('letter');
-        }
-    };
+    if (!offer) return <Box p={3}><Typography>Loading offer details...</Typography></Box>;
 
-    if (loading && !offer && viewMode === 'offer') {
-        // we want to show skeleton of the page (4 cards)
-        return (
-            <Box sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Skeleton variant="rectangular" width="100%" height={200} />
-                    <Skeleton variant="rectangular" width="100%" height={200} />
-                    <Skeleton variant="rectangular" width="100%" height={200} />
-                    <Skeleton variant="rectangular" width="100%" height={200} />
-                </Box>
-            </Box>
-        );
-    }
-
-    if (viewMode === 'joining') {
-        return <JoiningDetailsView details={joiningDetails} onBack={() => setViewMode('offer')} />;
-    }
-
-    if (viewMode === 'guarantor') {
-        return <GuarantorDetailsView details={guarantor} onBack={() => setViewMode('offer')} />;
-    }
-
-    if (viewMode === 'letter') {
-        return <OfferLetterView offer={offer} onBack={() => setViewMode('offer')} />;
-    }
-
-    if (!offer) return <Typography>No offer data found.</Typography>;
-
+    const fullName = selectedCandidate? `${selectedCandidate.candidate_name}` : 'Associate';
+    
     return (
-        <Box sx={{ p: 3 }}>
-            {/* Header */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    { 'Candidate Name'}
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary">
-                    {offer.position || 'Role'} • {offer.position || 'Department'}
-                </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                    {/* Offer Details */}
-                    <Box sx={{ flex: 1 }}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                    <Typography variant="h6">Offer Details</Typography>
-                                    {/* <Button startIcon={<Edit />} variant="text">Edit Offer</Button> */}
-                                </Box>
-                                <Stack spacing={2}>
-                                    <DetailRow label="Position" value={offer.position || 'Role'} />
-                                    <DetailRow label="Salary" value={offer.salary_net?.toString() || 'Salary'} />
-                                    <DetailRow label="Joining Date" value={formatOfferDate(offer.commencement_date!) || 'Joining Date'} />
-                                    <DetailRow label="Location" value={offer.location || 'Location'} />
-                                </Stack>
-                            </CardContent>
-                        </Card>
-                    </Box>
-
-                    {/* Candidate Progress */}
-                    <Box sx={{ flex: 1 }}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>Candidate Progress</Typography>
-                                <Stack spacing={2} sx={{ mt: 2 }}>
-                                    <DetailRow label="Link Sent" value={offer.sent_date || 'Not sent'} />
-                                    <DetailRow label="Link Expires" value={formatOfferDate(offer.expiry_date!) || '---'} />
-                                    <DetailRow 
-                                        label="Days Remaining" 
-                                        value={
-                                            offer.expiry_date 
-                                                ? (() => {
-                                                    const diff = new Date(offer.expiry_date).getTime() - new Date().getTime();
-                                                    if (diff < 0) return 'Expired';
-                                                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                                                    if (days === 0) {
-                                                        const hours = Math.floor(diff / (1000 * 60 * 60));
-                                                        return `${hours} Hours`;
-                                                    }
-                                                    return `${days} Days`;
-                                                })()
-                                                : '---'
-                                        } 
-                                    />
-                                    <DetailRow label="Access Count" value={offer.access_count?.toString() || '0'} />
-                                    <Button startIcon={<ContentCopy />} variant="outlined" fullWidth sx={{ mt: 2 }}>
-                                        Copy Link
-                                    </Button>
-                                </Stack>
-                            </CardContent>
-                        </Card>
-                    </Box>
-                </Box>
-
-                {/* Signature and Actions */}
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                    {/* Signature */}
-                    <Box sx={{ flex: 1 }}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>Signature</Typography>
-                                {offer.digital_signature ? (
-                                    <Box sx={{ textAlign: 'center', my: 2 }}>
-                                        <img src={offer.digital_signature} alt="Signature" style={{ maxWidth: '100%', maxHeight: '100px' }} />
-                                        <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1 }}>
-                                            Signed on 
-                                        </Typography>
-                                    </Box>
-                                ) : (
-                                    <Typography color="text.secondary">Not signed yet.</Typography>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </Box>
+        <Box sx={{ p: 3, maxWidth: 1200, margin: '0 auto' }}>
+            {/* Header Card */}
+            <Card sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', gap: 3 }}>
+                    <Avatar 
+                        sx={{ width: 80, height: 80, bgcolor: theme.palette.primary.main, fontSize: '2rem' }}
+                        src={joiningDetails?.passport_number ? undefined : undefined} // TODO: Add passport photo url if available
+                    >
+                        {fullName.charAt(0)}
+                    </Avatar>
                     
-                    {/* Actions */}
-                    <Box sx={{ flex: 1 }}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>Actions</Typography>
-                                <Stack spacing={2}>
-                                    <ActionButton 
-                                        icon={<Description />} 
-                                        label="Preview Offer Letter" 
-                                        onClick={handleViewOfferLetter}
-                                    />
-                                    <ActionButton 
-                                        icon={<AssignmentInd />} 
-                                        label="View Joining Form Details" 
-                                        onClick={handleViewJoiningDetails} 
-                                    />
-                                    <ActionButton 
-                                        icon={<Visibility />} 
-                                        label="View Guarantor Details" 
-                                        onClick={handleViewGuarantorDetails}
-                                    />
-                                </Stack>
-                            </CardContent>
-                        </Card>
+                    <Box sx={{ flex: 1, textAlign: { xs: 'center', md: 'left' } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1, justifyContent: { xs: 'center', md: 'flex-start' } }}>
+                            <Typography variant="h5" fontWeight="bold">{fullName}</Typography>
+                            {offer.status === 'accepted' && (
+                                <Chip label="OFFER ACCEPTED" color="primary" size="small" sx={{ fontWeight: 'bold', borderRadius: 1 }} />
+                            )}
+                        </Box>
+                        <Typography color="text.secondary" variant="body2">
+                            Position: {offer.position}
+                        </Typography>
                     </Box>
+
+                    {/* <Stack direction="row" spacing={2}>
+                        <Button variant="outlined" startIcon={<DownloadIcon />}>
+                            Export Report
+                        </Button>
+                        <Button 
+                            variant="contained" 
+                            startIcon={<VerifiedIcon />}
+                            onClick={handleVerifyAll}
+                            disabled={progress === 100}
+                        >
+                            Verify All
+                        </Button>
+                    </Stack> */}
                 </Box>
-            </Box>
+
+                <Box sx={{ mt: 4 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">VERIFICATION PROGRESS</Typography>
+                        <Typography variant="subtitle2" fontWeight="bold" color="primary">{progress}%</Typography>
+                    </Box>
+                    <LinearProgress 
+                        variant="determinate" 
+                        value={progress} 
+                        sx={{ 
+                            height: 8, 
+                            borderRadius: 4,
+                            bgcolor: theme.palette.grey[200],
+                            '& .MuiLinearProgress-bar': {
+                                borderRadius: 4,
+                            }
+                        }} 
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        {joiningDocs.filter(d => d.status !== 'approved' && d.status !== 'APPROVED').length} items require review
+                    </Typography>
+                </Box>
+            </Card>
+
+            {/* Accordions */}
+            <Stack spacing={2}>
+                {/* Joining Details */}
+                <Accordion 
+                    expanded={expanded === 'panel1'} 
+                    onChange={handleChange('panel1')}
+                    sx={{ borderRadius: '12px !important', boxShadow: '0px 2px 8px rgba(0,0,0,0.05)', '&:before': { display: 'none' } }}
+                >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: 'primary.light', width: 40, height: 40 }}>
+                                <AccountBoxIcon sx={{ color: 'primary.main' }} />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight="bold">Joining Details</Typography>
+                                <Typography variant="caption" color="text.secondary">Personal, Financial, and Family data</Typography>
+                            </Box>
+                        </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <JoiningDetailsView details={joiningDetails} mode="full" embedded />
+                    </AccordionDetails>
+                </Accordion>
+
+                {/* History & Background */}
+                <Accordion 
+                    expanded={expanded === 'panel2'} 
+                    onChange={handleChange('panel2')}
+                    sx={{ borderRadius: '12px !important', boxShadow: '0px 2px 8px rgba(0,0,0,0.05)', '&:before': { display: 'none' } }}
+                >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: 'secondary.light', width: 40, height: 40 }}>
+                                <HistoryIcon sx={{ color: 'secondary.main' }} />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight="bold">History & Background</Typography>
+                                <Typography variant="caption" color="text.secondary">Employment, Education, and Certifications</Typography>
+                            </Box>
+                        </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <JoiningDetailsView details={joiningDetails} mode="history" embedded />
+                    </AccordionDetails>
+                </Accordion>
+
+                {/* Guarantor Details */}
+                <Accordion 
+                    expanded={expanded === 'panel3'} 
+                    onChange={handleChange('panel3')}
+                    sx={{ borderRadius: '12px !important', boxShadow: '0px 2px 8px rgba(0,0,0,0.05)', '&:before': { display: 'none' } }}
+                >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: 'warning.light', width: 40, height: 40 }}>
+                                <VerifiedUserIcon sx={{ color: 'warning.main' }} />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight="bold">Guarantor Details</Typography>
+                                <Typography variant="caption" color="text.secondary">Reference verification and signatures</Typography>
+                            </Box>
+                        </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <GuarantorDetailsView details={guarantor} embedded />
+                    </AccordionDetails>
+                </Accordion>
+
+                {/* Document & Image Gallery */}
+                <Accordion 
+                    expanded={expanded === 'panel4'} 
+                    onChange={handleChange('panel4')}
+                    sx={{ borderRadius: '12px !important', boxShadow: '0px 2px 8px rgba(0,0,0,0.05)', '&:before': { display: 'none' } }}
+                >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: 'success.light', width: 40, height: 40 }}>
+                                <AssignmentIcon sx={{ color: 'success.main' }} />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="subtitle1" fontWeight="bold">Document & Image Gallery</Typography>
+                                <Typography variant="caption" color="text.secondary">Identity proof and educational certificates</Typography>
+                            </Box>
+                        </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <Stack spacing={2}>
+                            {joiningDocs && joiningDocs.length > 0 ? (
+                                joiningDocs.map((doc, index) => (
+                                    <Card key={doc._id || index} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ bgcolor: 'grey.100' }}>
+                                                {getDocIcon(doc.url || '')}
+                                            </Avatar>
+                                            <Box>
+                                                <Typography variant="subtitle2" fontWeight="medium">{doc.title}</Typography>
+                                                <Typography variant="caption" color="text.secondary">{doc.fileName}</Typography>
+                                                {/* <Typography variant="caption" color="text.secondary">Last updated: {doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : '---'}</Typography> */}
+                                            </Box>
+                                        </Box>
+                                        
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            {getStatusChip(doc.status)}
+                                            
+                                            {doc.url && (
+                                                <Tooltip title="View Document">
+                                                    <IconButton href={`http://localhost:5000${doc.url}`} target="_blank" size="small">
+                                                        <Box component="span" sx={{ fontSize: 20 }}>👁️</Box>
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+
+                                            <Stack direction="row" spacing={1}>
+                                                <IconButton 
+                                                    size="small" 
+                                                    color="success" 
+                                                    onClick={() => handleVerifyDoc(doc)}
+                                                    disabled={doc.status === 'approved' || doc.status === 'APPROVED'}
+                                                    sx={{ 
+                                                        bgcolor: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'success.main' : 'success.light', 
+                                                        color: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'white' : 'success.dark',
+                                                        '&:hover': { bgcolor: 'success.main', color: 'white' }
+                                                    }}
+                                                >
+                                                    <CheckIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton 
+                                                    size="small" 
+                                                    color="error"
+                                                    onClick={() => handleRejectDoc(doc)}
+                                                    disabled={doc.status === 'rejected' || doc.status === 'REJECTED'}
+                                                    sx={{ 
+                                                        bgcolor: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'error.main' : 'error.light', 
+                                                        color: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'white' : 'error.dark',
+                                                        '&:hover': { bgcolor: 'error.main', color: 'white' }
+                                                    }}
+                                                >
+                                                    <CloseIcon fontSize="small" />
+                                                </IconButton>
+                                            </Stack>
+                                        </Box>
+                                    </Card>
+                                ))
+                            ) : (
+                                <Typography color="text.secondary" textAlign="center" py={4}>No documents uploaded yet.</Typography>
+                            )}
+                        </Stack>
+                    </AccordionDetails>
+                </Accordion>
+            </Stack>
         </Box>
     );
 };
-
-const DetailRow = ({ label, value }: { label: string, value?: string }) => (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', pb: 1 }}>
-        <Typography color="text.secondary">{label}</Typography>
-        <Typography fontWeight="medium">{value || '---'}</Typography>
-    </Box>
-);
-
-interface ActionButtonProps {
-    icon: React.ReactNode;
-    label: string;
-    onClick?: () => void;
-}
-
-const ActionButton = ({ icon, label, onClick }: ActionButtonProps) => (
-    <Button 
-        variant="outlined" 
-        startIcon={icon} 
-        fullWidth 
-        onClick={onClick}
-        sx={{ justifyContent: 'flex-start', color: 'text.primary', borderColor: 'divider' }}
-    >
-        {label}
-    </Button>
-);
 
 export default OfferDetails;

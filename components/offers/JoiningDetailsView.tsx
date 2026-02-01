@@ -5,32 +5,46 @@ import { formatOfferDate } from '@/utils/transform';
 
 interface JoiningDetailsViewProps {
     details: Partial<JoiningDetails> | null;
-    onBack: () => void;
+    onBack?: () => void;
+    mode?: 'full' | 'joining' | 'history';
+    embedded?: boolean;
 }
 
-const JoiningDetailsView = ({ details, onBack }: JoiningDetailsViewProps) => {
+const JoiningDetailsView = ({ details, onBack, mode = 'full', embedded = false }: JoiningDetailsViewProps) => {
     if (!details) {
+        if (embedded) return <Typography color="text.secondary">No joining details available.</Typography>;
         return (
             <Box sx={{ p: 3 }}>
-                <IconButton onClick={onBack} sx={{ mb: 2 }}>
-                    <ArrowBack />
-                </IconButton>
+                {onBack && (
+                    <IconButton onClick={onBack} sx={{ mb: 2 }}>
+                        <ArrowBack />
+                    </IconButton>
+                )}
                 <Typography>No joining details available.</Typography>
             </Box>
         );
     }
 
+    const showJoining = mode === 'full' || mode === 'joining';
+    const showHistory = mode === 'full' || mode === 'history';
+
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-                <IconButton onClick={onBack} sx={{ mr: 2 }}>
-                    <ArrowBack />
-                </IconButton>
-                <Typography variant="h4">Joining Form Details</Typography>
-            </Box>
+        <Box sx={{ p: embedded ? 0 : 3 }}>
+            {!embedded && (
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                    {onBack && (
+                        <IconButton onClick={onBack} sx={{ mr: 2 }}>
+                            <ArrowBack />
+                        </IconButton>
+                    )}
+                    <Typography variant="h4">Joining Form Details</Typography>
+                </Box>
+            )}
 
             <Stack spacing={4}>
                 {/* Personal Details */}
+                {showJoining && (
+                    <>
                 <SectionCard title="Personal Details">
                     <Grid container spacing={3}>
                         <DetailItem label="First Name" value={details.first_name} />
@@ -187,8 +201,12 @@ const JoiningDetailsView = ({ details, onBack }: JoiningDetailsViewProps) => {
                          </Grid>
                      ) : <Typography color="text.secondary">No references listed.</Typography>}
                 </SectionCard>
+                    </>
+                )}
 
                  {/* History */}
+                 {showHistory && (
+                    <>
                  <SectionCard title="History">
                     <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem' }}>Employment History</Typography>
                     {details.employment_history && details.employment_history.length > 0 ? (
@@ -270,6 +288,8 @@ const JoiningDetailsView = ({ details, onBack }: JoiningDetailsViewProps) => {
                         </TableContainer>
                     ) : <Typography color="text.secondary">No certifications.</Typography>}
                 </SectionCard>
+                    </>
+                 )}
             </Stack>
         </Box>
     );

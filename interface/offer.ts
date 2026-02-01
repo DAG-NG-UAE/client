@@ -149,6 +149,21 @@ export interface JoiningDetails {
   negotiation_history?: NegotiationDetails[];
   preferred_email?: string;
   preferred_number?: string;
+  documents?: string | JoiningDocuments;
+}
+
+export interface JoiningDocumentItem {
+  _id: string;
+  url: string;
+  status: string;
+  comment: string;
+  fileName: string;
+}
+
+export interface JoiningDocuments {
+  passport: JoiningDocumentItem;
+  certificates: JoiningDocumentItem[];
+  proof: JoiningDocumentItem[];
 }
 
 export interface Guarantor {

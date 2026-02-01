@@ -221,3 +221,15 @@ export const approvedInternalSalaryProposal = async (candidateId: string) => {
     throw error;
   }
 }
+
+export const updateJoiningDocsStatus = async ( documentId: string, status: string, comment: string ) => { 
+  try {
+    const response = await axiosInstance.patch(
+      `offer/docs/status`, { documentId, status, comment },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating joining docs status", error);
+    throw error;
+  }
+}
