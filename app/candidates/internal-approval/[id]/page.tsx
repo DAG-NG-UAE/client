@@ -18,7 +18,8 @@ import {
     Refresh as RefreshIcon,
     History as HistoryIcon,
     Block as BlockIcon,
-    Cancel as CancelIcon
+    Cancel as CancelIcon,
+    Add as AddIcon
 } from '@mui/icons-material';
 import { useParams, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
@@ -44,7 +45,7 @@ const InternalApprovalPage = () => {
     // Ensure activeIndex is valid
     const safeActiveIndex = activeIndex < offers.length ? activeIndex : 0;
     const activeOffer = offers[safeActiveIndex];
-    const isArchived = safeActiveIndex > 0;
+    const isArchived = safeActiveIndex > 0 || activeOffer?.internal_approval_status === 'rejected';
 
     const archiveTheme = {
         primary: "#ec1313",
@@ -98,6 +99,11 @@ const InternalApprovalPage = () => {
         }
     };
 
+    const handleCreateNewVersion = () => {
+        // Navigate to edit page to create a new version
+        router.push(`/candidates/internal-approval/edit/${id}`);
+    };
+
     return (
         <Box sx={{ bgcolor: isArchived ? archiveTheme.bgLight : '#F5F6F8', minHeight: '100vh', p: { xs: 2, md: 4 } }}>
             {/* Header */}
@@ -145,15 +151,17 @@ const InternalApprovalPage = () => {
                 
                 {/* Left Column: Version History */}
                 <Box sx={{ width: { lg: 280 }, flexShrink: 0 }}>
-                    <Paper elevation={0} sx={{ p: 2, borderRadius: 2, mb: 2, height: '100%' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                            <HistoryIcon color="action" />
-                            <Typography variant="subtitle1" fontWeight={700}>Version History</Typography>
+                    <Paper elevation={0} sx={{ p: 2, borderRadius: 2, mb: 2 }}>
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="subtitle1" fontWeight={700} sx={{ letterSpacing: '0.05em' }}>VERSION HISTORY</Typography>
+                            <Typography variant="caption" color="text.secondary">Tracking iterations for {selectedCandidate?.candidate_name || "the candidate"}</Typography>
                         </Box>
                         <List dense>
                             {offers.map((offer, index) => {
                                 const isSelected = index === safeActiveIndex;
-                                const isRejected = index > 0; // Assuming all older are rejected/archived per req
+                                const isRejected = offer.internal_approval_status === 'rejected';
+                                const isCurrent = index === 0;
+                                
                                 return (
                                     <React.Fragment key={index}>
                                         <ListItem disablePadding sx={{ mb: 1 }}>
@@ -161,34 +169,73 @@ const InternalApprovalPage = () => {
                                                 onClick={() => setActiveIndex(index)}
                                                 sx={{ 
                                                     borderRadius: 2, 
-                                                    bgcolor: isSelected ? (isArchived ? '#ffebee' : '#E3F2FD') : 'transparent',
-                                                    border: isSelected ? `1px solid ${isArchived ? archiveTheme.primary : '#1976D2'}` : '1px solid transparent'
+                                                    position: 'relative',
+                                                    overflow: 'hidden',
+                                                    bgcolor: isCurrent && !isRejected ? '#E3F2FD' : 'transparent',
+                                                    '&:before': isSelected ? {
+                                                        content: '""',
+                                                        position: 'absolute',
+                                                        left: 0, top: 0, bottom: 0,
+                                                        width: 4,
+                                                        bgcolor: isRejected ? 'error.main' : 'primary.main',
+                                                        borderTopLeftRadius: 4,
+                                                        borderBottomLeftRadius: 4
+                                                    } : {}
                                                 }}
                                             >
                                                 <ListItemAvatar>
-                                                    <Avatar sx={{ width: 32, height: 32, bgcolor: isRejected ? '#ffebee' : '#E8F5E9', color: isRejected ? 'error.main' : 'success.main' }}>
-                                                        {isRejected ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
+                                                    <Avatar sx={{ 
+                                                        width: 24, height: 24, 
+                                                        bgcolor: isRejected ? 'error.main' : 'primary.main', 
+                                                        color: 'white' 
+                                                    }}>
+                                                        {isRejected ? <CancelIcon sx={{ fontSize: 16 }} /> : <CheckCircleIcon sx={{ fontSize: 16 }} />}
                                                     </Avatar>
                                                 </ListItemAvatar>
                                                 <ListItemText 
                                                     primary={
                                                         <Typography variant="body2" fontWeight={700}>
-                                                            {index === 0 ? 'Current Version' : `Version ${offers.length - index}`}
+                                                            {isCurrent ? `V${offers.length - index} (Current)` : `V${offers.length - index} ${isRejected ? '(Rejected)' : ''}`}
                                                         </Typography>
                                                     }
                                                     secondary={
                                                         <Typography variant="caption" color="text.secondary">
-                                                            {index === 0 ? 'Active' : 'Rejected'}
+                                                            {isRejected ? 'Rejected by Reviewer' : (isCurrent ? 'Updated recently' : 'Draft Initial Offer')}
                                                         </Typography>
                                                     }
                                                 />
                                             </ListItemButton>
                                         </ListItem>
-                                        {index < offers.length - 1 && <Divider component="li" variant="inset" sx={{ mb: 1 }} />}
                                     </React.Fragment>
                                 );
                             })}
                         </List>
+                        
+                        {/* Show Create New Version button ONLY if the LATEST offer is rejected */}
+                        {offers[0]?.internal_approval_status === 'rejected' && (
+                            <Box sx={{ mt: 2 }}>
+                                <Divider sx={{ mb: 2 }} />
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    startIcon={<AddIcon />}
+                                    onClick={handleCreateNewVersion}
+                                    sx={{ 
+                                        borderStyle: 'dashed', 
+                                        borderRadius: 2, 
+                                        color: 'text.secondary',
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                        '&:hover': {
+                                            borderStyle: 'dashed',
+                                            bgcolor: '#F5F5F5'
+                                        }
+                                    }}
+                                >
+                                    Create New Version
+                                </Button>
+                            </Box>
+                        )}
                     </Paper>
                 </Box>
 
