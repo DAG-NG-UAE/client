@@ -90,7 +90,7 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                         list.push({ 
                             ...cert, 
                             title: cert.fileName || `Certificate ${index + 1}`,
-                            docType: 'certificate'
+                            docType: 'certificates'
                         });
                     });
                 }
@@ -378,13 +378,13 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                     </AccordionSummary>
                     <AccordionDetails>
                         <Stack spacing={4}>
-                            {['passport', 'certificate', 'proof'].map((type) => {
+                            {['passport', 'certificates', 'proof'].map((type) => {
                                 const docs = groupedDocs[type];
                                 if (!docs || docs.length === 0) return null;
                                 return (
                                     <Box key={type}>
                                         <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ mb: 2, textTransform: 'uppercase' }}>
-                                            {type === 'passport' ? 'Passport' : type === 'certificate' ? 'Certificates' : 'Proof of Identity'}
+                                            {type === 'passport' ? 'Passport' : type === 'certificates' ? 'Certificates' : 'Proof of Identity'}
                                         </Typography>
                                         {renderDocList(docs)}
                                     </Box>
