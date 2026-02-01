@@ -1,5 +1,8 @@
 import { offerStatusDetail } from "@/utils/constants";
-import { Box, Button, Typography, CircularProgress } from "@mui/material";
+import { Box, Button, Typography, CircularProgress, Tooltip, IconButton } from "@mui/material";
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import FolderIcon from '@mui/icons-material/Folder';
+import ArchiveIcon from '@mui/icons-material/Archive';
 import TableComponent from "../Table/Table";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -68,8 +71,10 @@ const OfferStatusPage = ({status}: {status: string}) => {
     }, [status, limit, selectedRole]);
 
     const renderActions = (row: Partial<Offer>) => {
+      const isRejected = status === 'rejected';
+
       return (
-        <Box display='flex' gap={2}>
+        <Box display='flex' gap={2} alignItems="center">
             <Button
               variant="contained"
               color="primary"
@@ -94,7 +99,7 @@ const OfferStatusPage = ({status}: {status: string}) => {
                 >
                   Create Employee
                 </Button>
-              ): (
+              ): !isRejected && (
                 <Button
                   variant="contained"
                   color="primary"
@@ -104,7 +109,31 @@ const OfferStatusPage = ({status}: {status: string}) => {
                   Employee Created
                 </Button>
               )
-    }
+            }
+            {isRejected && (
+                <>
+                    <Tooltip title="Redo Proposal">
+                        <IconButton size="small" onClick={(e: React.MouseEvent) => { 
+                            e.stopPropagation(); 
+                            if(row.candidate_id) {
+                                router.push(`/candidates/internal-salary-proposal/${row.candidate_id}`);
+                            }
+                        }}>
+                            <RestartAltIcon color="primary" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Move to Regretted">
+                        <IconButton size="small" onClick={(e: React.MouseEvent) => { e.stopPropagation(); console.log('Move to Regretted', row); }}>
+                            <FolderIcon color="error" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Keep for another opening">
+                         <IconButton size="small" onClick={(e: React.MouseEvent) => { e.stopPropagation(); console.log('Keep for another opening', row); }}>
+                            <ArchiveIcon color="warning" />
+                        </IconButton>
+                    </Tooltip>
+                </>
+            )}
         </Box>
         
       );

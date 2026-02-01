@@ -45,7 +45,10 @@ const InternalApprovalPage = () => {
     // Ensure activeIndex is valid
     const safeActiveIndex = activeIndex < offers.length ? activeIndex : 0;
     const activeOffer = offers[safeActiveIndex];
-    const isArchived = safeActiveIndex > 0 || activeOffer?.internal_approval_status === 'rejected';
+    const isInternalRejected = activeOffer?.internal_approval_status === 'rejected';
+    const isCandidateRejected = activeOffer?.internal_approval_status === 'approved' && activeOffer?.candidate_response === 'rejected';
+    const isRejected = isInternalRejected || isCandidateRejected;
+    const isArchived = safeActiveIndex > 0 || isRejected;
 
     const archiveTheme = {
         primary: "#ec1313",
@@ -157,7 +160,9 @@ const InternalApprovalPage = () => {
                         <List dense>
                             {offers.map((offer, index) => {
                                 const isSelected = index === safeActiveIndex;
-                                const isRejected = offer.internal_approval_status === 'rejected';
+                                const isInternalRejected = offer.internal_approval_status === 'rejected';
+                                const isCandidateRejected = offer.internal_approval_status === 'approved' && offer.candidate_response === 'rejected';
+                                const isRejected = isInternalRejected || isCandidateRejected;
                                 const isCurrent = index === 0;
                                 
                                 return (
@@ -198,7 +203,7 @@ const InternalApprovalPage = () => {
                                                     }
                                                     secondary={
                                                         <Typography variant="caption" color="text.secondary">
-                                                            {isRejected ? 'Rejected by Reviewer' : (isCurrent ? 'Updated recently' : 'Draft Initial Offer')}
+                                                            {isRejected ? (isCandidateRejected ? 'Rejected by Candidate' : 'Rejected by Reviewer') : (isCurrent ? 'Updated recently' : 'Draft Initial Offer')}
                                                         </Typography>
                                                     }
                                                 />
@@ -210,7 +215,7 @@ const InternalApprovalPage = () => {
                         </List>
                         
                         {/* Show Create New Version button ONLY if the LATEST offer is rejected */}
-                        {offers[0]?.internal_approval_status === 'rejected' && (
+                        {(offers[0]?.internal_approval_status === 'rejected' || (offers[0]?.internal_approval_status === 'approved' && offers[0]?.candidate_response === 'rejected')) && (
                             <Box sx={{ mt: 2 }}>
                                 <Divider sx={{ mb: 2 }} />
                                 <Button
@@ -239,12 +244,14 @@ const InternalApprovalPage = () => {
 
                 {/* Middle Column: Package Details */}
                 <Box sx={{ flex: 1 }}>
-                    {isArchived && (
+                    {isArchived && isRejected && (
                         <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 2, bgcolor: '#FFEBEE', border: `1px solid ${archiveTheme.primary}`, display: 'flex', alignItems: 'center', gap: 2 }}>
                             <CancelIcon sx={{ color: archiveTheme.primary }} />
                             <Box>
                                 <Typography variant="subtitle2" fontWeight={700} color={archiveTheme.primary}>Offer Rejected</Typography>
-                                <Typography variant="body2" color="#B71C1C">Reason: Candidate requested higher base salary matching market rates.</Typography>
+                                <Typography variant="body2" color="#B71C1C">
+                                    {isCandidateRejected ? "Reason: Candidate rejected the offer." : "Reason: Rejected by internal reviewer."}
+                                </Typography>
                             </Box>
                         </Paper>
                     )}

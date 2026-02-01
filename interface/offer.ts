@@ -237,6 +237,7 @@ export interface InternalSalaryOffer {
   candidate_name?: string;
   approvals: InternalApproval[];
   internal_approval_status?: string | null;
+  candidate_response?: string | null;
 }
 
 export interface SendInternalOfferRequest {

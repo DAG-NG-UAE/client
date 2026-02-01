@@ -26,6 +26,7 @@ export interface CandidateProfile {
   requisition_id: string;
   department: string;
   candidate_id: string;
+  offer_id: string;
   assigned_position_slot_id?: string; // FK to RequisitionLine (will be set after DB insert)
   candidate_name: string;
   source: string;

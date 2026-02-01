@@ -18,6 +18,9 @@ import CandidateModal from './CandidateModal';
 import { FillInterviewFormButton, PingHiringManagersButton, GenerateOfferLetterButton, AppliedActionsStub } from './CandidateRowActions';
 import Filters from '../Filters';
 import CandidateRequirementDetail from './CandidateRequirementDetail';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import FolderIcon from '@mui/icons-material/Folder';
+import ArchiveIcon from '@mui/icons-material/Archive';
 
 
 interface CandidateStatusPageProps {
@@ -115,6 +118,45 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
              </IconButton>
            </Tooltip>
        );
+    } else if(status === 'offer_accepted'){
+      specificAction = (
+        <Tooltip title="View Details">
+          <IconButton 
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/offers/view/${candidate.offer_id}`);
+            }}
+            color="primary"
+          >
+            <AssignmentIcon />
+          </IconButton>
+        </Tooltip>
+      )
+    } else if (status === 'offer_rejected'){ 
+      specificAction = (
+        <>
+          <Tooltip title="Redo Proposal">
+              <IconButton onClick={(e: React.MouseEvent) => { 
+                  e.stopPropagation(); 
+                  if(candidate.candidate_id) {
+                      router.push(`/candidates/internal-salary-proposal/${candidate.candidate_id}`);
+                  }
+              }}>
+                  <RestartAltIcon color="primary" />
+              </IconButton>
+          </Tooltip>
+          <Tooltip title="Move to Regretted">
+              <IconButton >
+                  <FolderIcon color="error" />
+              </IconButton>
+          </Tooltip>
+          <Tooltip title="Keep for another opening">
+                <IconButton >
+                  <ArchiveIcon color="warning" />
+              </IconButton>
+          </Tooltip>
+        </>
+      )
     }
 
     // Always render the base actions (View, Move, Delete) with the specific action injected
