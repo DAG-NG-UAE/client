@@ -340,7 +340,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
           </Box>
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: theme.typography.fontWeightMedium }}>{user.full_name}</Typography>
-            <Typography variant="body2" color="text.secondary">{formatRoleName(user.role_name)}</Typography>
+            <Typography variant="body2" color="text.secondary"> {user.job_title !== null ? user.job_title : formatRoleName(user.role_name)}</Typography>
           </Box>
         </Box>
       )}

@@ -288,5 +288,5 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage;
-// export default withAuth(DashboardPage, [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager]);
+// export default DashboardPage;
+export default withAuth(DashboardPage, [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager]);

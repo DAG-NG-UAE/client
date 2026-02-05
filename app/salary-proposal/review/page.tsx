@@ -40,6 +40,10 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import HistoryIcon from '@mui/icons-material/History';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import CancelIcon from '@mui/icons-material/Cancel';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { fetchSalaryProposal, updateSalaryProposal } from '@/redux/slices/salaryProposal';
 import { RootState, useSelector } from '@/redux/store';
 
@@ -99,26 +103,38 @@ export default function SalaryProposalReview() {
   useEffect(() => {
      if(data?.is_expired){
        setIsExpired(true);
+     } else {
+       setIsExpired(false);
      }
   }, [data])
 
   useEffect(() => {
-    const fetchData = async () => {
-      // If no token is present, we might want to show an error or just load mock data?
-      // For now, let's assume token is required as per user request.
-      if (!token) {
-         // setError("No token provided");
-         // setLoading(false);
-         // For development/mock purposes if needed, but user asked to call API.
-         // Let's try to call it even if null, likely handle error.
-      }
+    if (salaryProposalError) {
+      const errorMsg = typeof salaryProposalError === 'string' 
+        ? salaryProposalError 
+        : (salaryProposalError as any).message;
       
+      if (errorMsg === "This link has expired") {
+        setIsExpired(true);
+        setError(null);
+      } else {
+        setError(errorMsg || "An unexpected error occurred");
+        setIsExpired(false);
+      }
+    } else {
+      setError(null);
+      setIsExpired(false);
+    }
+  }, [salaryProposalError]);
+
+  useEffect(() => {
+    const fetchData = async () => {
       if (token) {
         try {
             await fetchSalaryProposal(token);
         } catch (err) {
             console.error(err);
-            setError("Failed to verify token");
+            // Error is handled in the slice and caught by the useEffect above
         } finally {
             setLoading(false);
         }
@@ -171,43 +187,184 @@ export default function SalaryProposalReview() {
       await updateSalaryProposal([data?.id], data?.candidate_id, "rejected", token);
     }
   }
-  if (loading) {
+
+  if (loading || reduxLoading) {
       return (
          <ThemeProvider theme={theme}>
             <CssBaseline />
-             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: 'background.default' }}>
+             <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh', 
+                bgcolor: 'background.default',
+                gap: 2
+             }}>
                 <CircularProgress color="primary" />
+                <Typography variant="body2" color="text.secondary">Verifying credentials...</Typography>
              </Box>
          </ThemeProvider>
       );
+  }
+
+  // --- COMPONENT: Expired Link View ---
+  const ExpiredView = () => (
+    <Box sx={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      bgcolor: 'background.default',
+      p: 3 
+    }}>
+      <Container maxWidth="sm">
+        <Paper sx={{ 
+          p: { xs: 4, md: 6 }, 
+          textAlign: 'center', 
+          borderRadius: 4,
+          border: '1px solid',
+          borderColor: 'rgba(255,255,255,0.1)',
+          background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+        }}>
+          <Box sx={{ 
+            width: 80, 
+            height: 80, 
+            bgcolor: 'rgba(244, 63, 94, 0.1)', 
+            borderRadius: '50%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            margin: '0 auto',
+            mb: 3
+          }}>
+            <HistoryIcon sx={{ fontSize: 40, color: '#f43f5e' }} />
+          </Box>
+          <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ 
+            background: 'linear-gradient(to right, #fff, #94a3b8)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            Access Link Expired
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.6 }}>
+            For your security, this proposal link has expired. This usually happens if the link has already been used to make a decision or if the time limit has passed.
+          </Typography>
+          <Divider sx={{ mb: 4, opacity: 0.1 }} />
+          <Stack spacing={2}>
+            <Button variant="contained" size="large" fullWidth sx={{ py: 1.5 }}>
+              Request New Access Link
+            </Button>
+            <Button variant="text" color="inherit" startIcon={<HelpOutlineIcon />} sx={{ opacity: 0.7 }}>
+              Contact HR Support
+            </Button>
+          </Stack>
+        </Paper>
+      </Container>
+    </Box>
+  );
+
+  // --- COMPONENT: Processed Decision View ---
+  const ProcessedView = () => (
+    <Box sx={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      bgcolor: 'background.default',
+      p: 3 
+    }}>
+      <Container maxWidth="sm">
+        <Paper sx={{ 
+          p: { xs: 4, md: 6 }, 
+          textAlign: 'center', 
+          borderRadius: 4,
+          border: '1px solid',
+          borderColor: 'rgba(255,255,255,0.1)',
+          background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+        }}>
+          <Box sx={{ 
+            width: 80, 
+            height: 80, 
+            bgcolor: data?.status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)', 
+            borderRadius: '50%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            margin: '0 auto',
+            mb: 3
+          }}>
+            {data?.status === 'approved' ? (
+              <VerifiedIcon sx={{ fontSize: 40, color: '#10b981' }} />
+            ) : (
+              <CancelIcon sx={{ fontSize: 40, color: '#f43f5e' }} />
+            )}
+          </Box>
+          <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: 'white' }}>
+            Decision Recorded
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
+            You have successfully <strong>{data?.status}</strong> the salary proposal for <strong>{displayData.name}</strong>.
+          </Typography>
+          <Box sx={{ 
+            p: 2, 
+            bgcolor: 'rgba(255,255,255,0.03)', 
+            borderRadius: 2, 
+            mb: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            <Typography variant="caption" color="text.secondary">CANDIDATE</Typography>
+            <Typography variant="h6">{displayData.name}</Typography>
+            <Typography variant="caption" color="primary">{displayData.role}</Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+            The Talent Acquisition team has been notified and will proceed with the next steps. You may now close this window.
+          </Typography>
+        </Paper>
+      </Container>
+    </Box>
+  );
+
+  if (isExpired) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <ExpiredView />
+      </ThemeProvider>
+    );
+  }
+
+  if (data?.status === 'approved' || data?.status === 'rejected') {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <ProcessedView />
+      </ThemeProvider>
+    );
   }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       
-       {/* Expired Token Overlay */}
-       <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1, backdropFilter: 'blur(5px)' }}
-        open={isExpired}
-      >
-          <Paper sx={{ p: 4, textAlign: 'center', maxWidth: 400, bgcolor: 'background.paper', borderRadius: 2 }}>
-              <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
-              <Typography variant="h5" gutterBottom color="text.primary" fontWeight="bold">Link Expired</Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                  This salary proposal link has expired and is no longer valid. Please request a new link from the HR department.
-              </Typography>
-          </Paper>
-      </Backdrop>
-
       {/* Error State */}
-      {!isExpired && error && (
+      {error && (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: 'background.default' }}>
-            <Typography color="error" variant="h6">{error}</Typography>
+            <Paper sx={{ p: 4, textAlign: 'center', maxWidth: 400, bgcolor: 'background.paper', borderRadius: 2 }}>
+              <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
+              <Typography variant="h6" gutterBottom color="error">Error Loading Proposal</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>{error}</Typography>
+              <Button variant="contained" onClick={() => window.location.reload()}>Retry</Button>
+            </Paper>
           </Box>
       )}
 
-      {!isExpired && !error && (
+      {!error && (
       <>
       {/* DESKTOP VIEW */}
       <Box sx={{ display: { xs: 'none', md: 'flex' }, minHeight: '100vh', bgcolor: 'background.default', fontFamily: 'Inter' }}>
@@ -523,8 +680,8 @@ export default function SalaryProposalReview() {
           {/* Bottom Sticky Action Bar */}
           {data?.status === 'pending' && (
           <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, p: 2, bgcolor: '#0f172a', borderTop: '1px solid #334155', display: 'flex', gap: 2, zIndex: 100 }}>
-             <Button variant="outlined" color="error" sx={{ flex: 1, borderRadius: 2, height: 48, borderColor: '#ef4444', color: '#ef4444' }} startIcon={<CloseIcon />}>Reject</Button>
-             <Button variant="contained" sx={{ flex: 2, borderRadius: 2, bgcolor: '#10b981', height: 48, '&:hover': { bgcolor: '#059669' }, color: 'white', fontWeight: 'bold' }} startIcon={<CheckIcon />}>APPROVE REQUEST</Button>
+             <Button variant="outlined" color="error" sx={{ flex: 1, borderRadius: 2, height: 48, borderColor: '#ef4444', color: '#ef4444' }} startIcon={<CloseIcon />} onClick={handleReject}>Reject</Button>
+             <Button variant="contained" sx={{ flex: 2, borderRadius: 2, bgcolor: '#10b981', height: 48, '&:hover': { bgcolor: '#059669' }, color: 'white', fontWeight: 'bold' }} startIcon={<CheckIcon />} onClick={handleApprove}>APPROVE REQUEST</Button>
           </Box>
           )}
 

@@ -186,15 +186,10 @@ export const sendInternalSalaryOffer = async (payload: any) => {
 };
 
 export const verifyInternalSalaryToken = async (token: string) => {
-  try {
-    const response = await axiosInstance.get(
-      `offer/internal/salary/verify?token=${token}`,
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error verifying internal salary token", error);
-    throw error;
-  }
+  const response = await axiosInstance.get(
+    `offer/internal/salary/verify?token=${token}`,
+  );
+  return response.data;
 };
 
 export const updateInternalSalaryProposal = async (

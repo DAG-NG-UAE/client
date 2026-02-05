@@ -8,6 +8,8 @@ export interface User {
     role_name: AppRole;
     role_id: string; 
     color?: string;
+    microsoft_account_id?: string 
+    job_title?: string;
     // Add any other user properties here
 }
   

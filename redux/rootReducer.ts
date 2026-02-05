@@ -1,15 +1,15 @@
-import { combineReducers } from 'redux';
-import { persistReducer } from 'redux-persist';
-import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
+import { combineReducers } from "redux";
+import { persistReducer } from "redux-persist";
+import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 
-import authReducer from './slices/auth';
-import positionsReducer from './slices/positions';
-import requisitionReducer from './slices/requisition';
-import candidateReducer from './slices/candidates';
-import interviewReducer from './slices/interview';
-import userReducer from './slices/user';
-import offerReducer from './slices/offer'
-import salaryProposalReducer from './slices/salaryProposal'
+import authReducer from "./slices/auth";
+import positionsReducer from "./slices/positions";
+import requisitionReducer from "./slices/requisition";
+import candidateReducer from "./slices/candidates";
+import interviewReducer from "./slices/interview";
+import userReducer from "./slices/user";
+import offerReducer from "./slices/offer";
+import salaryProposalReducer from "./slices/salaryProposal";
 
 // ----------------------------------------------------------------------
 
@@ -27,15 +27,17 @@ const createNoopStorage = () => ({
   },
 });
 
-const storage = typeof window !== 'undefined' ? createWebStorage('local') : createNoopStorage();
+const storage =
+  typeof window !== "undefined"
+    ? createWebStorage("local")
+    : createNoopStorage();
 
 const rootPersistConfig = {
-  key: 'root',
+  key: "root",
   storage,
-  keyPrefix: 'redux-',
+  keyPrefix: "redux-",
+  blacklist: ["auth"],
 };
-
-
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -44,8 +46,8 @@ const rootReducer = combineReducers({
   candidates: candidateReducer,
   interviews: interviewReducer,
   users: userReducer,
-  offers: offerReducer, 
-  salaryProposals: salaryProposalReducer
+  offers: offerReducer,
+  salaryProposals: salaryProposalReducer,
 });
 
 export { rootPersistConfig, rootReducer };

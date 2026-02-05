@@ -29,6 +29,7 @@ import { RootState } from "@/redux/store";
 import { AppRole } from "@/utils/constants";
 import JobDescription from "@/components/requisition/JobDescription";
 import { convertToMarkdown } from "@/utils/documentConverter";
+import { getLoggedInUserManager } from "@/api/user";
 
 // --- Mock Data Constants ---
 
@@ -56,13 +57,26 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
 }) => {
   const { user } = useSelector((state: RootState) => state.auth);
 
+  const [manager, setManager] = useState<string>("");
+
+  useEffect(() => {
+    const fetchManager = async () => {
+      if(user?.microsoft_account_id){
+        const manager = await getLoggedInUserManager();
+        setManager(manager);
+      }
+    };
+    fetchManager();
+  }, []);
+  console.log(manager)
+
   // --- Form State ---
   // Shared
   const [requestDate, setRequestDate] = useState<Dayjs | null>(dayjs());
   const [nickname, setNickname] = useState("System Analyst (Lagos Mainland)");
   const [department, setDepartment] = useState("Digital");
   const [raisedBy, setRaisedBy] = useState(user?.full_name || "");
-  const [requesterDesignation, setRequesterDesignation] = useState("Data Engineer"); 
+  const [requesterDesignation, setRequesterDesignation] = useState(user?.job_title || ""); 
   
   // Position
   const [position, setPosition] = useState("System Analyst");

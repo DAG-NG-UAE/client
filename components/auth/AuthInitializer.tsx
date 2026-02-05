@@ -7,38 +7,60 @@ import { useSelector } from 'react-redux';
 import { fetchUsers } from '@/redux/slices/auth';
 import { dispatch } from '@/redux/dispatchHandle';
 
+import { Box, CircularProgress } from '@mui/material';
+
 export const AuthInitializer = ({children}: {children: React.ReactNode}) => { 
   const {isAuthenticated, loading} = useSelector((state: RootState) => state.auth)
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicPage = pathname?.startsWith('/careers') || pathname === '/login';
+  const isPublicPage = pathname?.startsWith('/careers') || pathname === '/login' || pathname?.startsWith('/salary-proposal');
 
   useEffect(() => {
-    // Only fetch the user if it's not a public page and we haven't authenticated yet.
-    if (!isPublicPage && !isAuthenticated) {
-      fetchUsers()
-    }
-  }, [dispatch, isAuthenticated, isPublicPage]);
+    console.log(`AuthInitializer: Initial Check - isAuthenticated=${isAuthenticated}, loading=${loading}, pathname=${pathname}`);
+    
+    // Always attempt to fetch user info on mount to ensure session sync
+    // This is critical when coming back from an SSO redirect
+    fetchUsers();
+  }, []); 
 
   useEffect(() => {
-    // Wait until the loading is false before we do any redirect
-    if (loading || isPublicPage) return; 
+    // Wait until loading is finished
+    if (loading) return;
 
-    // If not authenticated and not on a public page, redirect to login.
+    console.log(`AuthInitializer: State Update - isAuthenticated=${isAuthenticated}, loading=${loading}`);
+
     if (!isAuthenticated) {
-      console.log('from inside here you are not authenticated')
-      router.push('/login');
+      if (!isPublicPage) {
+        console.log('AuthInitializer: Redirecting to login (Not authenticated)');
+        router.push('/login');
+      }
+    } else {
+      if (pathname === '/login') {
+        console.log('AuthInitializer: Redirecting to dashboard (Already authenticated)');
+        router.push('/dashboard');
+      }
     }
   }, [isAuthenticated, loading, pathname, router, isPublicPage]);
 
-  // For authenticated users trying to access login, redirect to dashboard
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log('you are the reason I cannot go')
-      router.push(pathname);
-    }
-  }, [isAuthenticated, pathname, router]);
+  if (loading) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh', 
+        width: '100vw',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        bgcolor: 'background.default',
+        zIndex: 9999
+      }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return <>{children}</>;
 }
