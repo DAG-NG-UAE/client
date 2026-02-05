@@ -246,3 +246,21 @@ export const updateJoiningDocsStatus = async (
     throw error;
   }
 };
+
+export const updatePreOfferDocStatus = async (
+  documentId: string,
+  status: string,
+  candidateId: string,
+) => {
+  try {
+    const response = await axiosInstance.patch(`offer/pre/docs/update`, {
+      documentId,
+      status,
+      candidateId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating pre-offer doc status", error);
+    throw error;
+  }
+};

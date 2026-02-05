@@ -27,6 +27,7 @@ import {
   sendInternalSalaryOffer,
   updateInternalSalaryProposal,
   updateJoiningDocsStatus,
+  updatePreOfferDocStatus,
 } from "@/api/offer";
 import { enqueueSnackbar } from "notistack";
 
@@ -361,6 +362,27 @@ export const callUpdateJoiningDocsStatus = async (
       {
         variant: "error",
       },
+    );
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callUpdatePreOfferDocStatus = async (
+  documentId: string,
+  status: string,
+  candidateId: string,
+) => {
+  try {
+    dispatch(startLoading());
+    await updatePreOfferDocStatus(documentId, status, candidateId);
+    enqueueSnackbar(`Document ${status} successfully`, { variant: "success" });
+    await callFetchPreOfferDocs(candidateId);
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar(
+      error?.response?.data?.message || "Failed to update document status",
+      { variant: "error" },
     );
   } finally {
     dispatch(stopLoading());

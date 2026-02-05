@@ -294,7 +294,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
       </Box>
 
       <Box sx={{ width: "100%" }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Locations & Headcount (Fixed)</Typography>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Locations & Headcount</Typography>
                 {locations.map((item, index) => (
                   <Box key={item.id} sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
                     <Box sx={{ flex: 1 }}>
@@ -321,7 +321,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
                         helperText="Headcount is fixed to 1 per location entry"
                       />
                     </Box>
-                    <Box sx={{ width: 100, display: "flex", justifyContent: "center" }}>
+                    {/* <Box sx={{ width: 100, display: "flex", justifyContent: "center" }}>
                       <IconButton onClick={() => handleRemoveLocation(item.id)} disabled={locations.length === 1}>
                         <RemoveCircleOutlineIcon />
                       </IconButton>
@@ -330,7 +330,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
                           <AddCircleOutlineIcon />
                         </IconButton>
                       )}
-                    </Box>
+                    </Box> */}
                   </Box>
                 ))}
             </Box>

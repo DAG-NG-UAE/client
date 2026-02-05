@@ -17,8 +17,8 @@ import PendingIcon from '@mui/icons-material/Pending';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { callFetchPreOfferDocs, callSavePreOfferDocs } from '@/redux/slices/offer';
-import { fetchSingleCandidate } from '@/redux/slices/candidates';
+import { callFetchPreOfferDocs, callSavePreOfferDocs, callUpdatePreOfferDocStatus } from '@/redux/slices/offer';
+import { callUpdateCandidateStatus, fetchSingleCandidate } from '@/redux/slices/candidates';
 
 const STANDARD_DOCUMENTS = [
     { 
@@ -101,7 +101,24 @@ const PreOfferVerificationPage = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const handleUpdateStatus = async (docId: string, status: string) => {
+        await callUpdatePreOfferDocStatus(docId, status, id);
+    };
+
     const allApproved = currentDocs.length > 0 && currentDocs.every((d: any) => d.status === 'approved');
+
+    const handleBeginInternalSalaryProposal = async () => {
+        // we want to update the user status to internal_salary_proposal before we push them to the page 
+        const payload = {
+            candidate_id: id,
+            requisition_id: selectedCandidate?.requisition_id, 
+            current_status: 'internal_salary_proposal', 
+            old_status: 'pre_offer', 
+            new_status: 'internal_salary_proposal'
+        };
+        await callUpdateCandidateStatus(payload);
+        router.push(`/candidates/internal-salary-proposal/${id}`);
+    };
 
     return (
         <Box sx={{ bgcolor: '#F5F6F8', minHeight: '100vh', p: { xs: 2, md: 4 } }}>
@@ -130,10 +147,10 @@ const PreOfferVerificationPage = () => {
                         variant="contained" 
                         color="primary" 
                         sx={{ textTransform: 'none', fontWeight: 600 }}
-                        onClick={() => router.push(`/candidates/internal-salary-proposal/${id}`)}
+                        onClick={handleBeginInternalSalaryProposal}
                         disabled={!allApproved}
                     >
-                        All Documents Verified - Begin Internal Approval Process
+                        All Documents Verified - Begin Internal Salary Proposal Process
                     </Button>
                 </Box>
             </Box>
@@ -291,9 +308,29 @@ const PreOfferVerificationPage = () => {
                                     </Box>
 
                                     <Box sx={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                                        <IconButton size="small"><VisibilityIcon fontSize="small" /></IconButton>
-                                        <IconButton size="small" color="success"><CheckCircleIcon fontSize="small" /></IconButton>
-                                        <IconButton size="small" color="error"><CancelIcon fontSize="small" /></IconButton>
+                                        <IconButton 
+                                            size="small" 
+                                            onClick={() => doc.url && window.open(doc.url, '_blank')}
+                                            disabled={!doc.url}
+                                        >
+                                            <VisibilityIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton 
+                                            size="small" 
+                                            color="success"
+                                            onClick={() => handleUpdateStatus(doc.id, 'approved')}
+                                            disabled={!doc.url || doc.status === 'approved'}
+                                        >
+                                            <CheckCircleIcon fontSize="small" />
+                                        </IconButton>
+                                        <IconButton 
+                                            size="small" 
+                                            color="error"
+                                            onClick={() => handleUpdateStatus(doc.id, 'rejected')}
+                                            disabled={!doc.url || doc.status === 'rejected'}
+                                        >
+                                            <CancelIcon fontSize="small" />
+                                        </IconButton>
                                     </Box>
                                 </Box>
                             ))}

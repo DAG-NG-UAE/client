@@ -161,6 +161,24 @@ export const columnConfig: {
     { key: "rejected_date", label: "Withdrawn Date", render: (c) => renderDate(c.rejected_date) },
     { key: "current_status", label: "Status", render: renderStatus },
   ],
+  "offer_extended": [
+    { key: "candidate_name", label: "Candidate Name", render: renderCandidateName },
+    { key: "contact", label: "Contact", render: renderContact },
+    { key: "role_applied_for", label: "Position" },
+    { key: "current_status", label: "Status", render: renderStatus },
+  ],
+  "pre_offer": [
+    { key: "candidate_name", label: "Candidate Name", render: renderCandidateName },
+    { key: "contact", label: "Contact", render: renderContact },
+    { key: "role_applied_for", label: "Position" },
+    { key: "current_status", label: "Status", render: renderStatus },
+  ],
+  "internal_salary_proposal": [
+    { key: "candidate_name", label: "Candidate Name", render: renderCandidateName },
+    { key: "contact", label: "Contact", render: renderContact },
+    { key: "role_applied_for", label: "Position" },
+    { key: "current_status", label: "Status", render: renderStatus },
+  ],
   // Default fallback
   default: [
     { key: "candidate_name", label: "Candidate Name", render: renderCandidateName },

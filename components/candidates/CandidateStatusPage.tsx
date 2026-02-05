@@ -243,7 +243,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
             <TableComponent
               columns={getColumnsForStatus(status)}
               data={candidates}
-              // onRowClick={handleRowClick}
+              // onRowClick={handleRowClick} // Removed to prevent modal opening on row click, allowing row click to trigger expansion instead.
               renderDetailPanel={(row) => (
                   <CandidateRequirementDetail 
                       requirements={row.requirement_match} 

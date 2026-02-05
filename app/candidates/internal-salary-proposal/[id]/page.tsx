@@ -100,7 +100,7 @@ const InternalApprovalPage = () => {
 
     const handleEditPackage = () => {
         if (!hasApprovals) {
-            router.push(`/candidates/internal-salary-approval/edit/${id}`);
+            router.push(`/candidates/internal-salary-proposal/edit/${id}`);
         }
     };
 

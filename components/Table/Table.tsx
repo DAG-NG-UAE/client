@@ -62,9 +62,11 @@ function TableComponent<T>({
             <Table sx={{ minWidth: 650 }} aria-label="data table">
                 <TableHead>
                     <TableRow sx={{ backgroundColor: 'background.default' }}>
-                        <TableCell padding="checkbox">
-                             {/* Checkbox removed for expansion mode mainly, or can be enabled if needed */}
-                        </TableCell>
+                        {renderDetailPanel && (
+                            <TableCell padding="checkbox">
+                                {/* Checkbox column for expansion */}
+                            </TableCell>
+                        )}
                         {columns.map(col => (
                             <TableCell key={col.label} sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.75rem' }}>{col.label}</TableCell>
                         ))}
@@ -74,13 +76,13 @@ function TableComponent<T>({
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={columns.length + 3} align="center">
+                            <TableCell colSpan={columns.length + (renderDetailPanel !== undefined ? 1 : 0) + (actions !== undefined ? 1 : 0)} align="center">
                                 <CircularProgress />
                             </TableCell>
                         </TableRow>
                     ) : safeData.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={columns.length + 3} align="center">
+                            <TableCell colSpan={columns.length + (renderDetailPanel !== undefined ? 1 : 0) + (actions !== undefined ? 1 : 0)} align="center">
                                 <Typography>{emptyMessage}</Typography>
                             </TableCell>
                         </TableRow>
@@ -92,26 +94,34 @@ function TableComponent<T>({
                                 <React.Fragment key={rowKey}>
                                     <TableRow
                                         hover
-                                        // onClick={() => onRowClick && onRowClick(row)} 
+                                        onClick={(event) => {
+                                            if (onRowClick) {
+                                                onRowClick(row);
+                                            } else if (renderDetailPanel) {
+                                                handleClick(event, rowKey);
+                                            }
+                                        }}
                                         role="checkbox"
                                         aria-checked={isItemSelected}
                                         tabIndex={-1}
                                         selected={isItemSelected}
                                         sx={{ cursor: 'pointer' }}
                                     >
-                                        <TableCell padding="checkbox">
-                                            <Checkbox
-                                                color="primary"
-                                                checked={isItemSelected}
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    handleClick(event, rowKey);
-                                                }}
-                                                inputProps={{
-                                                    'aria-labelledby': `table-checkbox-${index}`,
-                                                }}
-                                            />
-                                        </TableCell>
+                                        {renderDetailPanel && (
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    color="primary"
+                                                    checked={isItemSelected}
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        handleClick(event, rowKey);
+                                                    }}
+                                                    inputProps={{
+                                                        'aria-labelledby': `table-checkbox-${index}`,
+                                                    }}
+                                                />
+                                            </TableCell>
+                                        )}
                                         {columns.map((col) => (
                                             <TableCell key={col.key as string}>
                                                 {col.render ? col.render(row) : String(row[col.key as keyof T] ?? '')}
@@ -125,7 +135,7 @@ function TableComponent<T>({
                                     </TableRow>
                                     {isItemSelected && renderDetailPanel && (
                                         <TableRow>
-                                            <TableCell colSpan={columns.length + (actions ? 2 : 1)} sx={{ p: 0 }}>
+                                            <TableCell colSpan={columns.length + (renderDetailPanel !== undefined ? 1 : 0) + (actions !== undefined ? 1 : 0)} sx={{ p: 0 }}>
                                                 {renderDetailPanel(row)}
                                             </TableCell>
                                         </TableRow>

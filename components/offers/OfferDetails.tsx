@@ -40,6 +40,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ImageIcon from '@mui/icons-material/Image';
 import JoiningDetailsView from './JoiningDetailsView';
 import GuarantorDetailsView from './GuarantorDetailsView';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { JoiningDocuments, JoiningDocumentItem } from '@/interface/offer';
 
 interface OfferDetailsProps {
@@ -125,6 +126,12 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
     const handleRejectDoc = async (doc: JoiningDocumentItem & { docType: string }) => {
         console.log("Reject doc", doc);
         callUpdateJoiningDocsStatus(doc._id, 'REJECTED', '', id, doc.docType);
+    };
+
+    const handleCreateEmployee = () => {
+        // TODO: Implement Create Employee logic
+        console.log("Creating employee for offer:", id);
+        alert("Employee created successfully!");
     };
 
     const groupedDocs = useMemo(() => {
@@ -253,19 +260,27 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                         </Typography>
                     </Box>
 
-                    {/* <Stack direction="row" spacing={2}>
-                        <Button variant="outlined" startIcon={<DownloadIcon />}>
+                    <Stack direction="row" spacing={2}>
+                        {joiningDocs.length > 0 && progress === 100 && (
+                            <Button 
+                                variant="contained" 
+                                color="success" 
+                                startIcon={<PersonAddIcon />}
+                                onClick={handleCreateEmployee}
+                                sx={{ 
+                                    fontWeight: 'bold', 
+                                    borderRadius: 2,
+                                    px: 3,
+                                    boxShadow: '0px 4px 14px rgba(76, 175, 80, 0.4)'
+                                }}
+                            >
+                                Create Employee
+                            </Button>
+                        )}
+                        {/* <Button variant="outlined" startIcon={<DownloadIcon />}>
                             Export Report
-                        </Button>
-                        <Button 
-                            variant="contained" 
-                            startIcon={<VerifiedIcon />}
-                            onClick={handleVerifyAll}
-                            disabled={progress === 100}
-                        >
-                            Verify All
-                        </Button>
-                    </Stack> */}
+                        </Button> */}
+                    </Stack>
                 </Box>
 
                 <Box sx={{ mt: 4 }}>
