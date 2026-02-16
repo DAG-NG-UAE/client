@@ -4,24 +4,26 @@ import React, { useEffect } from 'react';
 import { AppBar, Toolbar, IconButton, Typography, Button, Box } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useTheme } from '@mui/material/styles';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { logoutUser } from '@/store/features/authSlice';
 import { useRouter } from 'next/navigation';
+import { useSelector } from 'react-redux';
+import { logoutUser } from '@/redux/slices/auth';
+import { RootState } from '@/redux/store';
 
 const drawerWidth = 240;
 
 interface HeaderProps {
   handleDrawerToggle: () => void;
+  desktopOpen?: boolean;
+  handleDesktopToggle?: () => void;
 }
 
-const Header = ({ handleDrawerToggle }: HeaderProps) => {
+const Header = ({ handleDrawerToggle, desktopOpen = true, handleDesktopToggle }: HeaderProps) => {
   const theme = useTheme();
-  const dispatch = useAppDispatch();
   const router = useRouter();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const {isAuthenticated} = useSelector((state: RootState) => state.auth)
 
   const handleLogout = () => {
-    dispatch(logoutUser());
+    logoutUser();
   };
 
   useEffect(() => {
@@ -31,16 +33,22 @@ const Header = ({ handleDrawerToggle }: HeaderProps) => {
   }, [isAuthenticated, router]);
 
 
+  const isMobile = theme.breakpoints.down('sm');
+
   return (
     <AppBar
       position="fixed"
       sx={{
-        width: { sm: `calc(100% - ${drawerWidth}px)` },
-        ml: { sm: `${drawerWidth}px` },
+        width: { sm: desktopOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
+        ml: { sm: desktopOpen ? `${drawerWidth}px` : 0 },
         // boxShadow: 'none',
         // borderBottom: `1px solid ${theme.palette.divider}`,
         // backgroundColor: theme.palette.background.default,
         // color: theme.palette.text.primary,
+        transition: theme.transitions.create(['width', 'margin'], {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.leavingScreen,
+        }),
       }}
     >
       <Toolbar>
@@ -50,6 +58,15 @@ const Header = ({ handleDrawerToggle }: HeaderProps) => {
           edge="start"
           onClick={handleDrawerToggle}
           sx={{ mr: 2, display: { sm: 'none' } }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDesktopToggle}
+          sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}
         >
           <MenuIcon />
         </IconButton>

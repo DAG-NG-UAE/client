@@ -21,3 +21,75 @@ export const getFirstAndLastInitials = (fullName: string): string => {
     // 4. Concatenate and return the initials
     return firstInitial + lastInitial;
 }
+
+/**
+ * Converts an ISO date string into a human-readable relative time string.
+ * e.g., "3 days ago", "2 weeks ago", "1 month from now"
+ */
+export const getRelativeTime = (isoString: string, unitOfTime?: 'days'): string => {
+    const targetDate = new Date(isoString).getTime();
+
+    console.log(`the iso string is ${isoString}`)
+    console.log(`the target date is ${targetDate}`)
+    console.log(`the current date is ${new Date().getTime()}`)
+
+    const now = new Date().getTime();
+    const diffInSeconds = Math.floor((now - targetDate) / 1000);
+    const isPast = diffInSeconds >= 0;
+    const absSeconds = Math.abs(diffInSeconds);
+
+    if (unitOfTime === 'days') {
+      const diffInDays = Math.floor(absSeconds / 86400); // 86400 seconds in a day
+      return `${diffInDays}`;
+    }
+  
+    // Define time scales in seconds
+    const units: { label: string; seconds: number }[] = [
+      { label: 'year', seconds: 31536000 },
+      { label: 'month', seconds: 2592000 },
+      { label: 'week', seconds: 604800 },
+      { label: 'day', seconds: 86400 },
+      { label: 'hour', seconds: 3600 },
+      { label: 'minute', seconds: 60 },
+    ];
+  
+    for (const unit of units) {
+      const interval = Math.floor(absSeconds / unit.seconds);
+      
+      if (interval >= 1) {
+        return `${interval} ${unit.label}${interval > 1 ? 's' : ''} ${isPast ? 'ago' : 'from now'}`;
+      }
+    }
+  
+    return "just now";
+}
+
+export const formatRoleName = (role: string): string => {
+  if (!role) return "";
+
+  return role
+    .split(/[_-]/) // Splits by underscore or hyphen
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
+export const formatOfferDate = (dateString: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const day = date.getDate();
+  const month = date.toLocaleDateString('en-US', { month: 'long' });
+  const year = date.getFullYear();
+
+  // Logic for "st", "nd", "rd", "th"
+  const suffix = (day: number) => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1:  return "st";
+      case 2:  return "nd";
+      case 3:  return "rd";
+      default: return "th";
+    }
+  };
+
+  return `${day}${suffix(day)} ${month}, ${year}`;
+};

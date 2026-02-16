@@ -37,16 +37,16 @@ const JobDescriptionHistory = () => {
                   {item.version}
                 </Typography>
               }
-              secondary={
-                <Box>
-                  <Typography variant="body2" color="text.secondary" display="block">
-                    {item.user}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {item.date}
-                  </Typography>
-                </Box>
-              }
+             secondary={
+               <Box component="span">
+                 <Typography variant="body2" color="text.secondary" display="block" component="span">
+                   {item.user}
+                 </Typography>
+                 <Typography variant="body2" color="text.secondary" component="span">
+                   {item.date}
+                 </Typography>
+               </Box>
+             }
               sx={{ ListItemTextProps: { component: 'div' }}}
             />
           </ListItem>

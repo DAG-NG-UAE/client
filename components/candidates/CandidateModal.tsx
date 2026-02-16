@@ -4,12 +4,12 @@ import { getStatusChipProps } from "@/utils/statusColorMapping";
 import { 
     Dialog, DialogTitle, DialogContent, IconButton, Typography, Box, Avatar, 
     Button, Chip, Paper, Divider, TextField, Stack, useTheme,
-    DialogActions
+    DialogActions, CircularProgress
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CurrencyExchangeOutlined from '@mui/icons-material/CurrencyExchangeOutlined';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StarIcon from '@mui/icons-material/Star';
@@ -18,6 +18,9 @@ import { useEffect, useState } from "react";
 import { determineActions } from "@/utils/determineActions";
 import { CandidateActions, CandidateActionButton, CandidateStatus } from "@/interface/candidate";
 import ScheduleInterviewModal from "./ScheduleInterviewModal"; // Import the new modal
+import { callUpdateCandidateStatus } from "@/redux/slices/candidates";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 interface CandidateModalProps {
     open: boolean;
@@ -52,6 +55,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     const [note, setNote] = useState('');
     const [currentAction, setCurrentAction] = useState<CandidateActionButton | null>(null);
     const [updateCandidate, setUpdateCandidate] = useState(false);
+    const {loading} = useSelector((state: RootState) => state.candidates)
 
     const handleAction = (action: CandidateActionButton) => {
         setCurrentAction(action);
@@ -85,7 +89,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
             notes: note
         }
         // Placeholder for API call:
-        await updateCandidateStatus(body);
+        await callUpdateCandidateStatus(body)
 
         // Reset and close modals
         setNotesModalOpen(false);
@@ -115,8 +119,12 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                 />
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
-                <Button onClick={() => setNotesModalOpen(false)}>Cancel</Button>
-                <Button onClick={handleSubmitNote} variant="contained" disabled={!note}>Submit</Button>
+                <Button onClick={() => setNotesModalOpen(false)} disabled={loading}>Cancel</Button>
+                {loading ? (
+                    <CircularProgress size={24} sx={{ color: theme.palette.primary.main }} />
+                ) : (
+                    <Button onClick={handleSubmitNote} variant="contained" disabled={!note}>Submit</Button>
+                )}
             </DialogActions>
         </Dialog>
     );
@@ -246,8 +254,8 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     value={candidate.mobile_number} 
                                 />
                                 <DetailItem 
-                                    icon={<AttachMoneyIcon fontSize="small" />} 
-                                    value={fetchedDetails?.salary_target_min ? `$${fetchedDetails.salary_target_min}` : undefined} 
+                                    icon={<CurrencyExchangeOutlined fontSize="small" />} 
+                                    value={fetchedDetails?.salary_target_min ? `N${new Intl.NumberFormat().format(Number(fetchedDetails.salary_target_min))}` : undefined} 
                                     label="Expected Salary"
                                 />
                                 <DetailItem 
@@ -311,7 +319,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                         </Box>
 
                         {/* Interview History - Mocked */}
-                        <Box sx={{ width: '100%' }}>
+                        {/* <Box sx={{ width: '100%' }}>
                             <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
                                 <SectionTitle>Interview History</SectionTitle>
                                 <Box sx={{ pl: 2, borderLeft: `3px solid ${theme.palette.primary.main}` }}>
@@ -325,10 +333,10 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     <Typography variant="body2">Strong technical skills, good communication.</Typography>
                                 </Box>
                             </Paper>
-                        </Box>
+                        </Box> */}
 
                         {/* Notes */}
-                        <Box sx={{ width: '100%' }}>
+                        {/* <Box sx={{ width: '100%' }}>
                             <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
                                 <SectionTitle>Notes</SectionTitle>
                                 {candidate.notes && (
@@ -347,7 +355,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     <Button variant="contained" sx={{ textTransform: 'none' }}>Add Note</Button>
                                 </Stack>
                             </Paper>
-                        </Box>
+                        </Box> */}
                     </Box>
                 </DialogContent>
                 {NotesConfirmationModal}

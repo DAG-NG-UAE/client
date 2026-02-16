@@ -1,166 +1,292 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Alert, CircularProgress, Pagination, Grid, Card, CardContent, Chip } from '@mui/material';
-import { getRequisitions } from '../../api/requisitionApi';
+import { 
+  Box,
+  Typography, 
+  Card, 
+  CardContent, 
+  CircularProgress,
+  Avatar, 
+  List, 
+  ListItem, 
+  ListItemAvatar, 
+  ListItemText,
+  Divider,
+  Paper,
+  IconButton,
+  Skeleton,
+  Alert,
+  LinearProgress
+} from '@mui/material';
+import { useTheme, keyframes } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import TextField from '@mui/material/TextField';
-import WorkIcon from '@mui/icons-material/Work';
-import GroupIcon from '@mui/icons-material/Group';
-import { useTheme } from '@mui/material/styles';
-import RequisitionCard from '@/components/history/RequisitionCard';
+import { 
+  Work as WorkIcon, 
+  Group as GroupIcon, 
+  CheckCircle as CheckCircleIcon, 
+  Schedule as ScheduleIcon, 
+  Send as SendIcon, 
+  Timer as TimerIcon,
+  TrendingUp as TrendingUpIcon,
+  MoreVert as MoreVertIcon,
+
+} from '@mui/icons-material';
+import { getRequisitions } from '../../api/requisitionApi';
 import withAuth from '@/components/auth/withAuth';
+import { AppRole } from '@/utils/constants';
+import useSWR from 'swr';
+import axiosInstance from '@/api/axiosInstance';
 
-interface Requisition {
-  requisition_id: string;
-  position: string;
-  status: string;
-  department: string;
-  date_created: string;
-  expected_start_date: string; // Changed from expected_date_of_resumption
-  applicants: number; // Added for the new UI
-}
 
+import RecentActivity from '@/components/dashboard/RecentActivity';
+
+
+
+// --- Components ---
+
+const blinkAnimation = keyframes`
+  0% { 
+    background-color: transparent; 
+  }
+  50% { 
+    background-color: rgba(255, 0, 0, 0.1); /* Subtle red tint */
+    border-color: #ff0000;                /* Optional: make the border red too */
+  }
+  100% { 
+    background-color: transparent; 
+  }
+`;
+
+const KPICard = ({ title, value, icon, color, trend, blink, onClick }: { title: string, value: string | number, icon: React.ReactNode, color: string, trend?: string, blink?: boolean, onClick?: () => void }) => {
+  const theme = useTheme();
+  return (
+    <Card 
+      elevation={0}
+      onClick={onClick}
+      sx={{ 
+        height: '100%', 
+        borderRadius: 3, 
+        border: `1px solid ${theme.palette.divider}`,
+        background: theme.palette.background.paper, 
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        cursor: onClick ? 'pointer' : 'default',
+        animation: blink ? `${blinkAnimation} 1.5s infinite ease-in-out` : 'none',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.shadows[4],
+        }
+      }}
+    >
+      <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+          <Box 
+            sx={{ 
+              p: 1.5, 
+              borderRadius: 2, 
+              bgcolor: `${color}15`, 
+              color: color,
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center' 
+            }}
+          >
+            {icon}
+          </Box>
+          {trend && (
+            <Box sx={{ display: 'flex', alignItems: 'center', color: 'success.main', bgcolor: 'success.light', px: 1, py: 0.5, borderRadius: 10 }}>
+              <TrendingUpIcon sx={{ fontSize: 14, mr: 0.5 }} />
+              <Typography variant="caption" fontWeight="bold">{trend}</Typography>
+            </Box>
+          )}
+        </Box>
+        <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.5, color: 'text.primary' }}>
+          {value}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" fontWeight={500}>
+          {title}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+};
+
+const FunnelChart = ({ funnelChartData }: { funnelChartData: { label: string; value: number | string }[] }) => {
+  const colors = ['#3f51b5', '#2196f3', '#00bcd4', '#4caf50', '#8bc34a'];
+  
+  const processedData = funnelChartData.map((item, index) => ({
+    ...item,
+    value: Number(item.value) || 0,
+    color: colors[index % colors.length]
+  }));
+
+  const maxCount = Math.max(...processedData.map(d => d.value)) || 1;
+  
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+      {processedData.map((item, index) => (
+        <Box key={item.label} sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ width: 100 }}>
+            <Typography variant="body2" fontWeight={600} color="text.secondary">{item.label}</Typography>
+          </Box>
+          <Box sx={{ flex: 1, mx: 2 }}>
+            <Box 
+              sx={{ 
+                height: 32, 
+                borderRadius: 2, 
+                width: `${(item.value / maxCount) * 100}%`,
+                bgcolor: item.color,
+                display: 'flex',
+                alignItems: 'center',
+                px: 2,
+                transition: 'width 1s ease-in-out',
+                position: 'relative',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            >
+            </Box>
+          </Box>
+          <Typography variant="body2" fontWeight="bold">{item.value}</Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data.data)
 const DashboardPage = () => {
-  const [requisitions, setRequisitions] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [requisitionsPerPage] = useState(8); // Adjusted for card display
   const router = useRouter();
   const theme = useTheme();
+  const { data, error, isLoading } = useSWR('/analytics/dashboard/stats', fetcher)
 
-  useEffect(() => {
-    const fetchRequisitions = async () => {
-      console.log(`inside here the filter status is ${filterStatus}`);
-      try {
-        setLoading(true);
-        setError(null);
-        let data: any[];
-        if (filterStatus === 'all') {
-          data = await getRequisitions();
-        } else {
-          data = await getRequisitions(filterStatus);
-        }
+  if (isLoading) return <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />;
+  if (error) return <Alert severity="error">Failed to load dashboard data</Alert>;
 
-        // Adding dummy applicant data and ensuring expected_start_date for UI consistency
-        const requisitionsWithApplicants = data.map(req => ({
-          ...req,
-          applicants: Math.floor(Math.random() * 50) + 10, // Dummy data
-          expected_start_date: req.expected_start_date || new Date().toISOString().split('T')[0], // Ensure date exists
-        }));
+  const funnelBase = data?.funnel_applied || 1; // Avoid division by zero
 
-        setRequisitions(requisitionsWithApplicants);
-      } catch (err) {
-        setError('Failed to fetch requisitions.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRequisitions();
-  }, [filterStatus]);
+  console.log(`the data is ${JSON.stringify(data)}`)
+  const funnelStages = [
+    { label: 'Applied', value: data.funnel_applied },
+    { label: 'Shortlisted', value: data.funnel_shortlisted },
+    { label: 'Offered', value: data.funnel_offered },
+    { label: 'Hired', value: data.funnel_hired },
+  ];
 
-  const handleFilterChange = (event: SelectChangeEvent) => {
-    setFilterStatus(event.target.value as string);
-    setCurrentPage(1); // Reset to first page on filter change
-  };
+  console.log(`the funnel stages are ${JSON.stringify(funnelStages)}`)
 
-  const handleRequisitionClick = (requisitionId: string) => {
-    router.push(`/candidate-upload?requisitionId=${requisitionId}`);
-  };
-
-  const handleStatusChange = async (requisitionId: string, newStatus: string) => {
-    console.log(`they want to update the ${requisitionId} to status ${newStatus}`);
-    // TODO: Implement actual API call to update requisition status
-  };
-
-  // Get current requisitions for pagination
-  const indexOfLastRequisition = currentPage * requisitionsPerPage;
-  const indexOfFirstRequisition = indexOfLastRequisition - requisitionsPerPage;
-  const currentRequisitions = requisitions.slice(indexOfFirstRequisition, indexOfLastRequisition);
-
-  const paginate = (event: React.ChangeEvent<unknown>, value: number) => {
-    setCurrentPage(value);
-  };
 
   return (
-    <Box sx={{p:1, minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Typography variant="h4" gutterBottom>
-        Open Requisitions
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom sx={{ mb: 4 }}>
-        Manage and track all your hiring requisitions
-      </Typography>
-
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel id="status-filter-label">Status</InputLabel>
-          <Select
-            labelId="status-filter-label"
-            id="status-filter"
-            value={filterStatus}
-            label="Status"
-            onChange={handleFilterChange}
-          >
-            <MenuItem value="all">All</MenuItem>
-            <MenuItem value="pending">Pending</MenuItem>
-            <MenuItem value="approved">Approved</MenuItem>
-            <MenuItem value="hold">On Hold</MenuItem>
-            <MenuItem value="progress">In Progress</MenuItem>
-            <MenuItem value="closed">Closed</MenuItem>
-            <MenuItem value="open">Open</MenuItem> {/* Added 'Open' status */}
-            <MenuItem value="in review">In Review</MenuItem> {/* Added 'In Review' status */}
-          </Select>
-        </FormControl>
-        <TextField label="Filter by Department" variant="outlined" />
-        <TextField label="Filter by Date" variant="outlined" placeholder="YYYY-MM-DD" />
+    <Box sx={{ p: { xs: 2, md: 4 }, minHeight: '100vh', backgroundColor: 'background.default' }}>
+      
+      {/* Header Section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight={700} sx={{ color: 'text.primary', mb: 1 }}>
+          Overview
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Welcome back! Here's what's happening in recruitment today.
+        </Typography>
       </Box>
 
-      {loading && <CircularProgress sx={{ display: 'block', my: 4 }} />}
-      {error && <Alert severity="error" sx={{ my: 4 }}>{error}</Alert>}
-      {!loading && !error && requisitions.length === 0 && (
-        <Typography sx={{ my: 4 }}>No requisitions found.</Typography>
-      )}
-
-      {/* @ts-ignore */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 2,
-        }}
-        
-      >
-        {currentRequisitions?.map((req) => (
-          <RequisitionCard
-          key={req.requisition_id}
-            id={req.requisition_id}
-            role={req.position}
-            department={req.department}
-            candidateCount={req.applicants}
-            status={req.status}
-            showUploadButton={false}
-            handleRoute={handleRequisitionClick}
+      {/* KPI Cards */}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard 
+            title="Active Requisitions" 
+            value={data?.active_requisitions || 0}
+            icon={<WorkIcon />} 
+            color={theme.palette.primary.main} 
+            trend={data?.daily_requisition_request > 0 ? `+${data?.daily_requisition_request} New` : ""}
           />
-        ))}
+        </Box>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard 
+            title="Total Candidates" 
+            value={data?.total_candidates || 0 } 
+            icon={ <GroupIcon />} 
+            color="#9c27b0" 
+            trend={data?.daily_candidates > 0 ? `+${data?.daily_candidates} New` : ""}
+          />
+        </Box>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard 
+            title="Filled This Month" 
+            value={data.filled_this_month || 0} 
+            icon={<CheckCircleIcon />} 
+            color="#2e7d32"
+          />
+        </Box>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard 
+            title="Pe. Interviews" 
+            value={data?.pending_feedback || 0} 
+            icon={<ScheduleIcon />} 
+            color="#ed6c02"
+          />
+        </Box>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard 
+            title="Offers Sent" 
+            value={data.funnel_offered || 0} 
+            icon={<SendIcon />} 
+            color="#009688"
+          />
+        </Box>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard 
+            title="Offer Revision" 
+            value={data?.revise_offers || 0} 
+            icon={<ScheduleIcon />} 
+            color="#ed6c02"
+            blink={(data?.revise_offers || 0) > 0}
+            onClick={() => router.push('/offers/revision_requested')}
+          />
+        </Box>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard 
+            title="Avg Day(s) to Hire" 
+            value={data?.avg_time_to_fill || 0} 
+            icon={<TimerIcon />} 
+            color="#0288d1"
+          />
+        </Box>
       </Box>
 
+      {/* Main Content */}
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3 }}>
+        {/* Recruitment Funnel */}
+        <Box sx={{ flex: 2, minWidth: 0 }}>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 3, 
+              borderRadius: 3, 
+              border: `1px solid ${theme.palette.divider}`,
+              height: '100%'
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight={600}>Recruitment Funnel</Typography>
+              <IconButton size="small"><MoreVertIcon /></IconButton>
+            </Box>
+            <FunnelChart funnelChartData={funnelStages}/>
+            
+            {/* <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                 <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#4caf50' }} />
+                 <Typography variant="caption" color="text.secondary">Offers Accepted (62%)</Typography>
+              </Box>
+            </Box> */}
+          </Paper>
+        </Box>
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <Pagination
-          count={Math.ceil(requisitions.length / requisitionsPerPage)}
-          page={currentPage}
-          onChange={paginate}
-          color="primary"
-        />
+        {/* Recent Activity */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+             <RecentActivity />
+        </Box>
       </Box>
     </Box>
   );
 };
 
-export default withAuth(DashboardPage, ['admin', 'hiring_manager']);
+// export default DashboardPage;
+export default withAuth(DashboardPage, [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager]);

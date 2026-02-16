@@ -55,7 +55,7 @@ const CoreDetails = ({ requisition }: CoreDetailsProps) => {
           <DetailItem label="Headcount" value={requisition.num_positions} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <DetailItem label="Budget" value={requisition.proposed_salary} />
+          <DetailItem label="Budget" value={requisition.proposed_salary ? new Intl.NumberFormat().format(Number(requisition.proposed_salary)) : 'N/A'} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <DetailItem label="Status" value={requisition.status} isStatus />

@@ -1,23 +1,23 @@
 "use client";
 
+import { fetchPositions } from '@/redux/slices/positions';
+import { RootState } from '@/redux/store';
 import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchPositions } from '@/store/features/positionsSlice';
-import { RootState } from '@/store/store';
+import { useSelector } from 'react-redux';
+
 
 export default function CandidatesLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const dispatch = useAppDispatch();
-  const positionsStatus = useAppSelector((state: RootState) => state.positions.status);
+  const {positions, loading} = useSelector((state: RootState) => state.positions)
 
   useEffect(() => {
-    if (positionsStatus === 'idle') {
-      dispatch(fetchPositions());
+    if (loading) {
+      fetchPositions()
     }
-  }, [dispatch, positionsStatus]);
+  }, [loading]);
 
   return <>{children}</>;
 }

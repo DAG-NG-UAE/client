@@ -12,76 +12,22 @@ import JobDescriptionHistory from '@/components/requisition/JobDescriptionHistor
 import TotalApplicants from '@/components/requisition/TotalApplicants';
 import { Requisition } from '@/interface/requisition';
 import { getSingleRequisition } from '@/api/requisitionApi';
-
-// // Mock data generator
-// const getMockRequisition = (id: string): Requisition => ({
-//   requisition_id: id,
-//   requisition_raised_by: 'Sarah Chen',
-//   position: 'Senior Frontend Developer',
-//   department: 'Engineering',
-//   submitted_date: '2025-11-15',
-//   status: 'In Progress',
-//   applicants: 24,
-//   current_job_description_id: 'JD-001',
-//   internal_job_title: 'Senior Frontend Developer',
-//   headcount: 2,
-//   budget: '$120,000 - $160,000',
-//   hiring_manager: 'Sarah Chen',
-//   posting_locations: ['San Francisco, CA', 'Remote (US)'],
-//   recruiter: 'John Smith',
-//   job_description: `
-//     <h3>About the Role</h3>
-//     <p>We are seeking a talented Senior Frontend Developer to join our growing engineering team...</p>
-//     <h3>Responsibilities</h3>
-//     <ul>
-//       <li>Build responsive web applications</li>
-//       <li>Collaborate with design team</li>
-//       <li>Mentor junior developers</li>
-//     </ul>
-//   `,
-//   activity_log: [
-//     {
-//       title: 'Published to careers page',
-//       user: 'John Doe',
-//       timestamp: 'Nov 16, 12:00 PM'
-//     },
-//     {
-//       title: 'Job description updated',
-//       user: 'John Doe',
-//       timestamp: 'Nov 16, 11:30 AM'
-//     },
-//     {
-//       title: 'Status changed to In Progress',
-//       user: 'Sarah Chen',
-//       timestamp: 'Nov 15, 05:00 PM'
-//     },
-//     {
-//       title: 'Requisition created',
-//       user: 'Sarah Chen',
-//       timestamp: 'Nov 15, 10:00 AM'
-//     }
-//   ]
-// });
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { fetchRequisitionById } from '@/redux/slices/requisition';
 
 const RequisitionViewPage = () => {
   const params = useParams();
-  const [requisition, setRequisition] = useState<Partial<Requisition> | null>(null);
+  const {loading, selectedRequisition} = useSelector((state:RootState) => state.requisitions)
+ 
+  useEffect(() => { 
+    if(selectedRequisition && selectedRequisition.requisition_id){ 
+      fetchRequisitionById(selectedRequisition?.requisition_id)
+    }
 
-   useEffect(() => {
-      const fetchSingleRequisition = async () => {
-        try {
-          const response = await getSingleRequisition(params.id as string);
-          setRequisition(response);
-          console.log('Requisition fetched:', response);
-        } catch (error) {
-          console.error('Error fetching requisition:', error);
-        }
-      };
-      fetchSingleRequisition();
-    }, [params.id]);
-  
+  },[])
 
-  if (!requisition) {
+  if (!selectedRequisition) {
     return <Box sx={{ p: 3 }}>Loading...</Box>;
   }
 
@@ -89,32 +35,32 @@ const RequisitionViewPage = () => {
     <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: 'background.default' }}>
       <Container maxWidth="xl">
         <RequisitionHeader 
-          title={requisition.position!} 
-          requisitionId={requisition.requisition_id} 
+          title={selectedRequisition.position!} 
+          requisitionId={selectedRequisition.requisition_id} 
         />
 
-        <CoreDetails requisition={requisition} />
+        <CoreDetails requisition={selectedRequisition} />
 
-        <JobPostingDetails requisition={requisition} />
+        <JobPostingDetails requisition={selectedRequisition} />
 
         <Grid spacing={3}>
           <Grid size={{ xs: 12, md: 8, }} >
-            <JobDescription requisition={requisition} />
+            <JobDescription requisition={selectedRequisition} />
           </Grid>
         </Grid>
 
         {/* Bottom Cards Grid */}
-        <Grid container spacing={3} sx={{ mt: 3 }}>
+        {/* <Grid container spacing={3} sx={{ mt: 3 }}>
           <Grid size={{ xs: 12, md: 4 }} sx={{backgroundColor: 'orange' }}>
              <JobDescriptionHistory />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-             <TotalApplicants requisition={requisition} />
+             <TotalApplicants requisition={selectedRequisition} />
           </Grid>
           <Grid size={{ xs: 12, md: 4 }}>
-             <ActivityLog requisition={requisition} />
+             <ActivityLog requisition={selectedRequisition} />
           </Grid>
-        </Grid>
+        </Grid> */}
 
       </Container>
     </Box>

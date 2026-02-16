@@ -1,6 +1,6 @@
 "use client"
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google"; // Import Inter
 import "./globals.css";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
@@ -11,10 +11,14 @@ import Header from '../components/layout/Header';
 import { Box, Toolbar } from '@mui/material';
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import StoreProvider from '../store/StoreProvider'
 import {AuthInitializer} from '../components/auth/AuthInitializer'
+import { Provider as ReduxProvider } from 'react-redux';
+import {store, persistor} from '../redux/store'
+import { PersistGate } from 'redux-persist/integration/react';
+import { NotistackProvider } from "@/components/NotistackProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: '--font-inter' }); // Configure Inter
 
 const drawerWidth = 240;
 
@@ -24,6 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(true); // State for desktop sidebar
   const [isDarkMode, setIsDarkMode] = useState(false); // State for dark mode
   const pathname = usePathname();
 
@@ -34,49 +39,64 @@ export default function RootLayout({
   const theme = getAppTheme(isDarkMode ? 'dark' : 'light');
 
   const isLoginPage = pathname === '/login';
-  const isPublicPage = pathname?.startsWith('/careers');
+  const isPublicPage = pathname?.startsWith('/careers') || pathname?.startsWith('/salary-proposal'); // Add salary-proposal
 
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${plusJakartaSans.className} ${inter.variable}`}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <StoreProvider>
-            <ThemeProvider theme={theme}>
-              <CssBaseline />
-              {isLoginPage || isPublicPage ? (
-                // Public layout
-                <Box sx={{
-                  backgroundColor: isLoginPage ? theme.palette.loginBackground : theme.palette.background.default,
-                  minHeight: '100vh',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: isLoginPage ? 'center' : 'flex-start',
-                  alignItems: isLoginPage ? 'center' : 'stretch',
-                }}>
-                  {children}
-                </Box>
-              ) : (
-                // Private layout
-                <AuthInitializer>
-                  <Box sx={{ display: 'flex' }}>
-                    <Header handleDrawerToggle={handleDrawerToggle} />
-                    <Sidebar mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
-                    <Box
-                      component="main"
-                      sx={{
-                        flexGrow: 1,
-                        p: 3,
-                        width: { sm: `calc(100% - ${drawerWidth}px)` },
-                      }}
-                    >
-                      <Toolbar /> {/* This is important for content to not be hidden by AppBar */}
-                      {children}
-                    </Box>
+          <ReduxProvider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+              <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <NotistackProvider>
+                {isLoginPage || isPublicPage ? (
+                  // Public layout
+                  <Box sx={{
+                    backgroundColor: isLoginPage ? theme.palette.loginBackground : theme.palette.background.default,
+                    minHeight: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: isLoginPage ? 'center' : 'flex-start',
+                    alignItems: isLoginPage ? 'center' : 'stretch',
+                  }}>
+                    {children}
                   </Box>
-                </AuthInitializer>
-              )}
-            </ThemeProvider>
-          </StoreProvider>
+                ) : (
+                  <AuthInitializer>
+                    <Box sx={{ display: 'flex' }}>
+                      <Header 
+                        handleDrawerToggle={handleDrawerToggle} 
+                        desktopOpen={desktopOpen}
+                        handleDesktopToggle={() => setDesktopOpen(!desktopOpen)}
+                      />
+                      <Sidebar 
+                        mobileOpen={mobileOpen} 
+                        handleDrawerToggle={handleDrawerToggle} 
+                        desktopOpen={desktopOpen}
+                      />
+                      <Box
+                        component="main"
+                        sx={{
+                          flexGrow: 1,
+                          p: 3,
+                          width: { sm: desktopOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
+                          transition: theme.transitions.create(['width', 'margin'], {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.leavingScreen,
+                          }),
+                        }}
+                      >
+                        <Toolbar /> {/* This is important for content to not be hidden by AppBar */}
+                        {children}
+                      </Box>
+                    </Box>
+                  </AuthInitializer>
+                )}
+                </NotistackProvider>
+              </ThemeProvider>
+              </PersistGate>
+          </ReduxProvider>
         </AppRouterCacheProvider>
       </body>
     </html>

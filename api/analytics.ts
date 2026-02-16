@@ -26,3 +26,13 @@ export const getCandidateCardStat = async (
     throw error;
   }
 };
+
+export const getRecentActivity = async () => {
+  try {
+    const response = await axiosInstance.get("/analytics/activity");
+    return response.data.data;
+  } catch (error) {
+    console.log("Something went wrong while fetching the recent activity");
+    throw error;
+  }
+};

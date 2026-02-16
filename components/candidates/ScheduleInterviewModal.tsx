@@ -6,6 +6,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { CandidateProfile } from '@/interface/candidate';
 import { scheduleInterview } from '@/api/candidate'; // Import the new API function
+import { callScheduleInterview } from '@/redux/slices/candidates';
 
 interface ScheduleInterviewModalProps {
   open: boolean;
@@ -56,14 +57,14 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({ open, o
 
     setIsSubmitting(true);
     try {
-        await scheduleInterview({
+        await callScheduleInterview({
             candidate_id: candidate.candidate_id,
             requisition_id: candidate.requisition_id,
             current_status: 'interview_scheduled',
             interview_type: interviewType,
             interview_date: date,
-            interview_time: time,
-            interview_panel: interviewers.filter(i => i.trim() !== ''), // Send clean array
+            interview_time: time
+            // interview_panel: interviewers.filter(i => i.trim() !== '')
         });
         onClose(); // Close the modal and trigger refresh
     } catch (error) {
@@ -96,7 +97,6 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({ open, o
                 required
               >
                 <MenuItem value="hm-interview">Interview With HM</MenuItem>
-                <MenuItem value="another-interview">Another Interview</MenuItem>
                 <MenuItem value="executive-interview">Interview With C-Level</MenuItem>
               </Select>
             </FormControl>
@@ -121,7 +121,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({ open, o
               fullWidth
             />
 
-            <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: -1 }}>Interviewer(s)</Typography>
+            {/* <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: -1 }}>Interviewer(s)</Typography>
             {interviewers.map((interviewer, index) => (
               <Stack direction="row" spacing={1} key={index} alignItems="center">
                 <TextField
@@ -143,7 +143,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({ open, o
             >
               Add Interviewer
             </Button>
-            <FormHelperText sx={{mt: -1, ml: 1}}>Click the button to add another interviewer.</FormHelperText>
+            <FormHelperText sx={{mt: -1, ml: 1}}>Click the button to add another interviewer.</FormHelperText> */}
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
               <Button onClick={onClose} color="inherit" disabled={isSubmitting}>

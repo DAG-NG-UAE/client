@@ -1,8 +1,9 @@
 "use client";
+import { RootState } from '@/redux/store';
 
-import { useAppSelector } from '@/store/hooks';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
 const withAuth = <P extends object>(
   WrappedComponent: React.ComponentType<P>,
@@ -10,7 +11,7 @@ const withAuth = <P extends object>(
 ) => {
   const AuthComponent = (props: P) => {
     const router = useRouter();
-    const { isAuthenticated, user, loading } = useAppSelector((state) => state.auth);
+    const { isAuthenticated, user, loading } = useSelector((state: RootState) => state.auth);
 
     useEffect(() => {
       if (!loading && !isAuthenticated) {

@@ -22,40 +22,40 @@ declare module "@mui/material/styles" {
 
 // Define common design tokens from tailwindstyle.css
 const typography = {
-  fontFamily: '"Geist Sans", sans-serif',
+  fontFamily: '"Plus Jakarta Sans", sans-serif',
   h1: {
-    fontSize: "2rem",
-    fontWeight: 500,
-    lineHeight: 1.5,
+    fontSize: "1.75rem",
+    fontWeight: 600,
+    lineHeight: 1.3,
   },
   h2: {
-    fontSize: "1.75rem",
-    fontWeight: 500,
-    lineHeight: 1.5,
+    fontSize: "1.5rem",
+    fontWeight: 600,
+    lineHeight: 1.3,
   },
   h3: {
-    fontSize: "1.5rem",
-    fontWeight: 500,
-    lineHeight: 1.5,
+    fontSize: "1.25rem",
+    fontWeight: 600,
+    lineHeight: 1.4,
   },
   h4: {
-    fontSize: "1.25rem",
-    fontWeight: 500,
-    lineHeight: 1.5,
+    fontSize: "1.125rem",
+    fontWeight: 600,
+    lineHeight: 1.4,
   },
   tableHeader: {
-    fontSize: "0.7rem",
-    fontWeight: "bold",
+    fontSize: "0.75rem",
+    fontWeight: 600,
     lineHeight: 1.5,
   },
   body1: {
-    fontSize: "1rem",
-    fontWeight: "normal",
-    lineHeight: 1.5,
+    fontSize: "0.875rem",
+    fontWeight: 400,
+    lineHeight: 1.6,
   },
   button: {
-    fontSize: "1rem",
-    fontWeight: 500,
+    fontSize: "0.875rem",
+    fontWeight: 600,
     lineHeight: 1.5,
     textTransform: "none",
   },
@@ -254,3 +254,64 @@ const getDesignTokens = (mode: PaletteMode) => ({
 
 export const getAppTheme = (mode: PaletteMode) =>
   responsiveFontSizes(createTheme(getDesignTokens(mode)));
+
+export const getApprovalTheme = () =>
+  responsiveFontSizes(
+    createTheme({
+      palette: {
+        mode: "dark", // The reference image is dark
+        primary: {
+          main: "#135bec",
+        },
+        background: {
+          default: "#101622",
+          paper: "#1e293b", // Slightly lighter than background-dark for cards, mimicking the image cards
+        },
+        text: {
+          primary: "#ffffff",
+          secondary: "#94a3b8",
+        },
+      },
+      typography: {
+        fontFamily: '"Inter", "Plus Jakarta Sans", sans-serif',
+        h1: {
+          fontSize: "1.75rem",
+          fontWeight: 700,
+        },
+        h2: {
+          fontSize: "1.5rem",
+          fontWeight: 600,
+        },
+        h3: {
+          fontSize: "1.25rem",
+          fontWeight: 600,
+        },
+      },
+      components: {
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              borderRadius: "0.5rem", // lg
+              textTransform: "none",
+            },
+          },
+        },
+        MuiPaper: {
+          styleOverrides: {
+            root: {
+              backgroundImage: "none", // Remove default MUI dark mode gradient
+            },
+          },
+        },
+        MuiCard: {
+          styleOverrides: {
+            root: {
+              borderRadius: "0.75rem", // xl
+              backgroundColor: "#1e293b", // Keeping card bg distinct
+              border: "1px solid #334155", // Subtle border
+            },
+          },
+        },
+      },
+    }),
+  );
