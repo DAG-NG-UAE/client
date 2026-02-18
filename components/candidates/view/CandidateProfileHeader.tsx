@@ -11,6 +11,7 @@ import { fetchSingleCandidate, setSelectedCandidate } from '@/redux/slices/candi
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { AppRole } from '@/utils/constants';
+import { CandidateRejectionModal } from '../CandidateRejectionModal';
 
 interface Props {
     candidate: CandidateProfile;
@@ -19,6 +20,7 @@ interface Props {
 const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
     const statusProps = getStatusChipProps(candidate.current_status);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
     const {user} = useSelector((state: RootState) => state.auth);
     
     const handleCloseModal = () => {
@@ -30,6 +32,11 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
     const handleRowClick = (candidate:Partial<CandidateProfile>) =>{
         dispatch(setSelectedCandidate(candidate))
         setIsModalOpen(true);
+      }
+
+    const handleRejectRow = (candidate:Partial<CandidateProfile>) =>{
+        dispatch(setSelectedCandidate(candidate))
+        setRejectionModalOpen(true);
       }
 
     console.log(`candidate in the candidate profile header => ${JSON.stringify(candidate)}`)
@@ -62,6 +69,7 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
                     color="inherit" 
                     startIcon={<CloseIcon />}
                     sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary' }}
+                    onClick={() => handleRejectRow(candidate)}
                  >
                     Reject
                  </Button>
@@ -90,6 +98,11 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
         </Box>
         <CandidateModal
           open={isModalOpen}
+          onClose={handleCloseModal}
+          candidate={candidate}
+        />
+        <CandidateRejectionModal
+          open={rejectionModalOpen}
           onClose={handleCloseModal}
           candidate={candidate}
         />

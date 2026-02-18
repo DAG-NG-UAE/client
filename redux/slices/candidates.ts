@@ -167,7 +167,7 @@ export const fetchSingleCandidate = async (candidateId: string) => {
 };
 
 export const callUpdateCandidateStatus = async (
-  updateData: Partial<CandidateProfile>,
+  updateData: Partial<CandidateProfile> & { emailTemplateId?: number },
 ) => {
   try {
     dispatch(startLoading());

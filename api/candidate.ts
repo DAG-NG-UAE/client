@@ -88,8 +88,9 @@ export const getSingleCandidate = async (candidateId: string) => {
 
 export const getCandidateResume = async (candidateId: string) => {
   try {
-    const resumeLink = `${API_BASE_URL}/candidate/resume?candidateId=${candidateId}`;
-    return resumeLink;
+    const resumeLink = await axiosInstance.get(`candidate/resume?candidateId=${candidateId}`);
+    console.log("The resume link is ", resumeLink);
+    return resumeLink.data.data.value;
   } catch (error) {
     console.error("Error fetching single candidate details");
     throw error;

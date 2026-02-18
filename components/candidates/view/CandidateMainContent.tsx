@@ -45,16 +45,14 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
     // Construct Resume URL
     let resumeUrl = null;
     if (candidate.cv_path) {
-        // Assume format: C:\Users\...\server\uploads\application\filename.pdf
-        // We want: http://localhost:5000/uploads/application/filename.pdf
-        const parts = candidate.cv_path.split('uploads');
-        if (parts.length > 1) {
-             // Take the part after 'uploads' (incl. slash) and prepend /uploads
-             // e.g. \application\file.pdf -> /uploads/application/file.pdf
-             const relPath = parts[1].replace(/\\/g, '/');
-             resumeUrl = `${API_BASE_URL}/uploads${relPath}`;
-             console.log(resumeUrl);
-        }
+        resumeUrl = candidate.cv_path;
+
+        // const parts = candidate.cv_path.split('uploads');
+        // if (parts.length > 1) {
+        //      const relPath = parts[1].replace(/\\/g, '/');
+        //      resumeUrl = `${API_BASE_URL}/uploads${relPath}`;
+        //      console.log(resumeUrl);
+        // }
     }
 
     return (
@@ -72,17 +70,17 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
             <CustomTabPanel value={value} index={0}>
                 {resumeUrl ? (
                     <Box sx={{ height: '800px', width: '100%', bgcolor: '#eee', borderRadius: 1, overflow: 'hidden' }}>
-                <iframe 
-                            src={`${resumeUrl}#zoom=100`} 
-                            width="100%" 
-                            height="100%" 
+                        <iframe
+                            src={`${resumeUrl}#zoom=100`}
+                            width="100%"
+                            height="100%"
                             style={{ border: 'none' }}
                             title="Candidate Resume"
                         />
                     </Box>
                 ) : (
                     <Box sx={{ p: 4, textAlign: 'center' }}>
-                         <Typography color="text.secondary">No resume attached.</Typography>
+                        <Typography color="text.secondary">No resume attached.</Typography>
                     </Box>
                 )}
             </CustomTabPanel>
@@ -94,16 +92,16 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
 
             {/* REQUIREMENT MATCH TAB */}
             <CustomTabPanel value={value} index={2}>
-                 <CandidateRequirementDetail 
-                    requirements={candidate.requirement_match} 
+                <CandidateRequirementDetail
+                    requirements={candidate.requirement_match}
                     candidateName={candidate.candidate_name}
-                    // No need for "View Full Profile" button here since we are ALREADY on the full profile
+                // No need for "View Full Profile" button here since we are ALREADY on the full profile
                 />
             </CustomTabPanel>
 
             {/* NOTES TAB */}
             <CustomTabPanel value={value} index={3}>
-                 <Typography color="text.secondary">Notes section.</Typography>
+                <Typography color="text.secondary">Notes section.</Typography>
             </CustomTabPanel>
         </Paper>
     );
