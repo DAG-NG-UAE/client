@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { Search, Add, Person } from '@mui/icons-material';
 import { useSelector, useDispatch } from '@/redux/store';
-import { setMeetingDetails, removeInterviewer, addInterviewer, updateInterviewer } from '@/redux/slices/schedule';
+import { setMeetingDetails, removeInterviewer, addInterviewer, updateInterviewer, setLocation, setEditPreview } from '@/redux/slices/schedule';
 import { getInterviewerAvailability, searchInterviewers } from '@/api/interview';
 
 const SidebarSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
@@ -247,7 +247,7 @@ export const InterviewersSidebar = () => {
 
 export const MeetingDetailsSidebar = () => {
     const dispatch = useDispatch();
-    const { interviewTitle, date, duration, internalInterviewers } = useSelector((state) => state.schedule);
+    const { interviewTitle, date, duration, internalInterviewers, locationType, locationDetails } = useSelector((state) => state.schedule);
 
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         dispatch(setMeetingDetails({ title: e.target.value }));
@@ -278,6 +278,14 @@ export const MeetingDetailsSidebar = () => {
 
     const handleDurationChange = (e: SelectChangeEvent<number>) => {
         dispatch(setMeetingDetails({ duration: Number(e.target.value) }));
+    };
+
+    const handleLocationTypeChange = (e: SelectChangeEvent<string>) => {
+        dispatch(setLocation({ type: e.target.value as 'online' | 'in_person' }));
+    };
+
+    const handleLocationDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        dispatch(setLocation({ type: locationType, details: e.target.value }));
     };
 
     return (
@@ -319,6 +327,40 @@ export const MeetingDetailsSidebar = () => {
                     </Select>
                 </Box>
             </Stack>
+
+            <Box>
+                <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>Location Type</Typography>
+                <Select
+                    fullWidth
+                    value={locationType}
+                    onChange={handleLocationTypeChange}
+                    size="small"
+                    sx={{ borderRadius: 2 }}
+                >
+                    <MenuItem value="online">Online (Teams)</MenuItem>
+                    <MenuItem value="in_person">In-Person</MenuItem>
+                </Select>
+            </Box>
+
+            {locationType === 'in_person' ? (
+                <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>Location Details / Address</Typography>
+                    <TextField
+                        fullWidth
+                        placeholder="Room 302, Lagos Office"
+                        value={locationDetails}
+                        onChange={handleLocationDetailsChange}
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    />
+                </Box>
+            ) : (
+                <Box sx={{ p: 1.5, bgcolor: '#f0f9ff', borderRadius: 2, border: '1px solid #bae6fd' }}>
+                    <Typography variant="caption" sx={{ color: '#0369a1', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span>ℹ️</span> Microsoft Teams link will be generated automatically.
+                    </Typography>
+                </Box>
+            )}
         </SidebarSection>
     );
 };

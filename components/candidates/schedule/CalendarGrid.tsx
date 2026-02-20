@@ -43,6 +43,15 @@ export const CalendarGrid = () => {
         return dayjs().hour(hour).minute(minute).format('hh:mm A');
     };
 
+    const isSlotPassed = (slotIndex: number) => {
+        if (!date) return false;
+        const slotTime = dayjs(date)
+            .hour(Math.floor(slotIndex / 2))
+            .minute((slotIndex % 2) * 30)
+            .second(0);
+        return slotTime.isBefore(dayjs());
+    };
+
     const checkAvailability = (startSlot: number) => {
         const durationSlots = duration / 30;
         const unavailable = internalInterviewers.filter(int => {
@@ -82,6 +91,8 @@ export const CalendarGrid = () => {
         const rect = e.currentTarget.getBoundingClientRect();
         const y = e.clientY - rect.top;
         const slot = Math.floor(y / 50) + 16;
+
+        if (isSlotPassed(slot)) return;
 
         const unavailable = checkAvailability(slot);
         if (unavailable.length === 0 && internalInterviewers.length > 0) {
@@ -145,15 +156,35 @@ export const CalendarGrid = () => {
                         <Box key={colIdx} sx={{ flex: 1, borderLeft: '1px solid #f1f5f9', position: 'relative' }}>
                             {hours.map((_, rowIdx) => {
                                 const slotIndex = (8 + rowIdx) * 2;
-                                const firstHalf = int.availabilityView ? int.availabilityView[slotIndex] : '0';
-                                const secondHalf = int.availabilityView ? int.availabilityView[slotIndex + 1] : '0';
+                                const firstHalfIndex = slotIndex;
+                                const secondHalfIndex = slotIndex + 1;
+
+                                const firstHalf = int.availabilityView ? int.availabilityView[firstHalfIndex] : '0';
+                                const secondHalf = int.availabilityView ? int.availabilityView[secondHalfIndex] : '0';
+
+                                const isFirstHalfPassed = isSlotPassed(firstHalfIndex);
+                                const isSecondHalfPassed = isSlotPassed(secondHalfIndex);
 
                                 return (
                                     <Box key={rowIdx} sx={{ height: 100, borderBottom: '1px solid #f1f5f9', position: 'relative' }}>
                                         {int.type === 'interviewer' && int.availabilityView && (
                                             <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', zIndex: 0 }}>
-                                                <Box sx={{ flex: 1, bgcolor: getStatusColor(firstHalf) }} />
-                                                <Box sx={{ flex: 1, bgcolor: getStatusColor(secondHalf) }} />
+                                                <Box sx={{ flex: 1, bgcolor: isFirstHalfPassed ? '#f1f5f9' : getStatusColor(firstHalf) }}>
+                                                    {isFirstHalfPassed && colIdx === 0 && (
+                                                        <Typography variant="caption" sx={{ fontSize: 8, color: '#94a3b8', ml: 1, fontWeight: 700, mt: 0.5, display: 'block' }}>PASSED</Typography>
+                                                    )}
+                                                </Box>
+                                                <Box sx={{ flex: 1, bgcolor: isSecondHalfPassed ? '#f1f5f9' : getStatusColor(secondHalf) }}>
+                                                    {isSecondHalfPassed && colIdx === 0 && (
+                                                        <Typography variant="caption" sx={{ fontSize: 8, color: '#94a3b8', ml: 1, fontWeight: 700, mt: 0.5, display: 'block' }}>PASSED</Typography>
+                                                    )}
+                                                </Box>
+                                            </Box>
+                                        )}
+                                        {(isFirstHalfPassed || isSecondHalfPassed) && int.type !== 'interviewer' && (
+                                            <Box sx={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', zIndex: 0 }}>
+                                                <Box sx={{ flex: 1, bgcolor: isFirstHalfPassed ? '#f8fafc' : 'transparent' }} />
+                                                <Box sx={{ flex: 1, bgcolor: isSecondHalfPassed ? '#f8fafc' : 'transparent' }} />
                                             </Box>
                                         )}
                                     </Box>
@@ -163,7 +194,7 @@ export const CalendarGrid = () => {
                     ))}
 
                     {/* Hover Overlay */}
-                    {hoveredSlot !== null && (
+                    {hoveredSlot !== null && !isSlotPassed(hoveredSlot) && (
                         <Box
                             sx={{
                                 position: 'absolute',

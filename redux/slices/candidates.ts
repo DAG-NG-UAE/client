@@ -16,6 +16,7 @@ import {
 import { dispatch } from "../dispatchHandle";
 import { enqueueSnackbar } from "notistack";
 import { PaginationMeta } from "./requisition";
+import { resetSchedule } from "./schedule";
 
 export interface CandidateState {
   candidates: Partial<CandidateProfile>[];
@@ -185,22 +186,30 @@ export const callUpdateCandidateStatus = async (
 
 export const callScheduleInterview = async (interviewData: {
   candidate_id: string;
+  candidate_name: string;
   requisition_id: string;
-  current_status: string;
+  interview_phase: string;
   interview_date: string;
-  interview_time: string;
-  interview_type: string;
-  // interview_panel: string[];
+  duration_minutes: number;
+  location_type: 'online' | 'in_person';
+  location_details: string;
+  interview_panel: string[];
+  old_status: string;
+  publicCvLink: string;
+  body: string;
+  candidateEmail: string;
+  subject: string
 }) => {
   try {
     dispatch(startLoading());
     await scheduleInterview(interviewData);
     enqueueSnackbar("Interview scheduled successfully", { variant: "success" });
+    //clear the schedule state entirely 
+    dispatch(resetSchedule());
     fetchAllCandidates(undefined, "shortlisted");
     dispatch(stopLoading());
-    // Optionally refetch candidate or update state directly
   } catch (error: any) {
-    dispatch(hasError(error?.response?.data || error));
+    dispatch(hasError(error?.response?.data?.message || error?.message || error));
   } finally {
     dispatch(stopLoading());
   }

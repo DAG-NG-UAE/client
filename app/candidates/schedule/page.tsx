@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from '@/redux/store';
 import { setCandidate, setStep } from '@/redux/slices/schedule';
 import { callScheduleInterview } from '@/redux/slices/candidates';
 import { useSnackbar } from 'notistack';
+import dayjs from 'dayjs';
 
 // New specialized components
 import { ScheduleSidebar } from '@/components/candidates/schedule/Sidebar';
@@ -30,7 +31,11 @@ export default function SchedulePage() {
     const candidateId = searchParams.get('id');
     const requisitionId = searchParams.get('reqId');
 
-    const { candidate, step, date, interviewTitle, startTime } = useSelector((state) => state.schedule);
+    const {
+        candidate, step, date, interviewTitle, startTime, endTime,
+        internalInterviewers, duration, locationType, locationDetails,
+        candidateEmailBody, interviewerContext
+    } = useSelector((state) => state.schedule);
 
     useEffect(() => {
         if (candidateId) {
@@ -47,24 +52,42 @@ export default function SchedulePage() {
     }, [candidateId, dispatch]);
 
     const handleConfirmSchedule = async () => {
-        if (!candidateId || !requisitionId) {
+        if (!candidateId || !requisitionId || !candidate?.candidate_name) {
             enqueueSnackbar("Missing candidate or requisition ID", { variant: "error" });
             return;
         }
 
+        if (!candidate?.share_token) {
+            enqueueSnackbar("Candidate CV share link not available. Please ensure the candidate has a share token.", { variant: "warning" });
+            // continue anyway or block? User said they want to work on share_token
+        }
+
+        // Combine date and startTime for the backend (ISO 8601)
+        const combinedDateTime = dayjs(`${date} ${startTime}`, 'YYYY-MM-DD hh:mm A').toISOString();
+
         try {
+
+            console.log(`the argument we want to pass are => ${candidate?.candidate_name}, ${interviewTitle}, ${combinedDateTime}, ${duration}, ${locationType}, ${locationDetails}, ${internalInterviewers.map(i => i.email!).filter(Boolean)}, ${candidateEmailBody}, ${candidate?.email}, ${interviewTitle}`)
             await callScheduleInterview({
                 candidate_id: candidateId,
+                candidate_name: candidate?.candidate_name, 
                 requisition_id: requisitionId,
-                current_status: 'interview_scheduled',
-                interview_date: date,
-                interview_time: '14:00', // Could be dynamic via state
-                interview_type: interviewTitle
+                interview_phase: interviewTitle,
+                interview_date: combinedDateTime,
+                duration_minutes: duration,
+                location_type: locationType,
+                location_details: locationType === 'online' ? 'Microsoft Teams' : locationDetails,
+                interview_panel: internalInterviewers.map(i => i.email!).filter(Boolean),
+                old_status: candidate?.current_status || 'shortlisted',
+                publicCvLink: `https://bajaj-hiring.azurewebsites.net/api/share/${candidate?.share_token}`,
+                body: candidateEmailBody,
+                candidateEmail: candidate?.email || '',
+                subject: interviewTitle
             });
-            enqueueSnackbar("Schedule confirmed and invitations sent!", { variant: "success" });
+            // enqueueSnackbar will be called inside callScheduleInterview
             router.push(`/candidates/view?id=${candidateId}`);
         } catch (error) {
-            enqueueSnackbar("Failed to schedule interview", { variant: "error" });
+            // Error handling is also partially inside the slice
         }
     };
 

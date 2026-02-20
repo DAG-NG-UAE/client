@@ -18,6 +18,11 @@ export interface ScheduleState {
     step: number;
     startTime: string;
     endTime: string;
+    locationType: 'online' | 'in_person';
+    locationDetails: string;
+    candidateEmailBody: string;
+    interviewerContext: string;
+    isEditingPreview: boolean;
     loading: boolean;
     error: string | null;
 }
@@ -31,6 +36,11 @@ const initialState: ScheduleState = {
     step: 1,
     startTime: '',
     endTime: '',
+    locationType: 'online',
+    locationDetails: '',
+    candidateEmailBody: '',
+    interviewerContext: 'Final stage technical and cultural fit interview. Focus on core competencies and stakeholder management.',
+    isEditingPreview: false,
     loading: false,
     error: null,
 };
@@ -66,8 +76,32 @@ export const scheduleSlice = createSlice({
             state.startTime = action.payload.startTime;
             state.endTime = action.payload.endTime;
         },
+        setLocation: (state, action: PayloadAction<{ type: 'online' | 'in_person', details?: string }>) => {
+            state.locationType = action.payload.type;
+            if (action.payload.details !== undefined) state.locationDetails = action.payload.details;
+        },
+        setEmailCustomization: (state, action: PayloadAction<{ emailBody?: string, context?: string }>) => {
+            if (action.payload.emailBody !== undefined) state.candidateEmailBody = action.payload.emailBody;
+            if (action.payload.context !== undefined) state.interviewerContext = action.payload.context;
+        },
+        setEditPreview: (state, action: PayloadAction<boolean>) => {
+            state.isEditingPreview = action.payload;
+        },
         resetSchedule: (state) => {
-            return initialState;
+            state.candidate = null
+            state.internalInterviewers = []
+            state.date = ''
+            state.duration = 60
+            state.startTime = ''
+            state.endTime = ''
+            state.locationType = 'online'
+            state.locationDetails = ''
+            state.candidateEmailBody = ''
+            state.interviewerContext = 'Final stage technical and cultural fit interview. Focus on core competencies and stakeholder management.'
+            state.isEditingPreview = false
+            state.loading = false
+            state.error = null
+            state.step = 1
         }
     },
 });
@@ -80,6 +114,9 @@ export const {
     removeInterviewer,
     setStep,
     setTimeSlot,
+    setLocation,
+    setEmailCustomization,
+    setEditPreview,
     resetSchedule
 } = scheduleSlice.actions;
 

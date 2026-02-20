@@ -111,11 +111,19 @@ export const updateCandidateStatus = async (
 
 export const scheduleInterview = async (interviewData: {
   candidate_id: string;
+  candidate_name: string;
   requisition_id: string;
-  current_status: string;
+  interview_phase: string;
   interview_date: string;
-  interview_time: string;
-  interview_type: string;
+  duration_minutes: number;
+  location_type: 'online' | 'in_person';
+  location_details: string;
+  interview_panel: string[];
+  old_status: string;
+  publicCvLink: string;
+  body: string;
+  candidateEmail: string;
+  subject: string;
 }) => {
   try {
     console.log("The data to the backend is ", interviewData);

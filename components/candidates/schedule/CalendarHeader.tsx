@@ -25,8 +25,8 @@ export const CalendarHeader = () => {
                 </Stack>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Timezone: <span style={{ color: '#64748b' }}>(GMT-07:00) Pacific Time</span></Typography>
-                <IconButton size="small" sx={{ border: '1px solid #e2e8f0', borderRadius: 2 }}><Settings sx={{ fontSize: 18, color: '#64748b' }} /></IconButton>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Timezone: <span style={{ color: '#64748b' }}>(GMT+01:00) Nigerian Time</span></Typography>
+                {/* <IconButton size="small" sx={{ border: '1px solid #e2e8f0', borderRadius: 2 }}><Settings sx={{ fontSize: 18, color: '#64748b' }} /></IconButton> */}
             </Box>
         </Box>
     );

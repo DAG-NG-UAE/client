@@ -78,6 +78,7 @@ export interface CandidateProfile {
   // Matching
   match_score?: number;
   requirement_match?: RequirementMatch[];
+  share_token?: string;
 }
 
 export interface RequirementMatch {
