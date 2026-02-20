@@ -5,7 +5,7 @@ import {
     RadioGroup, FormControlLabel, FormLabel, Chip
 } from '@mui/material';
 import { CandidateProfile } from '@/interface/candidate';
-import { callUpdateCandidateStatus } from '@/redux/slices/candidates';
+import { callUpdateCandidateStatus, fetchAllCandidates } from '@/redux/slices/candidates';
 import { getTemplateType } from '@/api/emailTemplate';
 
 interface EmailTemplate {
@@ -95,7 +95,9 @@ export const CandidateRejectionModal: React.FC<CandidateRejectionModalProps> = (
             candidate_id: candidate?.candidate_id,
             requisition_id: candidate?.requisition_id,
             email: candidate?.email,
-            current_status: candidate?.current_status,
+            old_status: candidate?.current_status, 
+            new_status: "rejected",
+            current_status: "rejected",
             rejection_reason: actualReason,
             emailTemplateId: selectedTemplate?.id
         };
@@ -104,6 +106,8 @@ export const CandidateRejectionModal: React.FC<CandidateRejectionModalProps> = (
         callUpdateCandidateStatus(params);
         console.log(`Rejecting candidate ${candidate?.candidate_id} with reason: ${actualReason} and template: ${selectedTemplate?.name}`);
 
+        // get the candidates who are in the stage the candidate was in previously 
+        
         onClose();
     };
 

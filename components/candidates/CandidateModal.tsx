@@ -16,11 +16,14 @@ import StarIcon from '@mui/icons-material/Star';
 import { getCandidateResume, getSingleCandidate, updateCandidateStatus } from "@/api/candidate";
 import { useEffect, useState } from "react";
 import { determineActions } from "@/utils/determineActions";
-import { CandidateActions, CandidateActionButton, CandidateStatus } from "@/interface/candidate";
+import { CandidateActions, CandidateActionButton } from "@/interface/candidate";
 import ScheduleInterviewModal from "./ScheduleInterviewModal"; // Import the new modal
 import { callUpdateCandidateStatus } from "@/redux/slices/candidates";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { CandidateStatus } from "@/utils/constants";
+import { CandidateRejectionModal } from "./CandidateRejectionModal";
+import { CandidateStatusType } from "@/types/candidate";
 
 interface CandidateModalProps {
     open: boolean;
@@ -56,11 +59,15 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     const [currentAction, setCurrentAction] = useState<CandidateActionButton | null>(null);
     const [updateCandidate, setUpdateCandidate] = useState(false);
     const {loading} = useSelector((state: RootState) => state.candidates)
+    const [openRejectionModal, setOpenRejectionModal] = useState(false);
 
     const handleAction = (action: CandidateActionButton) => {
         setCurrentAction(action);
         if (action.triggersWorkflow === 'Scheduling') {
             setIsSchedulingModalOpen(true);
+        }else if(action.triggersWorkflow === 'Reject Candidate') {
+            // we want to open the rejection modal here
+            setOpenRejectionModal(true);
         } else if (action.requiresNotes) {
             setNotesModalOpen(true);
         } else {
@@ -130,7 +137,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     );
 
     const { progressionAction, rejectionAction } = fetchedDetails?.current_status
-        ? determineActions(fetchedDetails.current_status as CandidateStatus)
+        ? determineActions(fetchedDetails.current_status as CandidateStatusType)
         : { progressionAction: null, rejectionAction: null };
 
     useEffect(() => { 
@@ -318,44 +325,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                             </Paper>
                         </Box>
 
-                        {/* Interview History - Mocked */}
-                        {/* <Box sx={{ width: '100%' }}>
-                            <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
-                                <SectionTitle>Interview History</SectionTitle>
-                                <Box sx={{ pl: 2, borderLeft: `3px solid ${theme.palette.primary.main}` }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                        <Typography variant="subtitle2">Sarah Chen</Typography>
-                                        <Box sx={{ display: 'flex', color: '#ffb400' }}>
-                                            {[1,2,3,4].map(i => <StarIcon key={i} fontSize="small" />)}
-                                        </Box>
-                                    </Box>
-                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>Dec 5, 2024</Typography>
-                                    <Typography variant="body2">Strong technical skills, good communication.</Typography>
-                                </Box>
-                            </Paper>
-                        </Box> */}
-
-                        {/* Notes */}
-                        {/* <Box sx={{ width: '100%' }}>
-                            <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
-                                <SectionTitle>Notes</SectionTitle>
-                                {candidate.notes && (
-                                    <Box sx={{ p: 1.5, bgcolor: '#f5f5f5', borderRadius: 1, mb: 2 }}>
-                                        <Typography variant="body2">{candidate.notes}</Typography>
-                                    </Box>
-                                )}
-                                <Stack direction="row" spacing={1}>
-                                    <TextField 
-                                        fullWidth 
-                                        placeholder="Add a note..." 
-                                        size="small" 
-                                        variant="outlined"
-                                        sx={{ bgcolor: 'white' }}
-                                    />
-                                    <Button variant="contained" sx={{ textTransform: 'none' }}>Add Note</Button>
-                                </Stack>
-                            </Paper>
-                        </Box> */}
+                        
                     </Box>
                 </DialogContent>
                 {NotesConfirmationModal}
@@ -365,6 +335,14 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                 onClose={handleSchedulingComplete}
                 candidate={candidate}
             />
+
+            <CandidateRejectionModal
+                open={openRejectionModal}
+                onClose={() => setOpenRejectionModal(false)}
+                candidate={candidate}
+            >
+
+            </CandidateRejectionModal>
         </>
     );
 };

@@ -1,17 +1,9 @@
-export type CandidateStatus =
-  | "applied"
-  | "shortlisted"
-  | "interview_scheduled"
-  | "interviewed"
-  | "offer_extended"
-  | "offer_accepted"
-  | "offer_rejected";
 
 export interface CandidateActionButton {
   label: string; // Text displayed on the button
   actionType: string; // A unique identifier for the action (e.g., 'SHORTLIST_CANDIDATE')
   description: string; // Detailed description of the action, as provided
-  triggersWorkflow?: "Scheduling" | "Offer"; // Indicates if a specific workflow is triggered
+  triggersWorkflow?: "Scheduling" | "Offer" | "Reject Candidate"; // Indicates if a specific workflow is triggered
   requiresConfirmation?: boolean; // True if a confirmation dialog is needed
   requiresNotes?: boolean; // True if notes are required for this action
   targetStatus?: string; // The status the candidate will transition to (for simple changes)

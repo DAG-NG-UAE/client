@@ -36,6 +36,7 @@ export function determineActions(currentStatus: CandidateStatus): CandidateActio
            requiresConfirmation: true,
            requiresNotes: true,
            targetStatus: 'REJECTED',
+           triggersWorkflow: 'Reject Candidate'
          },
        };
      case 'interview_scheduled':

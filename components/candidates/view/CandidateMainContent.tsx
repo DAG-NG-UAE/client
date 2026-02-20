@@ -46,6 +46,7 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
     let resumeUrl = null;
     if (candidate.cv_path) {
         resumeUrl = candidate.cv_path;
+        console.log(`the resumeUrl is ${resumeUrl}`)
 
         // const parts = candidate.cv_path.split('uploads');
         // if (parts.length > 1) {
@@ -70,13 +71,19 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
             <CustomTabPanel value={value} index={0}>
                 {resumeUrl ? (
                     <Box sx={{ height: '800px', width: '100%', bgcolor: '#eee', borderRadius: 1, overflow: 'hidden' }}>
-                        <iframe
-                            src={`${resumeUrl}#zoom=100`}
+                        <object
+                            data={`${resumeUrl}#zoom=100`}
+                            key={resumeUrl}
+                            type="application/pdf"
                             width="100%"
                             height="100%"
-                            style={{ border: 'none' }}
-                            title="Candidate Resume"
-                        />
+                        >
+                            {/* <Box sx={{ p: 4, textAlign: 'center' }}>
+                                <Typography>
+                                    PDF viewer failed. <a href={resumeUrl} target="_blank" rel="noreferrer">Click here to open in a new tab.</a>
+                                </Typography>
+                            </Box> */}
+                        </object>
                     </Box>
                 ) : (
                     <Box sx={{ p: 4, textAlign: 'center' }}>

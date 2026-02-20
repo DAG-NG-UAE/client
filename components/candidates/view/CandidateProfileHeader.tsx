@@ -7,10 +7,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CandidateModal from '../CandidateModal';
 import { dispatch } from '@/redux/dispatchHandle';
-import { fetchSingleCandidate, setSelectedCandidate } from '@/redux/slices/candidates';
+import { fetchAllCandidates, fetchSingleCandidate, setSelectedCandidate } from '@/redux/slices/candidates';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { AppRole } from '@/utils/constants';
+import { AppRole, CandidateStatus } from '@/utils/constants';
 import { CandidateRejectionModal } from '../CandidateRejectionModal';
 
 interface Props {
@@ -39,6 +39,12 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
         setRejectionModalOpen(true);
       }
 
+    const handleCloseRejectionModal =() => { 
+        setRejectionModalOpen(false);
+        //when the modal closes we want to refetch the candidate data
+        fetchSingleCandidate(candidate.candidate_id)
+    }
+
     console.log(`candidate in the candidate profile header => ${JSON.stringify(candidate)}`)
 
     return (
@@ -64,16 +70,20 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
 
             {(user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
             <Box sx={{ display: 'flex', gap: 1.5 }}>
-                 <Button 
-                    variant="outlined" 
-                    color="inherit" 
-                    startIcon={<CloseIcon />}
-                    sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary' }}
-                    onClick={() => handleRejectRow(candidate)}
-                 >
-                    Reject
-                 </Button>
-                 {candidate.current_status == "shortlisted" && (
+                {/* //TODO:: consider adding the option for them to bring the candidate back into the pipeline  */}
+                {candidate.current_status !== CandidateStatus.REJECTED && ( 
+                    <Button 
+                        variant="outlined" 
+                        color="inherit" 
+                        startIcon={<CloseIcon />}
+                        sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary' }}
+                        onClick={() => handleRejectRow(candidate)}
+                    >
+                        Reject
+                    </Button>
+                )}
+                
+                 {candidate.current_status == CandidateStatus.SHORTLISTED && (
                  <Button 
                     variant="outlined" 
                     color="inherit"
@@ -103,7 +113,7 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
         />
         <CandidateRejectionModal
           open={rejectionModalOpen}
-          onClose={handleCloseModal}
+          onClose={handleCloseRejectionModal}
           candidate={candidate}
         />
         </>
