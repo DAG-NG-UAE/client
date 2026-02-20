@@ -1,6 +1,7 @@
-import { CandidateActions, CandidateStatus } from "@/interface/candidate";
+import { CandidateActions } from "@/interface/candidate";
+import { CandidateStatusType } from "@/types/candidate";
 
-export function determineActions(currentStatus: CandidateStatus): CandidateActions {
+export function determineActions(currentStatus: CandidateStatusType): CandidateActions {
     switch (currentStatus) {
      case 'applied':
        return {

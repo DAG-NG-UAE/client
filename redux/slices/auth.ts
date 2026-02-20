@@ -7,6 +7,7 @@ import { clearSelectedCandidate, clearCandidates, clearError } from "./candidate
 import { clearInterviewState } from "./interview";
 import { clearRequisition } from "./requisition";
 import { clearOfferState } from "./offer";
+import { resetSchedule } from "./schedule";
 
 // Define the initial state
 const initialState: AuthState = {
@@ -79,6 +80,7 @@ export const logoutUser = async () => {
         dispatch(clearInterviewState())
         dispatch(clearRequisition())
         dispatch(clearOfferState())
+        dispatch(resetSchedule())
     }catch(error: any){ 
         dispatch(hasError(error?.response?.data || error));
     }
