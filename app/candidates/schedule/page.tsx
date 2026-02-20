@@ -70,7 +70,7 @@ export default function SchedulePage() {
             console.log(`the argument we want to pass are => ${candidate?.candidate_name}, ${interviewTitle}, ${combinedDateTime}, ${duration}, ${locationType}, ${locationDetails}, ${internalInterviewers.map(i => i.email!).filter(Boolean)}, ${candidateEmailBody}, ${candidate?.email}, ${interviewTitle}`)
             await callScheduleInterview({
                 candidate_id: candidateId,
-                candidate_name: candidate?.candidate_name, 
+                candidate_name: candidate?.candidate_name,
                 requisition_id: requisitionId,
                 interview_phase: interviewTitle,
                 interview_date: combinedDateTime,
@@ -79,13 +79,13 @@ export default function SchedulePage() {
                 location_details: locationType === 'online' ? 'Microsoft Teams' : locationDetails,
                 interview_panel: internalInterviewers.map(i => i.email!).filter(Boolean),
                 old_status: candidate?.current_status || 'shortlisted',
-                publicCvLink: `https://bajaj-hiring.azurewebsites.net/api/share/${candidate?.share_token}`,
+                publicCvLink: `${window.location.origin}/share/${candidate?.share_token}`,
                 body: candidateEmailBody,
                 candidateEmail: candidate?.email || '',
                 subject: interviewTitle
             });
-            // enqueueSnackbar will be called inside callScheduleInterview
-            router.push(`/candidates/view?id=${candidateId}`);
+            // go back to the shortlisted page 
+            router.push('/candidates/shortlisted')
         } catch (error) {
             // Error handling is also partially inside the slice
         }

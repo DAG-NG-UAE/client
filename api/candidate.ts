@@ -208,3 +208,13 @@ export const getCandidateEvaluationDetails = async (candidateId: string) => {
     throw error;
   }
 };
+export const getCvByShareToken = async (token: string) => {
+  try {
+    const response = await axiosInstance.get(`/candidate/public/cv?token=${token}`);
+    console.log("The response from get cv by share token is ", response.data.data)
+    return response.data.data.value;
+  } catch (error) {
+    console.error("Error fetching CV by share token:", error);
+    throw error;
+  }
+};
