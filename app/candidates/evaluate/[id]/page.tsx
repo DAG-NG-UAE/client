@@ -37,7 +37,7 @@ import { callInsertCandidateEvaluation, fetchEvaluationForm } from '@/redux/slic
 import { fetchSingleCandidate } from '@/redux/slices/candidates';
 import { useParams, useRouter } from 'next/navigation';
 import { AppRole } from '@/utils/constants';
-import axiosInstance from '@/api/axiosInstance'; // Import axios instance for blob fetching
+import { getStatusChipProps } from '@/utils/statusColorMapping';
 
 const EvaluationPage = () => {
   const params = useParams();
@@ -45,6 +45,7 @@ const EvaluationPage = () => {
   const theme = useTheme();
   
   const candidateId = params.id as string;
+ 
 
   const { evaluationForm, loading: interviewLoading, error: interviewError } = useSelector((state: RootState) => state.interviews);
   const { selectedCandidate, loading: candidateLoading, error: candidateError } = useSelector((state: RootState) => state.candidates);
@@ -54,10 +55,9 @@ const EvaluationPage = () => {
   const [ratings, setRatings] = useState<Record<string, { rating: number | null, comment: string }>>({});
   const [recommendation, setRecommendation] = useState<string>('');
   const [submitted, setSubmitted] = useState(false);
+    const statusProps = getStatusChipProps(selectedCandidate?.current_status);
   
-  // State for the Blob URL
-  const [cvBlobUrl, setCvBlobUrl] = useState<string | null>(null);
-  const [cvLoading, setCvLoading] = useState(false);
+  let resumeUrl
 
   // Derivations
   const isRecruiter = user?.role_name === AppRole.Recruiter;
@@ -71,8 +71,6 @@ const EvaluationPage = () => {
     }
   }, [candidateId]);
 
-  console.log(`the candidate data is => ${JSON.stringify(selectedCandidate)}`)
-
   // Form Fetch
   useEffect(() => {
     if (candidateDepartment) {
@@ -80,51 +78,6 @@ const EvaluationPage = () => {
       setRatings({});
     }
   }, [candidateDepartment]);
-
-  // CV Fetching Logic (Blob approach to bypass CSP frame-ancestors 'self')
-  useEffect(() => {
-    let active = true; 
-
-    const fetchCvBlob = async () => {
-        if (!selectedCandidate?.candidate_id) return;
-        
-        setCvLoading(true);
-        try {
-            // We use the same endpoint path but request a blob.
-            // The backend returns the file stream.
-            const response = await axiosInstance.get('/candidate/resume', {
-                params: { candidateId: selectedCandidate.candidate_id },
-                responseType: 'blob' 
-            });
-
-            if (active) {
-                // Create a local object URL for the blob
-                // This 'blob:http://localhost:3000/...' URL is considered same-origin(ish) or at least trusted by the browser
-                // significantly more than a cross-origin iframe src.
-                const newBlobUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-                setCvBlobUrl(newBlobUrl);
-            }
-        } catch (error) {
-            console.error("Failed to fetch CV blob:", error);
-            // On failure, we might fallback to null or try something else, 
-            // but for now we just stop loading.
-        } finally {
-            if (active) setCvLoading(false);
-        }
-    };
-
-    fetchCvBlob();
-
-    return () => {
-        active = false;
-        // Clean up the object URL to avoid memory leaks
-        if (cvBlobUrl) {
-            URL.revokeObjectURL(cvBlobUrl);
-        }
-    };
-    // We only want to re-run this if the candidate ID changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCandidate?.candidate_id]);
 
   const handleRatingChange = (criteriaId: string | number, newValue: number | null) => {
     setRatings(prev => ({ 
@@ -185,11 +138,7 @@ const EvaluationPage = () => {
   const error = interviewError || candidateError;
 
   // Direct URL for the "Open in New Tab" button (Standard link)
-  const directCvUrl = useMemo(() => {
-      if(!selectedCandidate?.candidate_id) return null;
-      const baseUrl = 'http://localhost:5000';
-      return `${baseUrl}/candidate/resume?candidateId=${selectedCandidate.candidate_id}`;
-  }, [selectedCandidate?.candidate_id]);
+  const directCvUrl = selectedCandidate?.cv_path
 
   if (loading && !selectedCandidate) {
       return (
@@ -210,17 +159,6 @@ const EvaluationPage = () => {
 //     );
 //   }
 
-  if (submitted) {
-      return (
-          <Container maxWidth="md" sx={{ mt: 8, textAlign: 'center' }}>
-              <Paper sx={{ p: 6, borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <CheckCircleIcon color="success" sx={{ fontSize: 80, mb: 2 }} />
-                  <Typography variant="h4" gutterBottom>Evaluation Submitted</Typography>
-                  <Typography color="text.secondary">Redirecting to candidates list...</Typography>
-              </Paper>
-          </Container>
-      )
-  }
 
   return (
     <Box sx={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: 'grey.50' }}>
@@ -239,10 +177,7 @@ const EvaluationPage = () => {
                             {selectedCandidate?.role_applied_for}
                         </Typography>
                         <Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-                            <LocationOn sx={{ fontSize: 14 }} />
-                            <Typography variant="caption">{selectedCandidate?.location || 'Location N/A'}</Typography>
-                        </Box>
+                        
                         {selectedCandidate?.current_gross_salary && (
                             <>
                              <Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />
@@ -252,13 +187,13 @@ const EvaluationPage = () => {
                              </Box>
                             </>
                         )}
+                        {selectedCandidate?.current_status && (
                          <Chip 
-                            label={selectedCandidate?.current_status || 'Active'} 
-                            size="small"
-                            color="primary" 
-                            variant="outlined" 
-                            sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
+                            {...statusProps} 
+                            size="small" 
+                            sx={{ ...statusProps.sx, fontWeight: 700, textTransform: 'uppercase', height: 24 }} 
                         />
+                        )}
                     </Stack>
                 </Box>
             </Box>
@@ -307,25 +242,13 @@ const EvaluationPage = () => {
                 
                 {/* CV Content */}
                 <Box sx={{ flexGrow: 1, position: 'relative', bgcolor: 'grey.100' }}>
-                    {cvLoading ? (
-                        <Box sx={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : cvBlobUrl ? (
-                         <iframe 
-                            src={cvBlobUrl} 
+                    <iframe 
+                            src={selectedCandidate?.cv_path} 
                             width="100%" 
                             height="100%" 
                             style={{ border: 'none', display: 'block' }}
                             title="Candidate CV"
                         />
-                    ) : (
-                        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column',  justifyContent: 'center', alignItems: 'center', p: 4, color: 'text.secondary' }}>
-                            <AssignmentIcon sx={{ fontSize: 64, mb: 2, opacity: 0.2 }} />
-                            <Typography variant="h6">No CV Available</Typography>
-                            <Typography variant="body2">Unable to load CV for this candidate.</Typography>
-                        </Box>
-                    )}
                 </Box>
             </Box>
 

@@ -205,6 +205,7 @@ export interface PreOfferDocument {
     | "missing";
   updatedAt?: string;
   displayName: string;
+  token?: string;
 }
 
 export interface SavePreOfferDocsRequest {

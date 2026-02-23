@@ -218,3 +218,16 @@ export const getCvByShareToken = async (token: string) => {
     throw error;
   }
 };
+
+
+export const getCandidateDocuments = async (url: string ) => { 
+  try{ 
+    const response = await axiosInstance.get(`/candidate/public/documents?url=${url}`);
+    console.log("The response from get candidate documents is ", response.data.data)
+    window.open(response.data.data.value, '_blank')
+    // return response.data.data.value;
+  }catch(error){ 
+    console.error("Error fetching candidate documents", error);
+    throw error;
+  }
+}

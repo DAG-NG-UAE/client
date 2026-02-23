@@ -74,6 +74,44 @@ export function determineActions(currentStatus: CandidateStatusType): CandidateA
            targetStatus: 'REJECTED',
          },
        };
+     case 'pending_feedback':
+       return {
+         progressionAction: {
+           label: 'Begin Pre-offer Discussion',
+           actionType: 'BEGIN_PRE_OFFER_DISCUSSION',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: false,
+           requiresNotes: false,
+           targetStatus: 'PRE_OFFER_DISCUSSION',
+         },
+         rejectionAction: {
+           label: 'Reject Candidate',
+           actionType: 'REJECT_CANDIDATE',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: true,
+           requiresNotes: true,
+           targetStatus: 'REJECTED',
+         },
+       };
+       case 'pre_offer':
+       return {
+         progressionAction: {
+           label: 'Begin Internal Salary Proposal',
+           actionType: 'BEGIN_INTERNAL_SALARY_PROPOSAL',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: false,
+           requiresNotes: false,
+           targetStatus: 'INTERNAL_SALARY_PROPOSAL',
+         },
+         rejectionAction: {
+           label: 'Reject Candidate',
+           actionType: 'REJECT_CANDIDATE',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: true,
+           requiresNotes: true,
+           targetStatus: 'REJECTED',
+         },
+       };
      case 'offer_extended':
        return {
          progressionAction: {

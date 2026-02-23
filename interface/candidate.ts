@@ -1,12 +1,12 @@
 
 export interface CandidateActionButton {
-  label: string; // Text displayed on the button
-  actionType: string; // A unique identifier for the action (e.g., 'SHORTLIST_CANDIDATE')
-  description: string; // Detailed description of the action, as provided
-  triggersWorkflow?: "Scheduling" | "Offer" | "Reject Candidate"; // Indicates if a specific workflow is triggered
-  requiresConfirmation?: boolean; // True if a confirmation dialog is needed
-  requiresNotes?: boolean; // True if notes are required for this action
-  targetStatus?: string; // The status the candidate will transition to (for simple changes)
+  label: string;
+  actionType: string; 
+  description: string; 
+  triggersWorkflow?: "Scheduling" | "Offer" | "Reject Candidate" | "Begin Pre-offer Discussion" | "Begin Internal Salary Proposal"; 
+  requiresConfirmation?: boolean; 
+  requiresNotes?: boolean; 
+  targetStatus?: string; 
 }
 
 export interface CandidateActions {

@@ -40,6 +40,7 @@ export interface OfferState {
   currentOffer: Partial<Offer> | null;
   selectedClauses: ExtendedClause[];
   preOfferDocs: PreOfferDocument[];
+  preOfferToken: string | null;
   internalOffer: Partial<InternalSalaryOffer> | null;
   internalOffersHistory: Partial<InternalSalaryOffer>[];
   loading: boolean;
@@ -55,6 +56,7 @@ const initialState: OfferState = {
   currentOffer: null,
   selectedClauses: [],
   preOfferDocs: [],
+  preOfferToken: null,
   internalOffer: null,
   internalOffersHistory: [],
   loading: false,
@@ -109,8 +111,9 @@ export const offerSlice = createSlice({
     setGuarantor(state, action: PayloadAction<Partial<Guarantor>>) {
       state.guarantor = action.payload;
     },
-    setPreOfferDocs(state, action: PayloadAction<PreOfferDocument[]>) {
-      state.preOfferDocs = action.payload;
+    setPreOfferDocs(state, action: PayloadAction<{ docs: PreOfferDocument[], token: string | null }>) {
+      state.preOfferDocs = action.payload.docs || [];
+      state.preOfferToken = action.payload.token || null;
     },
     setInternalOffer(
       state,
@@ -133,6 +136,7 @@ export const offerSlice = createSlice({
       state.error = null;
       state.loading = false;
       state.preOfferDocs = [];
+      state.preOfferToken = null;
     },
   },
 });
@@ -294,7 +298,15 @@ export const callFetchPreOfferDocs = async (candidateId: string) => {
     dispatch(startLoading());
     const response = await fetchPreOfferDocs(candidateId);
     if (response.success) {
-      dispatch(setPreOfferDocs(response.data));
+      // Handle both cases: old array structure and new object structure
+      if (Array.isArray(response.data)) {
+        dispatch(setPreOfferDocs({ docs: response.data, token: null }));
+      } else {
+        dispatch(setPreOfferDocs({
+          docs: response.data.pre_offer_requested_docs || [],
+          token: response.data.token || null
+        }));
+      }
     }
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));

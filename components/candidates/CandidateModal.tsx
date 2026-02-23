@@ -69,6 +69,10 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
         } else if (action.triggersWorkflow === 'Reject Candidate') {
             // we want to open the rejection modal here
             setOpenRejectionModal(true);
+        } else if (action.actionType === 'BEGIN_PRE_OFFER_DISCUSSION') {
+            router.push(`/candidates/pre-offer/${candidate?.candidate_id}`);
+        } else if (action.actionType === 'BEGIN_INTERNAL_SALARY_PROPOSAL') {
+            router.push(`/candidates/internal-salary-proposal/${candidate?.candidate_id}`);
         } else if (action.requiresNotes) {
             setNotesModalOpen(true);
         } else {
