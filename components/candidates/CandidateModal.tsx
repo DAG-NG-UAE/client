@@ -1,8 +1,8 @@
 import { CandidateProfile } from "@/interface/candidate";
 import { getFirstAndLastInitials } from "@/utils/transform";
 import { getStatusChipProps } from "@/utils/statusColorMapping";
-import { 
-    Dialog, DialogTitle, DialogContent, IconButton, Typography, Box, Avatar, 
+import {
+    Dialog, DialogTitle, DialogContent, IconButton, Typography, Box, Avatar,
     Button, Chip, Paper, Divider, TextField, Stack, useTheme,
     DialogActions, CircularProgress
 } from "@mui/material";
@@ -16,11 +16,15 @@ import StarIcon from '@mui/icons-material/Star';
 import { getCandidateResume, getSingleCandidate, updateCandidateStatus } from "@/api/candidate";
 import { useEffect, useState } from "react";
 import { determineActions } from "@/utils/determineActions";
-import { CandidateActions, CandidateActionButton, CandidateStatus } from "@/interface/candidate";
+import { CandidateActions, CandidateActionButton } from "@/interface/candidate";
 import ScheduleInterviewModal from "./ScheduleInterviewModal"; // Import the new modal
 import { callUpdateCandidateStatus } from "@/redux/slices/candidates";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { CandidateStatus } from "@/utils/constants";
+import { CandidateRejectionModal } from "./CandidateRejectionModal";
+import { CandidateStatusType } from "@/types/candidate";
+import { useRouter } from "next/navigation";
 
 interface CandidateModalProps {
     open: boolean;
@@ -49,18 +53,26 @@ const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label?: str
 const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     const theme = useTheme();
 
+    const router = useRouter();
     const [fetchedDetails, setFetchedDetails] = useState<Partial<CandidateProfile> | null>(null);
     const [notesModalOpen, setNotesModalOpen] = useState(false);
-    const [isSchedulingModalOpen, setIsSchedulingModalOpen] = useState(false); // New state for scheduling modal
     const [note, setNote] = useState('');
     const [currentAction, setCurrentAction] = useState<CandidateActionButton | null>(null);
     const [updateCandidate, setUpdateCandidate] = useState(false);
-    const {loading} = useSelector((state: RootState) => state.candidates)
+    const { loading } = useSelector((state: RootState) => state.candidates)
+    const [openRejectionModal, setOpenRejectionModal] = useState(false);
 
     const handleAction = (action: CandidateActionButton) => {
         setCurrentAction(action);
         if (action.triggersWorkflow === 'Scheduling') {
-            setIsSchedulingModalOpen(true);
+            router.push(`/candidates/schedule?id=${candidate?.candidate_id}&reqId=${candidate?.requisition_id}`);
+        } else if (action.triggersWorkflow === 'Reject Candidate') {
+            // we want to open the rejection modal here
+            setOpenRejectionModal(true);
+        } else if (action.actionType === 'BEGIN_PRE_OFFER_DISCUSSION') {
+            router.push(`/candidates/pre-offer/${candidate?.candidate_id}`);
+        } else if (action.actionType === 'BEGIN_INTERNAL_SALARY_PROPOSAL') {
+            router.push(`/candidates/internal-salary-proposal/${candidate?.candidate_id}`);
         } else if (action.requiresNotes) {
             setNotesModalOpen(true);
         } else {
@@ -70,7 +82,6 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     };
 
     const handleSchedulingComplete = () => {
-        setIsSchedulingModalOpen(false);
         onClose(); // Close the main modal
         setUpdateCandidate(prev => !prev); // Trigger a re-fetch of data in the parent
     };
@@ -79,9 +90,9 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
         if (!currentAction || !candidate?.candidate_id) return;
 
         console.log(`Submitting action: ${currentAction.actionType} for candidate: ${candidate.candidate_id} with status: ${currentAction.targetStatus} and note: ${note}`);
-        
-        const body: Partial<CandidateProfile> = { 
-            candidate_id: candidate.candidate_id, 
+
+        const body: Partial<CandidateProfile> = {
+            candidate_id: candidate.candidate_id,
             requisition_id: candidate.requisition_id,
             old_status: candidate.current_status?.toLowerCase(),
             new_status: currentAction.targetStatus?.toLowerCase(),
@@ -130,16 +141,16 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     );
 
     const { progressionAction, rejectionAction } = fetchedDetails?.current_status
-        ? determineActions(fetchedDetails.current_status as CandidateStatus)
+        ? determineActions(fetchedDetails.current_status as CandidateStatusType)
         : { progressionAction: null, rejectionAction: null };
 
-    useEffect(() => { 
-        if(open && candidate?.candidate_id){ 
-            const fetchCandidateDetail = async() => { 
-                try{ 
+    useEffect(() => {
+        if (open && candidate?.candidate_id) {
+            const fetchCandidateDetail = async () => {
+                try {
                     const response = await getSingleCandidate(candidate.candidate_id!)
                     setFetchedDetails(response)
-                }catch(error){ 
+                } catch (error) {
                     throw error
                 }
             }
@@ -149,31 +160,31 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
 
     if (!candidate) return null;
 
-    const handleViewResume = async(candidateId:string) => {
+    const handleViewResume = async (candidateId: string) => {
         // This will hit your new API endpoint and the browser will display the PDF/file.
         const resumeUrl = await getCandidateResume(candidateId);
-        window.open(resumeUrl, '_blank'); 
+        window.open(resumeUrl, '_blank');
     };
 
     return (
         <>
-            <Dialog 
-                open={open} 
-                onClose={onClose} 
-                maxWidth="md" 
-                fullWidth 
+            <Dialog
+                open={open}
+                onClose={onClose}
+                maxWidth="md"
+                fullWidth
                 scroll="paper"
                 PaperProps={{
                     sx: { borderRadius: 2, height: '90vh' }
                 }}
             >
-                <DialogTitle sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}`}}>
+                <DialogTitle sx={{ p: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <Box sx={{ display: 'flex', gap: 2 }}>
-                            <Avatar 
-                                sx={{ 
-                                    width: 56, 
-                                    height: 56, 
+                            <Avatar
+                                sx={{
+                                    width: 56,
+                                    height: 56,
                                     bgcolor: 'primary.main',
                                     fontSize: '1.2rem'
                                 }}
@@ -245,22 +256,22 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                         <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                             <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
                                 <SectionTitle>Contact Information</SectionTitle>
-                                <DetailItem 
-                                    icon={<EmailIcon fontSize="small" />} 
-                                    value={candidate.email} 
+                                <DetailItem
+                                    icon={<EmailIcon fontSize="small" />}
+                                    value={candidate.email}
                                 />
-                                <DetailItem 
-                                    icon={<PhoneIcon fontSize="small" />} 
-                                    value={candidate.mobile_number} 
+                                <DetailItem
+                                    icon={<PhoneIcon fontSize="small" />}
+                                    value={candidate.mobile_number}
                                 />
-                                <DetailItem 
-                                    icon={<CurrencyExchangeOutlined fontSize="small" />} 
-                                    value={fetchedDetails?.salary_target_min ? `N${new Intl.NumberFormat().format(Number(fetchedDetails.salary_target_min))}` : undefined} 
+                                <DetailItem
+                                    icon={<CurrencyExchangeOutlined fontSize="small" />}
+                                    value={fetchedDetails?.salary_target_min ? `N${new Intl.NumberFormat().format(Number(fetchedDetails.salary_target_min))}` : undefined}
                                     label="Expected Salary"
                                 />
-                                <DetailItem 
-                                    icon={<CalendarTodayIcon fontSize="small" />} 
-                                    value={fetchedDetails?.notice_period} 
+                                <DetailItem
+                                    icon={<CalendarTodayIcon fontSize="small" />}
+                                    value={fetchedDetails?.notice_period}
                                     label="Notice Period"
                                 />
                             </Paper>
@@ -271,23 +282,23 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                             <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
                                 <SectionTitle>Application Details</SectionTitle>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1}}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start', gap: 1 }}>
                                         <Typography variant="body2" color="text.secondary">Applied:</Typography>
                                         <Typography variant="body2">{candidate.submitted_date?.split('T')[0]}</Typography>
                                     </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start', gap: 1 }}>
                                         <Typography variant="body2" color="text.secondary">Source:</Typography>
                                         <Typography variant="body2">{candidate.source}</Typography>
                                     </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start', gap: 1 }}>
                                         <Typography variant="body2" color="text.secondary">Experience:</Typography>
                                         <Typography variant="body2">{fetchedDetails?.total_experience_years}</Typography>
                                     </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start', gap: 1 }}>
                                         <Typography variant="body2" color="text.secondary">Education:</Typography>
                                         <Typography variant="body2">{candidate.qualification}</Typography>
                                     </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'start' , gap: 1 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'start', gap: 1 }}>
                                         <Typography variant="body2" color="text.secondary">Current Company:</Typography>
                                         <Typography variant="body2">{candidate.current_place_of_work}</Typography>
                                     </Box>
@@ -307,7 +318,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                         <Box sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                             <Paper elevation={0} sx={{ p: 2, height: '100%', border: `1px solid ${theme.palette.divider}` }}>
                                 <SectionTitle>Cover Letter</SectionTitle>
-                                <Typography variant="body2" color="text.secondary" sx={{ 
+                                <Typography variant="body2" color="text.secondary" sx={{
                                     display: '-webkit-box',
                                     overflow: 'hidden',
                                     WebkitBoxOrient: 'vertical',
@@ -318,53 +329,19 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                             </Paper>
                         </Box>
 
-                        {/* Interview History - Mocked */}
-                        {/* <Box sx={{ width: '100%' }}>
-                            <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
-                                <SectionTitle>Interview History</SectionTitle>
-                                <Box sx={{ pl: 2, borderLeft: `3px solid ${theme.palette.primary.main}` }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                        <Typography variant="subtitle2">Sarah Chen</Typography>
-                                        <Box sx={{ display: 'flex', color: '#ffb400' }}>
-                                            {[1,2,3,4].map(i => <StarIcon key={i} fontSize="small" />)}
-                                        </Box>
-                                    </Box>
-                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>Dec 5, 2024</Typography>
-                                    <Typography variant="body2">Strong technical skills, good communication.</Typography>
-                                </Box>
-                            </Paper>
-                        </Box> */}
 
-                        {/* Notes */}
-                        {/* <Box sx={{ width: '100%' }}>
-                            <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}` }}>
-                                <SectionTitle>Notes</SectionTitle>
-                                {candidate.notes && (
-                                    <Box sx={{ p: 1.5, bgcolor: '#f5f5f5', borderRadius: 1, mb: 2 }}>
-                                        <Typography variant="body2">{candidate.notes}</Typography>
-                                    </Box>
-                                )}
-                                <Stack direction="row" spacing={1}>
-                                    <TextField 
-                                        fullWidth 
-                                        placeholder="Add a note..." 
-                                        size="small" 
-                                        variant="outlined"
-                                        sx={{ bgcolor: 'white' }}
-                                    />
-                                    <Button variant="contained" sx={{ textTransform: 'none' }}>Add Note</Button>
-                                </Stack>
-                            </Paper>
-                        </Box> */}
                     </Box>
                 </DialogContent>
                 {NotesConfirmationModal}
             </Dialog>
-            <ScheduleInterviewModal
-                open={isSchedulingModalOpen}
-                onClose={handleSchedulingComplete}
+
+            <CandidateRejectionModal
+                open={openRejectionModal}
+                onClose={() => setOpenRejectionModal(false)}
                 candidate={candidate}
-            />
+            >
+
+            </CandidateRejectionModal>
         </>
     );
 };

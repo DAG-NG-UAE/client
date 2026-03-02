@@ -28,7 +28,7 @@ const LoginPage = () => {
 
   const handleMicrosoftSignIn = () => {
     dispatch(clearInterviewState())
-    dispatch(setUserLogout({}))
+    // dispatch(setUserLogout({}))
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     window.location.href = `${backendUrl}/auth/login`;
   };

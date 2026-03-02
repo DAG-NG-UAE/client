@@ -13,6 +13,7 @@ import {
   removeRequisitionLocation,
   updateRequisition,
   createRequisition,
+  inviteInterviewers,
 } from "@/api/requisitionApi";
 import { RecruiterSelection, Requisition } from "@/interface/requisition";
 import { dispatch } from "../dispatchHandle";
@@ -195,15 +196,16 @@ export const callUnPublishRequisition = async (
 
 export const callAssignRecruiters = async (
   requisitionId: string,
-  recruiters: { userId: string; roleId: string }[],
-  recruiterEmails: string,
+  recruiters: { email: string; displayName: string }[],
 ) => {
   try {
     dispatch(startLoading());
-    await assignRecruiters(requisitionId, recruiters, recruiterEmails);
+    await assignRecruiters(requisitionId, recruiters);
     await fetchRequisitionById(requisitionId);
     enqueueSnackbar("Recruiters assigned", { variant: "success" });
   } catch (error: any) {
+    const errorMessage = error?.response?.data?.message || "Failed to assign recruiters";
+    enqueueSnackbar(errorMessage, { variant: "error" });
     dispatch(hasError(error?.response?.data || error));
   } finally {
     dispatch(clearError());
@@ -319,6 +321,27 @@ export const callCreateRequisition = async (
     dispatch(startLoading());
     await createRequisition(requisition);
     enqueueSnackbar("Talent Request sent successfully", { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+  } finally {
+    dispatch(clearError());
+    dispatch(stopLoading());
+  }
+};
+
+export const callInviteInterviewers = async ({
+  requisitionId,
+  users,
+  message,
+}: {
+  requisitionId: string;
+  users: { email: string; displayName: string }[];
+  message: string;
+}) => {
+  try {
+    dispatch(startLoading());
+    await inviteInterviewers(requisitionId, users, message);
+    enqueueSnackbar("Invitations sent successfully", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   } finally {

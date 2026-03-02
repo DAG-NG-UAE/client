@@ -11,9 +11,9 @@ import Header from '../components/layout/Header';
 import { Box, Toolbar } from '@mui/material';
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import {AuthInitializer} from '../components/auth/AuthInitializer'
+import { AuthInitializer } from '../components/auth/AuthInitializer'
 import { Provider as ReduxProvider } from 'react-redux';
-import {store, persistor} from '../redux/store'
+import { store, persistor } from '../redux/store'
 import { PersistGate } from 'redux-persist/integration/react';
 import { NotistackProvider } from "@/components/NotistackProvider";
 
@@ -39,7 +39,7 @@ export default function RootLayout({
   const theme = getAppTheme(isDarkMode ? 'dark' : 'light');
 
   const isLoginPage = pathname === '/login';
-  const isPublicPage = pathname?.startsWith('/careers') || pathname?.startsWith('/salary-proposal'); // Add salary-proposal
+  const isPublicPage = pathname?.startsWith('/careers') || pathname?.startsWith('/salary-proposal') || pathname?.startsWith('/share'); // Add salary-proposal and share
 
   return (
     <html lang="en">
@@ -50,52 +50,52 @@ export default function RootLayout({
               <ThemeProvider theme={theme}>
                 <CssBaseline />
                 <NotistackProvider>
-                {isLoginPage || isPublicPage ? (
-                  // Public layout
-                  <Box sx={{
-                    backgroundColor: isLoginPage ? theme.palette.loginBackground : theme.palette.background.default,
-                    minHeight: '100vh',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: isLoginPage ? 'center' : 'flex-start',
-                    alignItems: isLoginPage ? 'center' : 'stretch',
-                  }}>
-                    {children}
-                  </Box>
-                ) : (
-                  <AuthInitializer>
-                    <Box sx={{ display: 'flex' }}>
-                      <Header 
-                        handleDrawerToggle={handleDrawerToggle} 
-                        desktopOpen={desktopOpen}
-                        handleDesktopToggle={() => setDesktopOpen(!desktopOpen)}
-                      />
-                      <Sidebar 
-                        mobileOpen={mobileOpen} 
-                        handleDrawerToggle={handleDrawerToggle} 
-                        desktopOpen={desktopOpen}
-                      />
-                      <Box
-                        component="main"
-                        sx={{
-                          flexGrow: 1,
-                          p: 3,
-                          width: { sm: desktopOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
-                          transition: theme.transitions.create(['width', 'margin'], {
-                            easing: theme.transitions.easing.sharp,
-                            duration: theme.transitions.duration.leavingScreen,
-                          }),
-                        }}
-                      >
-                        <Toolbar /> {/* This is important for content to not be hidden by AppBar */}
-                        {children}
-                      </Box>
+                  {isLoginPage || isPublicPage ? (
+                    // Public layout
+                    <Box sx={{
+                      backgroundColor: isLoginPage ? theme.palette.loginBackground : theme.palette.background.default,
+                      minHeight: '100vh',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: isLoginPage ? 'center' : 'flex-start',
+                      alignItems: isLoginPage ? 'center' : 'stretch',
+                    }}>
+                      {children}
                     </Box>
-                  </AuthInitializer>
-                )}
+                  ) : (
+                    <AuthInitializer>
+                      <Box sx={{ display: 'flex' }}>
+                        <Header
+                          handleDrawerToggle={handleDrawerToggle}
+                          desktopOpen={desktopOpen}
+                          handleDesktopToggle={() => setDesktopOpen(!desktopOpen)}
+                        />
+                        <Sidebar
+                          mobileOpen={mobileOpen}
+                          handleDrawerToggle={handleDrawerToggle}
+                          desktopOpen={desktopOpen}
+                        />
+                        <Box
+                          component="main"
+                          sx={{
+                            flexGrow: 1,
+                            p: 3,
+                            width: { sm: desktopOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
+                            transition: theme.transitions.create(['width', 'margin'], {
+                              easing: theme.transitions.easing.sharp,
+                              duration: theme.transitions.duration.leavingScreen,
+                            }),
+                          }}
+                        >
+                          <Toolbar /> {/* This is important for content to not be hidden by AppBar */}
+                          {children}
+                        </Box>
+                      </Box>
+                    </AuthInitializer>
+                  )}
                 </NotistackProvider>
               </ThemeProvider>
-              </PersistGate>
+            </PersistGate>
           </ReduxProvider>
         </AppRouterCacheProvider>
       </body>

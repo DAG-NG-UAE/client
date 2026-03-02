@@ -2,24 +2,25 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { 
-    fetchOfferById, 
-    fetchCandidateJoiningDetails, 
-    fetchGuarantor, 
+import {
+    fetchOfferById,
+    fetchCandidateJoiningDetails,
+    fetchGuarantor,
     callFetchPreOfferDocs,
     callSavePreOfferDocs,
     callUpdateJoiningDocsStatus
 } from '@/redux/slices/offer';
-import { 
-    Box, 
-    Button, 
-    Card, 
-    Typography, 
-    Accordion, 
-    AccordionSummary, 
-    AccordionDetails, 
-    Avatar, 
-    LinearProgress, 
+import { getCandidateDocuments } from '@/api/candidate';
+import {
+    Box,
+    Button,
+    Card,
+    Typography,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Avatar,
+    LinearProgress,
     Stack,
     IconButton,
     Chip,
@@ -49,14 +50,14 @@ interface OfferDetailsProps {
 
 const OfferDetails = ({ id }: OfferDetailsProps) => {
     const theme = useTheme();
-    const { 
-        currentOffer: offer, 
-        joiningDetails, 
-        guarantor, 
+    const {
+        currentOffer: offer,
+        joiningDetails,
+        guarantor,
         preOfferDocs,
-        loading 
+        loading
     } = useSelector((state: RootState) => state.offers);
-    const {selectedCandidate} = useSelector((state: RootState) => state.candidates);
+    const { selectedCandidate } = useSelector((state: RootState) => state.candidates);
 
     const [expanded, setExpanded] = useState<string | false>('panel1');
     const [joiningDocs, setJoiningDocs] = useState<(JoiningDocumentItem & { title: string, docType: string })[]>([]);
@@ -72,24 +73,24 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
     useEffect(() => {
         if (joiningDetails?.documents) {
             try {
-                const docs: JoiningDocuments = typeof joiningDetails.documents === 'string' 
-                    ? JSON.parse(joiningDetails.documents) 
+                const docs: JoiningDocuments = typeof joiningDetails.documents === 'string'
+                    ? JSON.parse(joiningDetails.documents)
                     : joiningDetails.documents;
-                
+
                 const list: (JoiningDocumentItem & { title: string, docType: string })[] = [];
-                
+
                 if (docs.passport) {
-                    list.push({ 
-                        ...docs.passport, 
-                        title: 'Passport', 
-                        docType: 'passport' 
+                    list.push({
+                        ...docs.passport,
+                        title: 'Passport',
+                        docType: 'passport'
                     });
                 }
-                
+
                 if (docs.certificates && Array.isArray(docs.certificates)) {
                     docs.certificates.forEach((cert, index) => {
-                        list.push({ 
-                            ...cert, 
+                        list.push({
+                            ...cert,
                             title: cert.fileName || `Certificate ${index + 1}`,
                             docType: 'certificates'
                         });
@@ -98,14 +99,14 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
 
                 if (docs.proof && Array.isArray(docs.proof)) {
                     docs.proof.forEach((cert, index) => {
-                        list.push({ 
-                            ...cert, 
+                        list.push({
+                            ...cert,
                             title: cert.fileName || `Proof ${index + 1}`,
                             docType: 'proof'
                         });
                     });
                 }
-                
+
                 setJoiningDocs(list);
             } catch (error) {
                 console.error("Error parsing joining documents:", error);
@@ -175,8 +176,8 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
 
     if (!offer) return <Box p={3}><Typography>Loading offer details...</Typography></Box>;
 
-    const fullName = selectedCandidate? `${selectedCandidate.candidate_name}` : 'Associate';
-    
+    const fullName = selectedCandidate ? `${selectedCandidate.candidate_name}` : 'Associate';
+
     const renderDocList = (docs: typeof joiningDocs) => (
         <Stack spacing={2}>
             {docs.map((doc, index) => (
@@ -190,39 +191,39 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                             <Typography variant="caption" color="text.secondary">{doc.fileName}</Typography>
                         </Box>
                     </Box>
-                    
+
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         {getStatusChip(doc.status)}
-                        
+
                         {doc.url && (
                             <Tooltip title="View Document">
-                                <IconButton href={`http://localhost:5000${doc.url}`} target="_blank" size="small">
+                                <IconButton onClick={() => getCandidateDocuments(doc.url)} size="small">
                                     <Box component="span" sx={{ fontSize: 20 }}>👁️</Box>
                                 </IconButton>
                             </Tooltip>
                         )}
 
                         <Stack direction="row" spacing={1}>
-                            <IconButton 
-                                size="small" 
-                                color="success" 
+                            <IconButton
+                                size="small"
+                                color="success"
                                 onClick={() => handleVerifyDoc(doc)}
                                 disabled={doc.status === 'approved' || doc.status === 'APPROVED'}
-                                sx={{ 
-                                    bgcolor: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'success.main' : 'success.light', 
+                                sx={{
+                                    bgcolor: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'success.main' : 'success.light',
                                     color: (doc.status === 'approved' || doc.status === 'APPROVED') ? 'white' : 'success.dark',
                                     '&:hover': { bgcolor: 'success.main', color: 'white' }
                                 }}
                             >
                                 <CheckIcon fontSize="small" />
                             </IconButton>
-                            <IconButton 
-                                size="small" 
+                            <IconButton
+                                size="small"
                                 color="error"
                                 onClick={() => handleRejectDoc(doc)}
                                 disabled={doc.status === 'rejected' || doc.status === 'REJECTED'}
-                                sx={{ 
-                                    bgcolor: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'error.main' : 'error.light', 
+                                sx={{
+                                    bgcolor: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'error.main' : 'error.light',
                                     color: (doc.status === 'rejected' || doc.status === 'REJECTED') ? 'white' : 'error.dark',
                                     '&:hover': { bgcolor: 'error.main', color: 'white' }
                                 }}
@@ -241,13 +242,13 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
             {/* Header Card */}
             <Card sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}>
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', gap: 3 }}>
-                    <Avatar 
+                    <Avatar
                         sx={{ width: 80, height: 80, bgcolor: theme.palette.primary.main, fontSize: '2rem' }}
                         src={joiningDetails?.passport_number ? undefined : undefined} // TODO: Add passport photo url if available
                     >
                         {fullName.charAt(0)}
                     </Avatar>
-                    
+
                     <Box sx={{ flex: 1, textAlign: { xs: 'center', md: 'left' } }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1, justifyContent: { xs: 'center', md: 'flex-start' } }}>
                             <Typography variant="h5" fontWeight="bold">{fullName}</Typography>
@@ -262,13 +263,13 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
 
                     <Stack direction="row" spacing={2}>
                         {joiningDocs.length > 0 && progress === 100 && (
-                            <Button 
-                                variant="contained" 
-                                color="success" 
+                            <Button
+                                variant="contained"
+                                color="success"
                                 startIcon={<PersonAddIcon />}
                                 onClick={handleCreateEmployee}
-                                sx={{ 
-                                    fontWeight: 'bold', 
+                                sx={{
+                                    fontWeight: 'bold',
                                     borderRadius: 2,
                                     px: 3,
                                     boxShadow: '0px 4px 14px rgba(76, 175, 80, 0.4)'
@@ -288,17 +289,17 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                         <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">VERIFICATION PROGRESS</Typography>
                         <Typography variant="subtitle2" fontWeight="bold" color="primary">{progress}%</Typography>
                     </Box>
-                    <LinearProgress 
-                        variant="determinate" 
-                        value={progress} 
-                        sx={{ 
-                            height: 8, 
+                    <LinearProgress
+                        variant="determinate"
+                        value={progress}
+                        sx={{
+                            height: 8,
                             borderRadius: 4,
                             bgcolor: theme.palette.grey[200],
                             '& .MuiLinearProgress-bar': {
                                 borderRadius: 4,
                             }
-                        }} 
+                        }}
                     />
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                         {joiningDocs.filter(d => d.status !== 'approved' && d.status !== 'APPROVED').length} items require review
@@ -309,8 +310,8 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
             {/* Accordions */}
             <Stack spacing={2}>
                 {/* Joining Details */}
-                <Accordion 
-                    expanded={expanded === 'panel1'} 
+                <Accordion
+                    expanded={expanded === 'panel1'}
                     onChange={handleChange('panel1')}
                     sx={{ borderRadius: '12px !important', boxShadow: '0px 2px 8px rgba(0,0,0,0.05)', '&:before': { display: 'none' } }}
                 >
@@ -331,8 +332,8 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                 </Accordion>
 
                 {/* History & Background */}
-                <Accordion 
-                    expanded={expanded === 'panel2'} 
+                <Accordion
+                    expanded={expanded === 'panel2'}
                     onChange={handleChange('panel2')}
                     sx={{ borderRadius: '12px !important', boxShadow: '0px 2px 8px rgba(0,0,0,0.05)', '&:before': { display: 'none' } }}
                 >
@@ -353,8 +354,8 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                 </Accordion>
 
                 {/* Guarantor Details */}
-                <Accordion 
-                    expanded={expanded === 'panel3'} 
+                <Accordion
+                    expanded={expanded === 'panel3'}
                     onChange={handleChange('panel3')}
                     sx={{ borderRadius: '12px !important', boxShadow: '0px 2px 8px rgba(0,0,0,0.05)', '&:before': { display: 'none' } }}
                 >
@@ -375,8 +376,8 @@ const OfferDetails = ({ id }: OfferDetailsProps) => {
                 </Accordion>
 
                 {/* Document & Image Gallery */}
-                <Accordion 
-                    expanded={expanded === 'panel4'} 
+                <Accordion
+                    expanded={expanded === 'panel4'}
                     onChange={handleChange('panel4')}
                     sx={{ borderRadius: '12px !important', boxShadow: '0px 2px 8px rgba(0,0,0,0.05)', '&:before': { display: 'none' } }}
                 >

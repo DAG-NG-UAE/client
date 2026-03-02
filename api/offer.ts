@@ -246,12 +246,14 @@ export const updatePreOfferDocStatus = async (
   documentId: string,
   status: string,
   candidateId: string,
+  docUrl: string,
 ) => {
   try {
     const response = await axiosInstance.patch(`offer/pre/docs/update`, {
       documentId,
       status,
       candidateId,
+      docUrl,
     });
     return response.data;
   } catch (error) {

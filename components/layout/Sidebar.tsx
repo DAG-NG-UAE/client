@@ -56,12 +56,16 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
   const [isRecruitmentOpen, setRecruitmentOpen] = useState(false);
   const [isCandidatesOpen, setCandidatesOpen] = useState(false);
   const [isOfferOpen, setOfferOpen] = useState(false);
+  const [isLibraryOpen, setLibraryOpen] = useState(false);
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   console.log(`the user is => ${JSON.stringify(user)} and isAuthenticated is => ${isAuthenticated}`)
 
   useEffect(() => {
     if (pathname.startsWith('/candidates')) {
       setCandidatesOpen(true);
+    }
+    if (pathname.startsWith('/library')) {
+      setLibraryOpen(true);
     }
   }, [pathname]);
 
@@ -77,6 +81,10 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
     setOfferOpen(!isOfferOpen);
   };
 
+  const handleLibraryClick = () => {
+    setLibraryOpen(!isLibraryOpen);
+  };
+
   const allMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.Recruiter] },
     // { text: 'Historical Data', icon:<HistoricalIcon/>, path: '/history', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager] },
@@ -85,39 +93,32 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
 
   const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role_name));
 
-  const recruitmentSubItems = [ 
-    { text: 'New Request', icon: <NoteAddIcon/> , path:'/requisition/request', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter]},
-    { text: 'Pending Requisitions', icon: <PendingActionsIcon/> , path:'/pending-requisition', roles: [AppRole.HeadOfHr, AppRole.HrManager]},
+  const recruitmentSubItems = [
+    { text: 'New Request', icon: <NoteAddIcon />, path: '/requisition/request', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
+    { text: 'Pending Requisitions', icon: <PendingActionsIcon />, path: '/pending-requisition', roles: [AppRole.HeadOfHr, AppRole.HrManager] },
     { text: 'Requisitions', icon: <DescriptionIcon />, path: '/requisition', roles: [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager, AppRole.HiringManager, AppRole.Recruiter] },
   ]
 
   const recruitmentMenuItems = recruitmentSubItems.filter(item => user && item.roles.includes(user.role_name));
   const candidateSubItems = [
-    { text: 'All', path: '/candidates/all', icon: <ListAltIcon />},
+    { text: 'All', path: '/candidates/all', icon: <ListAltIcon /> },
     { text: 'Applied', path: '/candidates/applied', icon: <PersonAddIcon /> },
     { text: 'Shortlisted', path: '/candidates/shortlisted', icon: <FactCheckIcon /> },
     { text: 'Interview Scheduled', path: '/candidates/interview_scheduled', icon: <CalendarMonthIcon /> },
     { text: 'Pending Feedback', path: '/candidates/pending_feedback', icon: <HourglassEmptyIcon /> },
     { text: 'Interviewed', path: '/candidates/interviewed', icon: <QuestionAnswerIcon /> },
-    { text: 'Internal Approval', path: '/candidates/internal_salary_proposal', icon: <RateReviewIcon /> },
-    { text: 'Approved for Offer', path: '/candidates/approved_for_offer', icon: <ThumbUpIcon /> },
-    { text: 'Offer Extended', path: '/candidates/offer_extended', icon: <SendIcon /> },
-    { text: 'Offer Accepted', path: '/candidates/offer_accepted', icon: <HandshakeIcon /> },
-    { text: 'Offer Rejected', path: '/candidates/offer_rejected', icon: <ThumbDownIcon /> },
-    { text: 'Rejected', path: '/candidates/rejected', icon: <PersonOffIcon /> },
+
   ];
 
   if (user && (user.role_name === AppRole.HeadOfHr || user.role_name === AppRole.HrManager)) {
     candidateSubItems.splice(6, 0, { text: 'Pre Offer', path: '/candidates/pre_offer', icon: <AssignmentIcon /> });
+    candidateSubItems.splice(7, 0, { text: 'Internal Approval', path: '/candidates/internal_salary_proposal', icon: <RateReviewIcon /> });
+    candidateSubItems.splice(8, 0, { text: 'Approved for Offer', path: '/candidates/approved_for_offer', icon: <ThumbUpIcon /> });
+    candidateSubItems.splice(9, 0, { text: 'Offer Extended', path: '/candidates/offer_extended', icon: <SendIcon /> });
+    candidateSubItems.splice(10, 0, { text: 'Offer Accepted', path: '/candidates/offer_accepted', icon: <HandshakeIcon /> });
+    candidateSubItems.splice(11, 0, { text: 'Offer Rejected', path: '/candidates/offer_rejected', icon: <ThumbDownIcon /> });
+    candidateSubItems.splice(12, 0, { text: 'Rejected', path: '/candidates/rejected', icon: <PersonOffIcon /> });
   }
-
-//   const offerSubItems = [
-//     { text: 'All', path: '/offers/all', icon: <ListAltIcon /> },
-//     { text: 'Pending', path: '/offers/pending', icon: <HourglassEmptyIcon /> },
-//     { text: 'Accepted', path: '/offers/accepted', icon: <CheckCircleIcon /> },
-//     { text: 'Rejected', path: '/offers/rejected', icon: <CancelIcon /> },
-//     { text: 'Revision Requested', path: '/offers/revision_requested', icon: <EditNoteIcon /> },
-// ];
 
   const drawerContent = (
     <Box sx={{ overflow: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -136,33 +137,83 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
       </Box>
       <List sx={{ flexGrow: 1, paddingTop: theme.spacing(1) }}>
         {menuItems.map((item) => (
-          <ListItemButton 
-            key={item.text} 
+          <ListItemButton
+            key={item.text}
             selected={pathname === item.path} // Set selected based on current path
             onClick={() => {
-              router.push(item.path); 
+              router.push(item.path);
               if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile after navigation
             }}
             sx={{
-            margin: theme.spacing(0.5, 1),
-            borderRadius: theme.shape.borderRadius,
-            '&.Mui-selected': {
-              backgroundColor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText,
-              '&:hover': {
+              margin: theme.spacing(0.5, 1),
+              borderRadius: theme.shape.borderRadius,
+              '&.Mui-selected': {
                 backgroundColor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
+                '&:hover': {
+                  backgroundColor: theme.palette.primary.main,
+                },
               },
-            },
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover,
-            },
-          }}>
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              },
+            }}>
             <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItemButton>
         ))}
+        {/* Library collapsible menu */}
+        {user && (user.role_name === AppRole.HeadOfHr || user.role_name === AppRole.HrManager || user.role_name === AppRole.Admin) && (
+          <>
+            <ListItemButton
+              onClick={handleLibraryClick}
+              selected={pathname.startsWith('/library')}
+              sx={{
+                margin: theme.spacing(0.5, 1),
+                borderRadius: theme.shape.borderRadius,
+                '&.Mui-selected': {
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.primary.contrastText,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.main,
+                  },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'inherit' }}><LocalOfferIcon /></ListItemIcon>
+              <ListItemText primary="Library" />
+              {isLibraryOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+            <Collapse in={isLibraryOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItemButton
+                  selected={pathname === '/library'}
+                  onClick={() => {
+                    router.push('/library');
+                    if (mobileOpen) handleDrawerToggle();
+                  }}
+                  sx={{
+                    pl: 4,
+                    margin: theme.spacing(0.5, 1),
+                    borderRadius: theme.shape.borderRadius,
+                    '&.Mui-selected': {
+                      backgroundColor: theme.palette.primary.main,
+                      color: theme.palette.primary.contrastText,
+                      '&:hover': {
+                        backgroundColor: theme.palette.primary.main,
+                      },
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'inherit' }}><SettingsIcon /></ListItemIcon>
+                  <ListItemText primary="Preferences" />
+                </ListItemButton>
+              </List>
+            </Collapse>
+          </>
+        )}
         {/* Recruitment collapsible menu */}
-        <ListItemButton 
+        <ListItemButton
           onClick={handleRecruitmentClick}
           selected={pathname.startsWith('/recruitment')}
           sx={{
@@ -180,7 +231,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             },
           }}
         >
-          <ListItemIcon sx={{ color: 'inherit' }}><WorkIcon/> </ListItemIcon>
+          <ListItemIcon sx={{ color: 'inherit' }}><WorkIcon /> </ListItemIcon>
           <ListItemText primary="Recruitment" />
           {isRecruitmentOpen ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>
@@ -194,7 +245,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
                   router.push(item.path);
                   if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile
                 }}
-                sx={{ 
+                sx={{
                   pl: 4,
                   margin: theme.spacing(0.5, 1),
                   borderRadius: theme.shape.borderRadius,
@@ -217,7 +268,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
           </List>
         </Collapse>
         {/* Candidates collapsible menu */}
-        <ListItemButton 
+        <ListItemButton
           onClick={handleCandidatesClick}
           selected={pathname.startsWith('/candidates')}
           sx={{
@@ -246,7 +297,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
                   router.push(item.path);
                   if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile
                 }}
-                sx={{ 
+                sx={{
                   pl: 4,
                   margin: theme.spacing(0.5, 1),
                   borderRadius: theme.shape.borderRadius,
@@ -265,57 +316,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             ))}
           </List>
         </Collapse>
-
-        {/* Offer dropdown */}
-        {/* <ListItemButton 
-          onClick={handleOfferClick}
-          selected={pathname.startsWith('/offer')}
-          sx={{
-            margin: theme.spacing(0.5, 1),
-            borderRadius: theme.shape.borderRadius,
-            '&.Mui-selected': {
-              backgroundColor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText,
-              '&:hover': {
-                backgroundColor: theme.palette.primary.main,
-              },
-            },
-          }}
-        >
-          <ListItemIcon sx={{ color: 'inherit' }}><LocalOfferIcon /></ListItemIcon>
-          <ListItemText primary="Offers" />
-          {isOfferOpen ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton> */}
-        {/* <Collapse in={isOfferOpen} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            {offerSubItems.map((item) => (
-              <ListItemButton
-                key={item.text}
-                selected={pathname === item.path}
-                onClick={() => {
-                  router.push(item.path);
-                  if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile
-                }}
-                sx={{ 
-                  pl: 4,
-                  margin: theme.spacing(0.5, 1),
-                  borderRadius: theme.shape.borderRadius,
-                  '&.Mui-selected': {
-                    backgroundColor: theme.palette.primary.main,
-                    color: theme.palette.primary.contrastText,
-                    '&:hover': {
-                      backgroundColor: theme.palette.primary.main,
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            ))}
-          </List>
-        </Collapse> */}
-
+        
       </List>
       {user && (
         <Box sx={{
@@ -350,10 +351,11 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
   return (
     <Box
       component="nav"
-      sx={{ width: { sm: desktopOpen ? drawerWidth : 0 }, flexShrink: { sm: 0 }, transition: theme.transitions.create('width', {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-      })
+      sx={{
+        width: { sm: desktopOpen ? drawerWidth : 0 }, flexShrink: { sm: 0 }, transition: theme.transitions.create('width', {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.leavingScreen,
+        })
       }}
       aria-label="mailbox folders"
     >

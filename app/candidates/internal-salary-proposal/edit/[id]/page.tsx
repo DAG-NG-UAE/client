@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Box, Typography, Button, Paper, TextField, 
+import {
+    Box, Typography, Button, Paper, TextField,
     ToggleButton, ToggleButtonGroup, IconButton, Stack, Divider,
-    Switch, Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Chip 
+    Switch, Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Chip
 } from '@mui/material';
-import { 
+import {
     DeleteOutline as DeleteIcon,
     Add as AddIcon,
     CheckCircle as CheckCircleIcon,
@@ -23,7 +23,7 @@ const EditPackagePage = () => {
     const router = useRouter();
     const id = params?.id as string;
     const dispatch = useDispatch<any>();
-    
+
     const { selectedCandidate } = useSelector((state: RootState) => state.candidates);
     const { internalOffer } = useSelector((state: RootState) => state.offers);
 
@@ -33,7 +33,7 @@ const EditPackagePage = () => {
                 fetchSingleCandidate(id);
             }
             if (!internalOffer) {
-                callFetchInternalSalaryOffer(id)    ;
+                callFetchInternalSalaryOffer(id);
             }
         }
     }, [id, dispatch, selectedCandidate, internalOffer]);
@@ -75,38 +75,38 @@ const EditPackagePage = () => {
     // Populate state from internalOffer if available
     useEffect(() => {
         if (internalOffer) {
-             setCurrency(internalOffer.currency || 'Naira');
-             setComponents({
-                 basic: internalOffer.bha_breakdown?.basic || 0,
-                 housing: internalOffer.bha_breakdown?.housing || 0,
-                 transport: internalOffer.bha_breakdown?.transport || 0,
-                 variable: internalOffer.bha_breakdown?.other_allowances || 0
-             });
-             setTotals({
-                 annualGross: Number(internalOffer.annual_gross) || 0,
-                 monthlyNet: Number(internalOffer.monthly_net) || 0
-             });
-             
-             if (internalOffer.benefits) {
-                 const offerBenefitNames = internalOffer.benefits.map(b => b.name);
-                 setBenefits(prev => prev.map(b => ({
-                     ...b,
-                     active: offerBenefitNames.includes(b.name)
-                 })));
-                 
-                 // Add any benefit from offer that isn't in default list?
-                 // Skipping for simplicity, assuming default list covers most or custom additions handled differently.
-             }
+            setCurrency(internalOffer.currency || 'Naira');
+            setComponents({
+                basic: internalOffer.bha_breakdown?.basic || 0,
+                housing: internalOffer.bha_breakdown?.housing || 0,
+                transport: internalOffer.bha_breakdown?.transport || 0,
+                variable: internalOffer.bha_breakdown?.other_allowances || 0
+            });
+            setTotals({
+                annualGross: Number(internalOffer.annual_gross) || 0,
+                monthlyNet: Number(internalOffer.monthly_net) || 0
+            });
+
+            if (internalOffer.benefits) {
+                const offerBenefitNames = internalOffer.benefits.map(b => b.name);
+                setBenefits(prev => prev.map(b => ({
+                    ...b,
+                    active: offerBenefitNames.includes(b.name)
+                })));
+
+                // Add any benefit from offer that isn't in default list?
+                // Skipping for simplicity, assuming default list covers most or custom additions handled differently.
+            }
         }
     }, [internalOffer]);
 
     const handleComponentChange = (field: string, value: string) => {
-        const numValue = parseFloat(value) || 0;
+        const numValue = parseFloat(value.replace(/,/g, '')) || 0;
         setComponents({ ...components, [field]: numValue });
     };
 
     const handleTotalChange = (field: string, value: string) => {
-        const numValue = parseFloat(value) || 0;
+        const numValue = parseFloat(value.replace(/,/g, '')) || 0;
         setTotals({ ...totals, [field]: numValue });
     };
 
@@ -181,12 +181,12 @@ const EditPackagePage = () => {
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                     <Box>
                         <Typography variant="caption" fontWeight={700} color="text.secondary">Annual Gross Salary</Typography>
-                        <TextField 
-                            fullWidth 
+                        <TextField
+                            fullWidth
                             placeholder="0.00"
-                            value={totals.annualGross || ''} 
-                            onChange={(e) => handleTotalChange('annualGross', e.target.value)} 
-                            type="number"
+                            value={totals.annualGross ? totals.annualGross.toLocaleString() : ''}
+                            onChange={(e) => handleTotalChange('annualGross', e.target.value)}
+                            type="text"
                             InputProps={{
                                 startAdornment: <Typography color="text.secondary" fontWeight={600} sx={{ mr: 1 }}>{currency === 'Naira' ? '₦' : currency === 'USD' ? '$' : '₹'}</Typography>
                             }}
@@ -195,12 +195,12 @@ const EditPackagePage = () => {
                     </Box>
                     <Box>
                         <Typography variant="caption" fontWeight={700} color="text.secondary">Monthly Net (Estimate)</Typography>
-                         <TextField 
-                            fullWidth 
+                        <TextField
+                            fullWidth
                             placeholder="0.00"
-                            value={totals.monthlyNet || ''} 
-                            onChange={(e) => handleTotalChange('monthlyNet', e.target.value)} 
-                            type="number"
+                            value={totals.monthlyNet ? totals.monthlyNet.toLocaleString() : ''}
+                            onChange={(e) => handleTotalChange('monthlyNet', e.target.value)}
+                            type="text"
                             InputProps={{
                                 startAdornment: <Typography color="text.secondary" fontWeight={600} sx={{ mr: 1 }}>{currency === 'Naira' ? '₦' : currency === 'USD' ? '$' : '₹'}</Typography>
                             }}
@@ -212,24 +212,24 @@ const EditPackagePage = () => {
             </Paper>
 
             {/* Core Breakdown */}
-             <Paper elevation={0} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
+            <Paper elevation={0} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 3 }}>Core Component Breakdown (BHA)</Typography>
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
                     <Box>
-                         <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1, display: 'block' }}>Basic Pay</Typography>
-                         <TextField fullWidth placeholder="0.00" value={components.basic || ''} onChange={(e) => handleComponentChange('basic', e.target.value)} type="number" />
+                        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1, display: 'block' }}>Basic Pay</Typography>
+                        <TextField fullWidth placeholder="0.00" value={components.basic ? components.basic.toLocaleString() : ''} onChange={(e) => handleComponentChange('basic', e.target.value)} type="text" />
                     </Box>
-                     <Box>
-                         <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1, display: 'block' }}>Housing Allowance</Typography>
-                         <TextField fullWidth placeholder="0.00" value={components.housing || ''} onChange={(e) => handleComponentChange('housing', e.target.value)} type="number" />
+                    <Box>
+                        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1, display: 'block' }}>Housing Allowance</Typography>
+                        <TextField fullWidth placeholder="0.00" value={components.housing ? components.housing.toLocaleString() : ''} onChange={(e) => handleComponentChange('housing', e.target.value)} type="text" />
                     </Box>
-                     <Box>
-                         <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1, display: 'block' }}>Transport Allowance</Typography>
-                         <TextField fullWidth placeholder="0.00" value={components.transport || ''} onChange={(e) => handleComponentChange('transport', e.target.value)} type="number" />
+                    <Box>
+                        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1, display: 'block' }}>Transport Allowance</Typography>
+                        <TextField fullWidth placeholder="0.00" value={components.transport ? components.transport.toLocaleString() : ''} onChange={(e) => handleComponentChange('transport', e.target.value)} type="text" />
                     </Box>
-                     <Box>
-                         <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1, display: 'block' }}>Other Allowances (Variable/Utilities)</Typography>
-                         <TextField fullWidth placeholder="0.00" value={components.variable || ''} onChange={(e) => handleComponentChange('variable', e.target.value)} type="number" />
+                    <Box>
+                        <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ mb: 1, display: 'block' }}>Other Allowances (Variable/Utilities)</Typography>
+                        <TextField fullWidth placeholder="0.00" value={components.variable ? components.variable.toLocaleString() : ''} onChange={(e) => handleComponentChange('variable', e.target.value)} type="text" />
                     </Box>
                 </Box>
             </Paper>
@@ -238,8 +238,8 @@ const EditPackagePage = () => {
             <Paper elevation={0} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                     <Typography variant="subtitle1" fontWeight={700}>Non-Cash Benefits & Perks</Typography>
-                    <Button 
-                        startIcon={<AddIcon />} 
+                    <Button
+                        startIcon={<AddIcon />}
                         size="small"
                         onClick={() => setOpenModal(true)}
                         sx={{ textTransform: 'none' }}
@@ -247,15 +247,15 @@ const EditPackagePage = () => {
                         Add Benefit
                     </Button>
                 </Box>
-                
+
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
                     {benefits.map(benefit => (
-                         <Box key={benefit.id} sx={{ p: 2, border: '1px solid', borderColor: benefit.active ? 'primary.light' : 'divider', borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: benefit.active ? '#E3F2FD' : 'background.paper' }}>
+                        <Box key={benefit.id} sx={{ p: 2, border: '1px solid', borderColor: benefit.active ? 'primary.light' : 'divider', borderRadius: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: benefit.active ? '#E3F2FD' : 'background.paper' }}>
                             <Typography variant="body2" fontWeight={benefit.active ? 600 : 400} color={benefit.active ? 'text.primary' : 'text.secondary'}>{benefit.name}</Typography>
-                            <Switch 
-                                checked={benefit.active} 
-                                onChange={() => handleToggleBenefit(benefit.id)} 
-                                size="small" 
+                            <Switch
+                                checked={benefit.active}
+                                onChange={() => handleToggleBenefit(benefit.id)}
+                                size="small"
                             />
                         </Box>
                     ))}
@@ -265,10 +265,10 @@ const EditPackagePage = () => {
             {/* Approvers Section */}
             <Paper elevation={0} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Approver List</Typography>
-                <TextField 
-                    label="Approver Emails (comma separated)" 
-                    fullWidth 
-                    value={approverEmails} 
+                <TextField
+                    label="Approver Emails (comma separated)"
+                    fullWidth
+                    value={approverEmails}
                     onChange={(e) => setApproverEmails(e.target.value)}
                     helperText="These users will receive an email to approve this offer."
                 />
@@ -294,20 +294,20 @@ const EditPackagePage = () => {
             </Dialog>
 
             {/* Footer Actions */}
-            <Paper elevation={0} sx={{ 
+            <Paper elevation={0} sx={{
                 position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
                 p: 2, borderTop: '1px solid #E0E0E0', display: 'flex', justifyContent: 'flex-end', gap: 2,
                 bgcolor: 'white' // Make sure it's opaque
             }}>
-                 <Button onClick={() => router.back()} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
-                 <Button 
-                    variant="contained" 
-                    startIcon={<CheckCircleIcon />} 
+                <Button onClick={() => router.back()} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
+                <Button
+                    variant="contained"
+                    startIcon={<CheckCircleIcon />}
                     sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#1565C0', px: 4 }}
                     onClick={handleSaveAndProceed}
                 >
-                     Save & Proceed to Approval
-                 </Button>
+                    Save & Proceed to Approval
+                </Button>
             </Paper>
         </Box>
     );

@@ -1,73 +1,63 @@
 import { Requisition } from "@/interface/requisition";
-import { Edit, MoreVert, Visibility } from "@mui/icons-material";
-import { IconButton, Link, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { useState } from "react";
+import { Edit, Visibility, PersonAdd } from "@mui/icons-material";
+import { Box, IconButton, Tooltip, Link, alpha } from "@mui/material";
 
 export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Requisition> }) => {
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-  
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-      setAnchorEl(event.currentTarget);
-    };
-  
-    const handleClose = () => {
-      setAnchorEl(null);
-    };
-  
-    return (
-      <>
+  return (
+    <Box sx={{ display: 'flex', gap: 0.5 }}>
+      <Tooltip title="View Requisition" arrow>
         <IconButton
-          aria-label="more"
-          id={`action-button-${requisition.requisition_id}`}
-          aria-controls={open ? `action-menu-${requisition.requisition_id}` : undefined}
-          aria-expanded={open ? 'true' : undefined}
-          aria-haspopup="true"
-          onClick={handleClick}
+          component={Link}
+          href={`/requisition/${requisition.requisition_id}`}
           size="small"
+          sx={{
+            color: '#1976d2', // Professional Blue
+            '&:hover': {
+              bgcolor: alpha('#1976d2', 0.1),
+              transform: 'translateY(-1px)'
+            },
+            transition: 'all 0.2s'
+          }}
         >
-          <MoreVert />
+          <Visibility fontSize="small" />
         </IconButton>
-        <Menu
-          id={`action-menu-${requisition.requisition_id}`}
-          MenuListProps={{
-            'aria-labelledby': `action-button-${requisition.requisition_id}`,
-          }}
-          anchorEl={anchorEl}
-          open={open}
-          onClose={handleClose}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          PaperProps={{
-              elevation: 1,
-              sx: {
-                  minWidth: 180,
-                  mt: 1,
-                  borderRadius: 2,
-                  '& .MuiMenuItem-root': {
-                      px: 2,
-                      py: 1,
-                      mx: 1,
-                      my: 0.5,
-                      typography: 'body2',
-                      fontWeight: 500
-                  }
-              }
+      </Tooltip>
+
+      <Tooltip title="Edit Requisition" arrow>
+        <IconButton
+          component={Link}
+          href={`/requisition/${requisition.requisition_id}/edit`}
+          size="small"
+          sx={{
+            color: '#ed6c02', // Deep Orange for better visibility than yellow
+            '&:hover': {
+              bgcolor: alpha('#ed6c02', 0.1),
+              transform: 'translateY(-1px)'
+            },
+            transition: 'all 0.2s'
           }}
         >
-          <MenuItem onClick={handleClose} component={Link} href={`/requisition/${requisition.requisition_id}`}>
-            <ListItemIcon>
-              <Visibility fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>View Requisition</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleClose} component={Link} href={`/requisition/${requisition.requisition_id}/edit`}>
-            <ListItemIcon>
-              <Edit fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Edit Requisition</ListItemText>
-          </MenuItem>
-        </Menu>
-      </>
-    );
-  };
+          <Edit fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title="Invite Stakeholders" arrow>
+        <IconButton
+          component={Link}
+          href={`/requisition/${requisition.requisition_id}/invite`}
+          size="small"
+          sx={{
+            color: '#2e7d32', // Forest Green to match "Approved" status
+            '&:hover': {
+              bgcolor: alpha('#2e7d32', 0.1),
+              transform: 'translateY(-1px)'
+            },
+            transition: 'all 0.2s'
+          }}
+        >
+          <PersonAdd fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
+};

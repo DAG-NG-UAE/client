@@ -144,13 +144,12 @@ export const holdRequisition = async (requisitionId: string) => {
 
 export const assignRecruiters = async (
   requisitionId: string,
-  recruiters: { userId: string; roleId: string }[],
-  recruiterEmails: string,
+  recruiters: { email: string; displayName: string }[],
 ) => {
   try {
     const response = await axiosInstance.put(
       `/requisition/assign-recruiters?requisitionId=${requisitionId}`,
-      { recruiters, recruiterEmails },
+      { recruiters },
     );
     return response.data.data;
   } catch (error) {
@@ -231,6 +230,24 @@ export const removeRequisitionLocation = async (
     return response.data.data;
   } catch (error) {
     console.error("Error removing location:", error);
+    throw error;
+  }
+};
+
+export const inviteInterviewers = async (
+  requisitionId: string,
+  users: { email: string; displayName: string }[],
+  message: string,
+) => {
+  try {
+    const response = await axiosInstance.post("/requisition/invite", {
+      requisitionId,
+      users,
+      message,
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error inviting interviewers:", error);
     throw error;
   }
 };

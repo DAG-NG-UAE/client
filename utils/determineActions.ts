@@ -1,6 +1,7 @@
-import { CandidateActions, CandidateStatus } from "@/interface/candidate";
+import { CandidateActions } from "@/interface/candidate";
+import { CandidateStatusType } from "@/types/candidate";
 
-export function determineActions(currentStatus: CandidateStatus): CandidateActions {
+export function determineActions(currentStatus: CandidateStatusType): CandidateActions {
     switch (currentStatus) {
      case 'applied':
        return {
@@ -36,6 +37,7 @@ export function determineActions(currentStatus: CandidateStatus): CandidateActio
            requiresConfirmation: true,
            requiresNotes: true,
            targetStatus: 'REJECTED',
+           triggersWorkflow: 'Reject Candidate'
          },
        };
      case 'interview_scheduled':
@@ -62,6 +64,44 @@ export function determineActions(currentStatus: CandidateStatus): CandidateActio
            actionType: 'EXTEND_OFFER',
            description: 'Triggers the Offer Workflow (approval, salary details).',
            triggersWorkflow: 'Offer',
+         },
+         rejectionAction: {
+           label: 'Reject Candidate',
+           actionType: 'REJECT_CANDIDATE',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: true,
+           requiresNotes: true,
+           targetStatus: 'REJECTED',
+         },
+       };
+     case 'pending_feedback':
+       return {
+         progressionAction: {
+           label: 'Begin Pre-offer Discussion',
+           actionType: 'BEGIN_PRE_OFFER_DISCUSSION',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: false,
+           requiresNotes: false,
+           targetStatus: 'PRE_OFFER_DISCUSSION',
+         },
+         rejectionAction: {
+           label: 'Reject Candidate',
+           actionType: 'REJECT_CANDIDATE',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: true,
+           requiresNotes: true,
+           targetStatus: 'REJECTED',
+         },
+       };
+       case 'pre_offer':
+       return {
+         progressionAction: {
+           label: 'Begin Internal Salary Proposal',
+           actionType: 'BEGIN_INTERNAL_SALARY_PROPOSAL',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: false,
+           requiresNotes: false,
+           targetStatus: 'INTERNAL_SALARY_PROPOSAL',
          },
          rejectionAction: {
            label: 'Reject Candidate',

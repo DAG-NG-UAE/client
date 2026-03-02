@@ -212,3 +212,10 @@ export const enum AutomationType {
   NEW_REQUISITION = "new_req",
   PING_HIRING_MANAGER = "ping_hiring_manager",
 }
+
+
+export const enum CandidateStatus  { 
+  APPLIED = 'applied', 
+  REJECTED = 'rejected', 
+  SHORTLISTED = 'shortlisted'
+ }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import {
   Box,
   Typography,
@@ -36,7 +36,7 @@ interface FormInputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
-const FormInput: React.FC<FormInputProps> = ({
+const FormInput: React.FC<FormInputProps> = memo(({
   label,
   required = false,
   placeholder,
@@ -64,24 +64,24 @@ const FormInput: React.FC<FormInputProps> = ({
       disabled={disabled}
       onChange={onChange}
       InputProps={{
-        sx: { 
-          borderRadius: 2, 
+        sx: {
+          borderRadius: 2,
           backgroundColor: '#ffffff',
           color: '#101828',
           '& .MuiOutlinedInput-notchedOutline': {
-             borderColor: 'rgba(0,0,0,0.2)'
+            borderColor: 'rgba(0,0,0,0.2)'
           }
         }
       }}
     />
   </Box>
-);
+));
 
-const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
+const SectionHeader: React.FC<{ title: string }> = memo(({ title }) => (
   <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#101828' }}>
     {title}
   </Typography>
-);
+));
 
 interface ApplicationDrawerProps {
   open: boolean;
@@ -102,13 +102,13 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false); // State to manage submission status
-  
+
   const [availability, setAvailability] = useState('');
   const [experience, setExperience] = useState('');
   const [location, setLocation] = useState('');
   const [source, setSource] = useState('');
   const [otherSource, setOtherSource] = useState('');
-  
+
   // Preference Values: Keyed by composite ID "${pref_key}_${index}"
   // Value stores { skill?: number | string, value: string }
   const [preferenceValues, setPreferenceValues] = useState<Record<string, { skill?: number | string, value?: string }>>({});
@@ -132,7 +132,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       }
     }));
   };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -157,7 +157,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
     }
   };
 
-  const isFormValid =
+  const isFormValid = useMemo(() => (
     fullName !== '' &&
     emailAddress !== '' &&
     phoneNumber !== '' &&
@@ -171,24 +171,28 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
     (source === 'Other' ? otherSource !== '' : true) &&
     // Check Preferences
     (!requisitionPreference || requisitionPreference.every((item, index) => {
-        const key = `${item.pref_key}_${index}`;
-        const answer = preferenceValues[key];
-        
-        // If it requires a skill (has full_skill_list), check skill is selected
-        const needsSkill = item.full_skill_list && item.full_skill_list.length > 0;
-        if (needsSkill && (answer?.skill === undefined || answer?.skill === null || answer?.skill === '')) return false;
+      const key = `${item.pref_key}_${index}`;
+      const answer = preferenceValues[key];
 
-        // Check value (proficiency/rank or text)
-        if (!answer?.value || answer.value.trim() === '') return false;
-        
-        return true;
-    }));
+      // If it requires a skill (has full_skill_list), check skill is selected or auto-selected
+      const needsSkill = item.full_skill_list && item.full_skill_list.length > 0;
+      const isRequiredSkillFixed = item.required_skill_id !== null && item.required_skill_id !== undefined;
+      const autoSkillId = item.full_skill_list?.[0]?.id;
+
+      if (needsSkill && !isRequiredSkillFixed && !autoSkillId && (answer?.skill === undefined || answer?.skill === null || answer?.skill === '')) return false;
+
+      // Check value (proficiency/rank or text)
+      if (!answer?.value || answer.value.trim() === '') return false;
+
+      return true;
+    }))
+  ), [fullName, emailAddress, phoneNumber, availability, experience, location, expectedSalary, cvFile, privacyConsent, source, otherSource, requisitionPreference, preferenceValues]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isFormValid) {
-      enqueueSnackbar('Please fill all required fields and accept the privacy notice.', {variant: 'error'})
+      enqueueSnackbar('Please fill all required fields and accept the privacy notice.', { variant: 'error' })
       return;
     }
 
@@ -214,44 +218,51 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       formData.append('cvFile', cvFile, cvFile.name);
     }
     formData.append('requisitionPositionSlot', location);
-    
+
     // Format Preferences
     // Format Preferences
     if (requisitionPreference && requisitionPreference.length > 0) {
-        const formattedPreferences = requisitionPreference.map((item, index) => {
-            const key = `${item.pref_key}_${index}`;
-            const answer = preferenceValues[key];
-            
-            // User requested object structure: { skill_id: 1, rank: "Fluent" }
-            // Wrapping in array as response_value is typically an array/list in this system
-            
-            const valueObject: { skill_id?: number | string | null; rank: string } = {
-                rank: answer?.value || ''
-            };
+      const formattedPreferences = requisitionPreference.map((item, index) => {
+        const key = `${item.pref_key}_${index}`;
+        const answer = preferenceValues[key];
 
-            if (answer?.skill !== undefined && answer?.skill !== null && answer?.skill !== '') {
-                valueObject.skill_id = answer.skill;
-            } else {
-                valueObject.skill_id = null; // Explicit null for non-skill preferences if needed, or just omit. 
-            }
-            
-            // Only include if there is a value
-            if (!valueObject.rank) return null;
+        // User requested object structure: { skill_id: 1, rank: "Fluent" }
+        // Wrapping in array as response_value is typically an array/list in this system
 
-            return {
-                pref_key: item.pref_key,
-                response_value: [valueObject] 
-            };
-        }).filter(p => p !== null);
-        
-        formData.append('preferences', JSON.stringify(formattedPreferences));
+        const valueObject: { skill_id?: number | string | null; rank: string } = {
+          rank: answer?.value || ''
+        };
+
+        const isRequiredSkillFixed = item.required_skill_id !== null && item.required_skill_id !== undefined;
+        const autoSkillId = item.full_skill_list?.[0]?.id;
+
+        if (isRequiredSkillFixed) {
+          valueObject.skill_id = item.required_skill_id;
+        } else if (answer?.skill !== undefined && answer?.skill !== null && answer?.skill !== '') {
+          valueObject.skill_id = answer.skill;
+        } else if (autoSkillId) {
+          valueObject.skill_id = autoSkillId;
+        } else {
+          valueObject.skill_id = null; // Explicit null for non-skill preferences if needed, or just omit. 
+        }
+
+        // Only include if there is a value
+        if (!valueObject.rank) return null;
+
+        return {
+          pref_key: item.pref_key,
+          response_value: [valueObject]
+        };
+      }).filter(p => p !== null);
+
+      formData.append('preferences', JSON.stringify(formattedPreferences));
     }
 
     console.log('form data =>', Object.fromEntries(formData.entries()));
 
     try {
       await apply(formData, requisitionId);
-      enqueueSnackbar('You will be contacted if you are shortlisted!', { variant: 'success'})
+      enqueueSnackbar('You will be contacted if you are shortlisted!', { variant: 'success' })
       setFullName('');
       setEmailAddress('');
       setPhoneNumber('');
@@ -269,7 +280,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       // Reset form could be here
     } catch (error) {
       console.error('Error submitting form:', error);
-      enqueueSnackbar('There was an error submitting your form!', { variant: 'info'})
+      enqueueSnackbar('There was an error submitting your form!', { variant: 'info' })
     } finally {
       setSubmitting(false); // Re-enable button after submission attempt
     }
@@ -304,10 +315,10 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
             {/* Personal Information */}
             <Box mb={4}>
               <SectionHeader title="Personal Information" />
-                <FormInput label="Full Name" required placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                <FormInput label="Email Address" required placeholder="john.doe@email.com" type="email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
-                <FormInput label="Phone Number" required placeholder="(555) 123-4567" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
-                <FormInput label="Position Applied For" required disabled={true} value={careerDetails?.position || ''} />
+              <FormInput label="Full Name" required placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <FormInput label="Email Address" required placeholder="john.doe@email.com" type="email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
+              <FormInput label="Phone Number" required placeholder="(555) 123-4567" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+              <FormInput label="Position Applied For" required disabled={true} value={careerDetails?.position || ''} />
             </Box>
 
             <Divider sx={{ my: 4, borderColor: '#e0e0e0' }} />
@@ -315,7 +326,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
             {/* Application Details */}
             <Box mb={4}>
               <SectionHeader title="Application Details" />
-              
+
               {/* Resume Upload */}
               <Box mb={3}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
@@ -365,7 +376,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
 
               <FormInput label="Expected Salary" required placeholder="e.g., N120,000 - N140,000" value={expectedSalary} onChange={(e) => setExpectedSalary(e.target.value)} />
 
-{/* TODO:: Consider removing the experience field */}
+              {/* TODO:: Consider removing the experience field */}
               <Box mb={3}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
                   Experience <span style={{ color: '#d32f2f' }}>*</span>
@@ -375,12 +386,12 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                   displayEmpty
                   value={experience}
                   onChange={(e) => setExperience(e.target.value)}
-                  sx={{ 
-                    borderRadius: 2, 
+                  sx={{
+                    borderRadius: 2,
                     bgcolor: '#ffffff',
                     color: '#101828',
                     '& .MuiOutlinedInput-notchedOutline': {
-                       borderColor: 'rgba(0,0,0,0.2)'
+                      borderColor: 'rgba(0,0,0,0.2)'
                     }
                   }}
                 >
@@ -404,12 +415,12 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                   displayEmpty
                   value={availability}
                   onChange={(e) => setAvailability(e.target.value)}
-                  sx={{ 
-                    borderRadius: 2, 
+                  sx={{
+                    borderRadius: 2,
                     bgcolor: '#ffffff',
                     color: '#101828',
                     '& .MuiOutlinedInput-notchedOutline': {
-                       borderColor: 'rgba(0,0,0,0.2)'
+                      borderColor: 'rgba(0,0,0,0.2)'
                     }
                   }}
                 >
@@ -424,74 +435,74 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
               </Box>
 
               <Box mb={3}>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
-                      Select Location <span style={{ color: '#d32f2f' }}>*</span>
-                  </Typography>
-                  <Select
-                    fullWidth
-                    displayEmpty
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    sx={{ 
-                      borderRadius: 2, 
-                      bgcolor: '#ffffff',
-                      color: '#101828',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                       borderColor: 'rgba(0,0,0,0.2)'
-                      }
-                    }}
-                  >
-                    <MenuItem value="" disabled>
-                      <Typography color="#888">Select Location</Typography>
-                    </MenuItem>
-                    
-                    {careerDetails?.requisition_positions?.map((loc, index) => (
-                      <MenuItem key={loc.position_slot_id || `${loc.location}_${index}`} value={loc.position_slot_id || loc.location}>{loc.location}</MenuItem>
-                    ))}
-                  </Select>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
+                  Select Location <span style={{ color: '#d32f2f' }}>*</span>
+                </Typography>
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  sx={{
+                    borderRadius: 2,
+                    bgcolor: '#ffffff',
+                    color: '#101828',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    <Typography color="#888">Select Location</Typography>
+                  </MenuItem>
+
+                  {careerDetails?.requisition_positions?.map((loc, index) => (
+                    <MenuItem key={loc.position_slot_id || `${loc.location}_${index}`} value={loc.position_slot_id || loc.location}>{loc.location}</MenuItem>
+                  ))}
+                </Select>
               </Box>
 
               <Box mb={3}>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
-                      How did you hear about us? <span style={{ color: '#d32f2f' }}>*</span>
-                  </Typography>
-                  <Select
-                    fullWidth
-                    displayEmpty
-                    value={source}
-                    onChange={(e) => setSource(e.target.value)}
-                    sx={{ 
-                      borderRadius: 2, 
-                      bgcolor: '#ffffff',
-                      color: '#101828',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                       borderColor: 'rgba(0,0,0,0.2)'
-                      }
-                    }}
-                  >
-                    <MenuItem value="" disabled>
-                      <Typography color="#888">Select Source</Typography>
-                    </MenuItem>
-                    <MenuItem value="Career Website">Career Website</MenuItem>
-                    <MenuItem value="LinkedIn">LinkedIn</MenuItem>
-                    <MenuItem value="Job Mag">Job Mag</MenuItem>
-                    <MenuItem value="Indeed">Indeed</MenuItem>
-                    <MenuItem value="Other">Other</MenuItem>
-                  </Select>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
+                  How did you hear about us? <span style={{ color: '#d32f2f' }}>*</span>
+                </Typography>
+                <Select
+                  fullWidth
+                  displayEmpty
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  sx={{
+                    borderRadius: 2,
+                    bgcolor: '#ffffff',
+                    color: '#101828',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(0,0,0,0.2)'
+                    }
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    <Typography color="#888">Select Source</Typography>
+                  </MenuItem>
+                  <MenuItem value="Career Website">Career Website</MenuItem>
+                  <MenuItem value="LinkedIn">LinkedIn</MenuItem>
+                  <MenuItem value="Job Mag">Job Mag</MenuItem>
+                  <MenuItem value="Indeed">Indeed</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </Select>
               </Box>
 
               {source === 'Other' && (
-                <FormInput 
-                  label="Please specify" 
-                  required 
+                <FormInput
+                  label="Please specify"
+                  required
                   placeholder="e.g., Friend, Google Search"
                   value={otherSource}
                   onChange={(e) => setOtherSource(e.target.value)}
                 />
               )}
 
-              <FormInput 
-                label="Cover Letter (Optional)" 
+              <FormInput
+                label="Cover Letter (Optional)"
                 placeholder="Tell us why you're interested..."
                 multiline
                 rows={4}
@@ -503,83 +514,66 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
             {/* Additional Information / Preferences */}
             {requisitionPreference && requisitionPreference.length > 0 && (
               <>
-                 <Divider sx={{ my: 4, borderColor: '#e0e0e0' }} />
-                 <Box mb={4}>
+                <Divider sx={{ my: 4, borderColor: '#e0e0e0' }} />
+                <Box mb={4}>
                   <SectionHeader title="Additional Information" />
-                  
+
                   {requisitionPreference.map((item, index) => {
                     const compositeKey = `${item.pref_key}_${index}`;
                     const answer = preferenceValues[compositeKey] || {};
                     const hasSkills = item.full_skill_list && item.full_skill_list.length > 0;
                     const hasOptions = item.ranking_options && item.ranking_options.length > 0;
 
-                    return (
-                        <Box key={compositeKey} mb={3}>
-                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
-                                {item.category_label} <span style={{ color: '#d32f2f' }}>*</span>
-                            </Typography>
-                            
-                            {/* Skill Selection if available */}
-                            {hasSkills && (
-                                <Box mb={2}>
-                                    <Select
-                                        fullWidth
-                                        displayEmpty
-                                        value={answer.skill !== undefined ? answer.skill : ''}
-                                        onChange={(e) => handlePreferenceSkillChange(compositeKey, e.target.value)}
-                                        sx={{ 
-                                            borderRadius: 2, 
-                                            bgcolor: '#ffffff',
-                                            mb: 1
-                                        }}
-                                    >
-                                         <MenuItem value="" disabled>
-                                            <Typography color="#888">Select Specific Skill</Typography>
-                                        </MenuItem>
-                                        {item.full_skill_list?.map(skill => (
-                                            <MenuItem key={skill.id} value={skill.id}>
-                                                {skill.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </Box>
-                            )}
+                    const isRequiredSkillFixed = item.required_skill_id !== null && item.required_skill_id !== undefined;
+                    const skillName = isRequiredSkillFixed
+                      ? item.full_skill_list?.find(s => s.id === item.required_skill_id)?.name || 'this skill'
+                      : (hasSkills ? item.full_skill_list?.[0]?.name : null);
 
-                            {/* Rank/Option Selection (Pills) - Only show if skill selected (or no skill required) */}
-                            {(hasOptions && (!hasSkills || answer.skill)) ? (
-                                <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                                    {item.ranking_options?.map((opt) => (
-                                        <Chip
-                                            key={opt.rank}
-                                            label={opt.label}
-                                            clickable
-                                            color={answer.value === opt.label ? "primary" : "default"}
-                                            onClick={() => handlePreferenceValueChange(compositeKey, opt.label)}
-                                            sx={{
-                                                borderRadius: '8px',
-                                                '&:hover': { backgroundColor: answer.value === opt.label ? 'primary.dark' : '#e0e0e0' }
-                                            }}
-                                        />
-                                    ))}
-                                </Stack>
-                            ) : (
-                                /* Fallback if no ranking options but just text input */
-                                <TextField
-                                    fullWidth
-                                    value={answer.value || ''}
-                                    onChange={(e) => handlePreferenceValueChange(compositeKey, e.target.value)}
-                                    placeholder="Enter details"
-                                    sx={{ bgcolor: '#fff' }}
-                                />
-                            )}
-                            
-                            {(hasSkills && !answer.skill) && (
-                                <FormHelperText>Please select a specfic skill first.</FormHelperText>
-                            )}
-                        </Box>
+                    const labelText = skillName
+                      ? `Rate your ${skillName} skill`
+                      : item.category_label;
+
+                    return (
+                      <Box key={compositeKey} mb={3}>
+                        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
+                          {labelText} <span style={{ color: '#d32f2f' }}>*</span>
+                        </Typography>
+
+                        {/* Options Selection (Chips) or Text Input */}
+                        {hasOptions ? (
+                          <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                            {item.ranking_options?.map((opt) => (
+                              <Chip
+                                key={opt.rank}
+                                label={opt.label}
+                                clickable
+                                color={answer.value === opt.label ? "primary" : "default"}
+                                onClick={() => handlePreferenceValueChange(compositeKey, opt.label)}
+                                sx={{
+                                  borderRadius: '8px',
+                                  '&:hover': { backgroundColor: answer.value === opt.label ? 'primary.dark' : '#e0e0e0' }
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                        ) : (
+                          <TextField
+                            fullWidth
+                            value={answer.value || ''}
+                            onChange={(e) => handlePreferenceValueChange(compositeKey, e.target.value)}
+                            placeholder="Enter details"
+                            sx={{
+                              bgcolor: '#fff',
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(0,0,0,0.2)'
+                              }
+                            }}
+                          />
+                        )}
+                      </Box>
                     );
                   })}
-                 </Box>
+                </Box>
               </>
             )}
 
@@ -590,9 +584,9 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
               <SectionHeader title="Privacy & Data Protection" />
               <FormControlLabel
                 control={
-                  <Checkbox 
-                    checked={privacyConsent} 
-                    onChange={(e) => setPrivacyConsent(e.target.checked)} 
+                  <Checkbox
+                    checked={privacyConsent}
+                    onChange={(e) => setPrivacyConsent(e.target.checked)}
                     sx={{ color: '#155dfc', '&.Mui-checked': { color: '#155dfc' } }}
                   />
                 }
@@ -609,15 +603,15 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
 
             {/* Footer Actions */}
             <Box sx={{ mt: 4 }}>
-              <Button 
-                variant="contained" 
-                size="large" 
-                fullWidth 
-                type="submit" 
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                type="submit"
                 disabled={!isFormValid || submitting}
-                sx={{ 
-                  py: 1.5, 
-                  bgcolor: '#155dfc', 
+                sx={{
+                  py: 1.5,
+                  bgcolor: '#155dfc',
                   '&:hover': { bgcolor: '#0F4DBA' },
                   '&:disabled': { bgcolor: '#e0e0e0' }
                 }}

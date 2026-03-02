@@ -88,8 +88,9 @@ export const getSingleCandidate = async (candidateId: string) => {
 
 export const getCandidateResume = async (candidateId: string) => {
   try {
-    const resumeLink = `${API_BASE_URL}/candidate/resume?candidateId=${candidateId}`;
-    return resumeLink;
+    const resumeLink = await axiosInstance.get(`candidate/resume?candidateId=${candidateId}`);
+    console.log("The resume link is ", resumeLink);
+    return resumeLink.data.data.value;
   } catch (error) {
     console.error("Error fetching single candidate details");
     throw error;
@@ -110,11 +111,19 @@ export const updateCandidateStatus = async (
 
 export const scheduleInterview = async (interviewData: {
   candidate_id: string;
+  candidate_name: string;
   requisition_id: string;
-  current_status: string;
+  interview_phase: string;
   interview_date: string;
-  interview_time: string;
-  interview_type: string;
+  duration_minutes: number;
+  location_type: 'online' | 'in_person';
+  location_details: string;
+  interview_panel: string[];
+  old_status: string;
+  publicCvLink: string;
+  body: string;
+  candidateEmail: string;
+  subject: string;
 }) => {
   try {
     console.log("The data to the backend is ", interviewData);
@@ -199,3 +208,26 @@ export const getCandidateEvaluationDetails = async (candidateId: string) => {
     throw error;
   }
 };
+export const getCvByShareToken = async (token: string) => {
+  try {
+    const response = await axiosInstance.get(`/candidate/public/cv?token=${token}`);
+    console.log("The response from get cv by share token is ", response.data.data)
+    return response.data.data.value;
+  } catch (error) {
+    console.error("Error fetching CV by share token:", error);
+    throw error;
+  }
+};
+
+
+export const getCandidateDocuments = async (url: string ) => { 
+  try{ 
+    const response = await axiosInstance.get(`/candidate/public/documents?url=${url}`);
+    console.log("The response from get candidate documents is ", response.data.data)
+    window.open(response.data.data.value, '_blank')
+    // return response.data.data.value;
+  }catch(error){ 
+    console.error("Error fetching candidate documents", error);
+    throw error;
+  }
+}

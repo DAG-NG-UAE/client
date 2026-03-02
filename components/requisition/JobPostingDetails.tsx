@@ -1,9 +1,8 @@
-import { Box, Typography, Paper, Chip, TextField, Stack, IconButton, MenuItem, Select, Button, useTheme, Tooltip, CircularProgress, Avatar, Popover, List, ListItem, ListItemText, ListItemAvatar, Checkbox, InputAdornment, ListItemButton, Switch, FormControlLabel } from '@mui/material';
+import { Box, Typography, Paper, Chip, TextField, Stack, IconButton, MenuItem, Select, Button, useTheme, Tooltip, CircularProgress, Avatar, Popover, List, ListItem, ListItemText, ListItemAvatar, Checkbox, InputAdornment, ListItemButton, Switch, FormControlLabel, alpha } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Requisition, RequisitionPosition, RequisitionPositionLists } from '@/interface/requisition';
 import { Add, Close, Search } from '@mui/icons-material';
-import { assignRecruiters } from '@/api/requisitionApi';
-import { fetchRecruiters } from '@/redux/slices/user';
+import { searchInterviewers } from '@/api/interview';
 import { AppRole } from '@/utils/constants';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -14,126 +13,113 @@ import { Check, Edit, Close as CloseIcon } from '@mui/icons-material';
 interface JobPostingDetailsProps {
   requisition: Partial<Requisition>;
   isEditMode?: boolean;
-  handlePublishRequisition?:(requisitionId:string) => void
+  handlePublishRequisition?: (requisitionId: string) => void
   handleUnpublishRequisition?: (requisitionId: string, jobListKey: string) => void
 }
 
+interface Interviewer {
+  id: string;
+  displayName: string;
+  mail: string;
+  jobTitle: string;
+}
 
-const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequisition, handleUnpublishRequisition}: JobPostingDetailsProps) => {
+
+const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequisition, handleUnpublishRequisition }: JobPostingDetailsProps) => {
   console.log(`the requisition is => ${JSON.stringify(requisition)}`)
   const theme = useTheme();
-  const {recruiters} = useSelector((state: RootState) => state.users)
-  const {selectedRequisition} = useSelector((state: RootState) => state.requisitions)
-  const {user} = useSelector((state: RootState) => state.auth)
+  // We no longer fetch all recruiters by default
+  const { selectedRequisition } = useSelector((state: RootState) => state.requisitions)
+  const { user } = useSelector((state: RootState) => state.auth)
 
-  const [locations, setLocations] = useState<{position_slot_id:string; loc: string; qty:number; is_active:boolean}[]>(requisition.positions_list || []);
-  const [newLocation, setNewLocation] = useState('');
-  const [newQuantity, setNewQuantity] = useState<number | ''>('');
-  const [editingLocationId, setEditingLocationId] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [unpublishing, setUnpublishing] = useState(false);
 
-  useEffect(() => {
-    if (requisition.positions_list) {
-      setLocations(requisition.positions_list);
-    }
-  }, [requisition.positions_list]);
 
-  useEffect(() => { 
-    handleFetchRecruiters()
-  }, [])
-  
+
   // Recruiter Assignment State
-  const [assignedRecruiters, setAssignedRecruiters] = useState<typeof recruiters>([]);
+  const [assignedRecruiters, setAssignedRecruiters] = useState<{ user_id?: string, full_name?: string, email?: string, color?: string }[]>([]);
 
   useEffect(() => {
-    if (requisition.stakeholder_names && recruiters) {
+    if (requisition.stakeholder_names) {
       const assigned = requisition.stakeholder_names
         .filter(stakeholder => stakeholder.role === AppRole.Recruiter)
-        .map(stakeholder => {
-          const foundRecruiter = recruiters.find(r => r.user_id === stakeholder.id);
-          return foundRecruiter ? foundRecruiter : null;
-        })
-        .filter(recruiter => recruiter !== null) as typeof recruiters;
+        .map(stakeholder => ({
+          user_id: stakeholder.id,
+          full_name: stakeholder.name,
+          email: stakeholder.email,
+        }));
       setAssignedRecruiters(assigned);
     } else {
       setAssignedRecruiters([]);
     }
-  }, [requisition.stakeholder_names, recruiters]);
+  }, [requisition.stakeholder_names]);
+
   const [recruiterAnchorEl, setRecruiterAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [recruiterSearch, setRecruiterSearch] = useState('');
-  const [tempSelectedRecruiters, setTempSelectedRecruiters] = useState<string[]>([]);
+  const [isSearchingRecruiters, setIsSearchingRecruiters] = useState(false);
+  const [recruiterSearchResults, setRecruiterSearchResults] = useState<Interviewer[]>([]);
+  const [tempSelectedRecruiters, setTempSelectedRecruiters] = useState<Interviewer[]>([]);
   const [assigningRecruiters, setAssigningRecruiters] = useState(false);
   const [removingRecruiterId, setRemovingRecruiterId] = useState<string | null>(null);
 
-  const handleAddLocation = async () => {
-    if (newLocation && newQuantity && requisition.requisition_id) {
-      if (editingLocationId) {
-        // Edit Mode
-        await callUpdateRequisitionLocation(requisition.requisition_id, editingLocationId, newLocation, Number(newQuantity));
-        setEditingLocationId(null);
-      } else {
-        // Add Mode
-        await callAddRequisitionLocation(requisition.requisition_id, newLocation, Number(newQuantity));
+  // Debounced search for recruiters
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!recruiterSearch || recruiterSearch.length < 2) {
+        setRecruiterSearchResults([]);
+        return;
       }
-      setNewLocation('');
-      setNewQuantity('');
-    }
-  };
+      setIsSearchingRecruiters(true);
+      try {
+        const results = await searchInterviewers(recruiterSearch);
+        setRecruiterSearchResults(results || []);
+      } catch (error) {
+        console.error("Search failed", error);
+      } finally {
+        setIsSearchingRecruiters(false);
+      }
+    }, 500);
 
-  const handleRemoveLocation = async (locToRemove: {position_slot_id: string, loc: string}) => {
-    if (requisition.requisition_id) {
-      await callDeleteRequisitionLocation(requisition.requisition_id, locToRemove.position_slot_id, locToRemove.loc);
-    }
-  };
+    return () => clearTimeout(timer);
+  }, [recruiterSearch]);
 
-  const handleEditLocation = (loc: {position_slot_id:string; loc: string; qty:number}) => {
-    setNewLocation(loc.loc);
-    setNewQuantity(loc.qty);
-    setEditingLocationId(loc.position_slot_id);
-  };
 
-  const handleCancelEdit = () => {
-    setNewLocation('');
-    setNewQuantity('');
-    setEditingLocationId(null);
-  };
 
   // Recruiter Handlers
   const handleRecruiterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setTempSelectedRecruiters(assignedRecruiters.map(r => r.user_id).filter((id): id is string => id !== undefined));
+    // Current assigned recruiters as base for selection
+    const initialSelection = assignedRecruiters.map(r => ({
+      mail: r.email,
+      displayName: r.full_name,
+      id: r.user_id,
+      jobTitle: ''
+    } as Interviewer));
+    setTempSelectedRecruiters(initialSelection);
     setRecruiterAnchorEl(event.currentTarget);
   };
 
   const handleCloseRecruiterPopover = () => {
     setRecruiterAnchorEl(null);
     setRecruiterSearch('');
+    setRecruiterSearchResults([]);
   };
 
-  const handleToggleRecruiter = (recruiterId: string) => {
-    setTempSelectedRecruiters(prev => 
-      prev.includes(recruiterId)
-        ? prev.filter(id => id !== recruiterId)
-        : [...prev, recruiterId]
+  const handleToggleRecruiter = (recruiter: Interviewer) => {
+    setTempSelectedRecruiters(prev =>
+      prev.find(r => r.mail === recruiter.mail)
+        ? prev.filter(r => r.mail !== recruiter.mail)
+        : [...prev, recruiter]
     );
   };
 
   const handleAssignRecruitersAction = async () => {
     setAssigningRecruiters(true);
     try {
-      const selectedObjs = recruiters.filter(r => r.user_id !== undefined && tempSelectedRecruiters.includes(r.user_id));
-      console.log(`The selected recruiters are => ${JSON.stringify(selectedObjs)}`)
-      
-      const assignedIds = assignedRecruiters.map(r => r.user_id);
-      const newRecruiters = selectedObjs.filter(r => !assignedIds.includes(r.user_id));
-
-      const emails = newRecruiters.map(r => r.email).filter(Boolean).join(';');
-
       if (requisition.requisition_id) {
         await callAssignRecruiters(
-            requisition.requisition_id, 
-            selectedObjs.filter((r): r is {user_id: string, role_id: string, full_name: string} => r.user_id !== undefined && r.role_id !== undefined).map(r => ({userId: r.user_id, roleId: r.role_id})),
-            emails
+          requisition.requisition_id,
+          tempSelectedRecruiters.map(r => ({ email: r.mail, displayName: r.displayName }))
         )
       }
       handleCloseRecruiterPopover();
@@ -149,14 +135,10 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
 
     setRemovingRecruiterId(recruiterIdToRemove);
     try {
-      const updatedAssignedRecruiters = assignedRecruiters.filter(r => r.user_id !== recruiterIdToRemove);
-
-      console.log(`this is the updated assigned recruiter => ${JSON.stringify(updatedAssignedRecruiters)}`)
-      
       const recruiterToRemove = assignedRecruiters.find(r => r.user_id === recruiterIdToRemove);
       const email = recruiterToRemove?.email || "";
 
-       await callRemoveRecruiters(requisition.requisition_id, recruiterIdToRemove, email);
+      await callRemoveRecruiters(requisition.requisition_id, recruiterIdToRemove, email);
     } catch (error) {
       console.error("Failed to remove recruiter", error);
     } finally {
@@ -164,15 +146,9 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
     }
   };
 
-  const handleFetchRecruiters = async() => { 
-    await fetchRecruiters(AppRole.Recruiter)
-  }
 
- 
 
-  const filteredRecruiters = recruiters?.filter(r => 
-    r.full_name && r.full_name.toLowerCase().includes(recruiterSearch.toLowerCase())
-  );
+
 
   const openRecruiterPopover = Boolean(recruiterAnchorEl);
   const recruiterPopoverId = openRecruiterPopover ? 'recruiter-popover' : undefined;
@@ -189,320 +165,280 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
           <Typography variant="body2" display="block" gutterBottom>
             Posting Locations
           </Typography>
-          {isEditMode ? (
-            <Box>
-              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Location"
-                  placeholder="Enter location"
-                  value={newLocation}
-                  onChange={(e) => setNewLocation(e.target.value)}
-                />
-                <TextField
-                  sx={{ width: 120 }}
-                  size="small"
-                  label="Headcount"
-                  type="number"
-                  placeholder='Qty'
-                  value={newQuantity}
-                  onChange={(e) => setNewQuantity(e.target.value === '' ? '' : Number(e.target.value))}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddLocation()}
-                />
-                
-                {editingLocationId ? (
-                   <>
-                    <IconButton onClick={handleAddLocation} color="primary" sx={{ bgcolor: 'secondary.main', color: 'white', '&:hover': { bgcolor: 'secondary.dark' }, borderRadius: 1 }}>
-                        <Check />
-                    </IconButton>
-                    <IconButton onClick={handleCancelEdit} size="small">
-                        <CloseIcon />
-                    </IconButton>
-                   </>
-                ) : (
-                   <IconButton 
-                      onClick={handleAddLocation} 
-                      color="primary" 
-                      sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' }, borderRadius: 1 }}
-                    >
-                      <Add />
-                   </IconButton>
-                )}
-              </Stack>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {locations?.map((loc) => (
-                  <Tooltip key={loc.position_slot_id} title={loc.is_active === false ? "This location is currently inactive/hidden" : ""}>
-                    <Chip
-                      label={`${loc.loc} (${loc.qty})`}
-                      onDelete={() => handleRemoveLocation(loc)}
-                      onClick={() => handleEditLocation(loc)}
-                      variant={editingLocationId === loc.position_slot_id ? "filled" : "outlined"}
-                      color={editingLocationId === loc.position_slot_id ? "primary" : "default"}
-                      sx={{ 
-                        opacity: loc.is_active === false ? 0.6 : 1,
-                        textDecoration: loc.is_active === false ? 'line-through' : 'none',
-                        bgcolor: editingLocationId === loc.position_slot_id 
-                          ? 'primary.light' 
-                          : loc.is_active === false 
-                            ? 'action.disabledBackground' 
-                            : 'action.hover' 
-                      }}
-                    />
-                  </Tooltip>
-                ))}
-              </Stack>
-            </Box>
-          ) : (
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {locations.length > 0 ? locations.map((loc) => (
-                <Tooltip key={loc.position_slot_id} title={loc.is_active === false ? "Inactive/Hidden" : ""}>
-                   <Chip 
-                    label={`${loc.loc} (${loc.qty})`} 
-                    size="small" 
-                    color={loc.is_active === false ? "default" : "primary"} 
-                    variant="outlined" 
-                    sx={{ 
-                      bgcolor: loc.is_active === false ? 'action.disabledBackground' : 'action.hover',
-                      opacity: loc.is_active === false ? 0.6 : 1,
-                      textDecoration: loc.is_active === false ? 'line-through' : 'none'
-                     }} 
-                   />
-                </Tooltip>
-              )) : <Typography variant="body2" color="text.secondary">No locations set</Typography>}
-            </Stack>
-          )}
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {requisition.locations ? (
+              <Chip
+                label={`${requisition.locations} (${requisition.num_positions || 0})`}
+                variant="outlined"
+                color="primary"
+                sx={{
+                  bgcolor: 'action.hover',
+                  fontWeight: 500
+                }}
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary">No location set</Typography>
+            )}
+          </Stack>
         </Box>
-        
+
         {/* Right Column: Visibility & Recruiters */}
         <Stack spacing={4} sx={{ minWidth: 300 }}>
-             {/* Public Visibility */}
-             <Box>
-                <Typography variant="body2" display="block" gutterBottom>
-                  Public Visibility
-                </Typography>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                   {/* Status Indicator Dot */}
-                   <Box sx={{
-                     width: 8, height: 8,
-                     borderRadius: '50%',
-                     bgcolor: requisition.sanity_job_list_key ? 'success.main' : 'text.disabled'
-                   }} />
-                   
-                   <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: requisition.sanity_job_list_key ? 'success.main' : 'text.disabled',
-                        fontWeight: 500,
-                        flex: 1
-                      }}
-                   >
-                     {requisition.sanity_job_list_key ? 'Published' : 'Unpublished'}
-                   </Typography>
+          {/* Public Visibility */}
+          <Box>
+            <Typography variant="body2" display="block" gutterBottom>
+              Public Visibility
+            </Typography>
+            <Stack direction="row" alignItems="center" spacing={2}>
+              {/* Status Indicator Dot */}
+              <Box sx={{
+                width: 8, height: 8,
+                borderRadius: '50%',
+                bgcolor: requisition.sanity_job_list_key ? 'success.main' : 'text.disabled'
+              }} />
 
-                   {/* Toggle Switch */}
-                {
-                 requisition.current_job_description_id ? (
-                   <Tooltip title={requisition.sanity_job_list_key ? "Unpublish" : "Publish"}>
-                      <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                         <Switch
-                          checked={!!requisition.sanity_job_list_key}
-                          disabled={publishing || unpublishing || requisition.status !== 'approved'}
-                          onChange={async (e) => {
-                            if (e.target.checked) {
-                              // Publish
-                               setPublishing(true);
-                               try {
-                                 requisition.requisition_id && await handlePublishRequisition?.(requisition.requisition_id);
-                               } finally {
-                                 setPublishing(false);
-                               }
-                            } else {
-                              // Unpublish
-                               setUnpublishing(true);
-                               try {
-                                 requisition.requisition_id && await handleUnpublishRequisition?.(requisition.requisition_id, requisition.sanity_job_list_key!);
-                               } finally {
-                                 setUnpublishing(false);
-                               }
-                            }
-                          }}
-                          color="success"
-                        />
-                        {(publishing || unpublishing) && (
-                          <CircularProgress
-                            size={24}
-                            sx={{
-                              color: 'success.main',
-                              position: 'absolute',
-                              top: '50%',
-                              left: '50%',
-                              marginTop: '-12px',
-                              marginLeft: '-12px',
-                            }}
-                          />
-                        )}
-                      </Box>
-                   </Tooltip>
-                 ) : (
-                   <Tooltip title="Write job description first">
-                      <span><Switch disabled /></span>
-                   </Tooltip>
-                 )
-                }
-                </Stack>
-             </Box>
-
-
-             {/* Recruiters Assigned */}
-             <Box>
-               <Typography variant="body2" display="block" gutterBottom>
-                Recruiters Assigned
+              <Typography
+                variant="body2"
+                sx={{
+                  color: requisition.sanity_job_list_key ? 'success.main' : 'text.disabled',
+                  fontWeight: 500,
+                  flex: 1
+                }}
+              >
+                {requisition.sanity_job_list_key ? 'Published' : 'Unpublished'}
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                {assignedRecruiters.map((recruiter) => (
-                  <Tooltip title={recruiter.full_name} key={recruiter.user_id}>
+
+              {/* Toggle Switch */}
+              {
+                requisition.current_job_description_id ? (
+                  <Tooltip title={requisition.sanity_job_list_key ? "Unpublish" : "Publish"}>
                     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                      <Avatar 
-                        sx={{ 
-                          bgcolor: recruiter.color || 'red', 
-                          width: 32, 
-                          height: 32, 
-                          fontSize: '0.875rem' 
+                      <Switch
+                        checked={!!requisition.sanity_job_list_key}
+                        disabled={publishing || unpublishing || requisition.status !== 'approved'}
+                        onChange={async (e) => {
+                          if (e.target.checked) {
+                            // Publish
+                            setPublishing(true);
+                            try {
+                              requisition.requisition_id && await handlePublishRequisition?.(requisition.requisition_id);
+                            } finally {
+                              setPublishing(false);
+                            }
+                          } else {
+                            // Unpublish
+                            setUnpublishing(true);
+                            try {
+                              requisition.requisition_id && await handleUnpublishRequisition?.(requisition.requisition_id, requisition.sanity_job_list_key!);
+                            } finally {
+                              setUnpublishing(false);
+                            }
+                          }
                         }}
-                      >
-                        {getFirstAndLastInitials(recruiter.full_name || 'Unknown')}
-                      </Avatar>
-                      {isEditMode && (
-                        <IconButton
-                          size="small"
+                        color="success"
+                      />
+                      {(publishing || unpublishing) && (
+                        <CircularProgress
+                          size={24}
                           sx={{
+                            color: 'success.main',
                             position: 'absolute',
-                            top: -8,
-                            right: -8,
-                            bgcolor: 'grey.500',
-                            color: 'white',
-                            '&:hover': { bgcolor: 'grey.700' },
-                            width: 20,
-                            height: 20,
+                            top: '50%',
+                            left: '50%',
+                            marginTop: '-12px',
+                            marginLeft: '-12px',
                           }}
-                          onClick={() => { if (recruiter.user_id) handleRemoveRecruiter(recruiter.user_id); }}
-                          disabled={assigningRecruiters || removingRecruiterId === recruiter.user_id || user?.role_name != AppRole.HeadOfHr && user?.role_name != AppRole.HrManager}
-                        >
-                          {removingRecruiterId === recruiter.user_id ? <CircularProgress size={12} color="inherit" /> : <Close fontSize="inherit" />}
-                        </IconButton>
+                        />
                       )}
                     </Box>
                   </Tooltip>
-                ))}
-                
-                {isEditMode && (user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
-                  <Tooltip title="Assign Recruiters">
-                    <IconButton 
-                      onClick={handleRecruiterClick} 
-                      size="small"
-                      sx={{ 
-                        bgcolor: 'primary.main', 
-                        color: 'white', 
-                        width: 32, 
+                ) : (
+                  <Tooltip title="Write job description first">
+                    <span><Switch disabled /></span>
+                  </Tooltip>
+                )
+              }
+            </Stack>
+          </Box>
+
+
+          {/* Recruiters Assigned */}
+          <Box>
+            <Typography variant="body2" display="block" gutterBottom>
+              Recruiters Assigned
+            </Typography>
+            <Stack direction="row" spacing={1} alignItems="center">
+              {assignedRecruiters.map((recruiter) => (
+                <Tooltip title={recruiter.full_name} key={recruiter.user_id}>
+                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: alpha('#155dfc', 0.1),
+                        color: 'primary.main',
+                        width: 32,
                         height: 32,
-                        '&:hover': { bgcolor: 'primary.dark' } 
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        border: '1px solid',
+                        borderColor: alpha('#155dfc', 0.2)
                       }}
                     >
-                      <Add fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </Stack>
-              
-              <Popover
-                id={recruiterPopoverId}
-                open={openRecruiterPopover}
-                anchorEl={recruiterAnchorEl}
-                onClose={handleCloseRecruiterPopover}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                PaperProps={{ sx: { width: 300, p: 0, mt: 1, borderRadius: 2 } }}
-              >
-                <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-                   <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="Search recruiters..."
-                    value={recruiterSearch}
-                    onChange={(e) => setRecruiterSearch(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Search fontSize="small" color="action" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Box>
-                <List sx={{ maxHeight: 200, overflow: 'auto', p: 0 }}>
-                  {filteredRecruiters?.map((recruiter) => {
-                    const labelId = `checkbox-list-label-${recruiter.user_id}`;
-                    return (
-                      <ListItem key={recruiter.user_id} dense disablePadding>
-                        <ListItemButton onClick={() => { if (recruiter.user_id) handleToggleRecruiter(recruiter.user_id); }}>
-                          <ListItemAvatar>
-                            <Checkbox
-                              edge="start"
-                              checked={recruiter.user_id ? tempSelectedRecruiters.indexOf(recruiter.user_id) !== -1 : false}
-                              tabIndex={-1}
-                              disableRipple
-                              inputProps={{ 'aria-labelledby': labelId }}
-                            />
-                          </ListItemAvatar>
-                          <ListItemAvatar sx={{minWidth: 40}}>
-                            <Avatar 
-                              sx={{ width: 30, 
-                              height: 30, 
-                              bgcolor: recruiter.color || 'red',
-                              fontSize: '0.75rem' 
-                            }}>{getFirstAndLastInitials(recruiter.full_name || 'Unknown')}</Avatar>
-                          </ListItemAvatar>
-                          <ListItemText id={labelId} primary={recruiter.full_name} />
-                        </ListItemButton>
-                      </ListItem>
-                    );
-                  })}
-                  {filteredRecruiters?.length === 0 && (
-                    <ListItem>
-                      <ListItemText primary="No recruiters found" sx={{textAlign: 'center', color: 'text.secondary'}} />
-                    </ListItem>
-                  )}
-                </List>
-                <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-                  <Button 
-                    fullWidth 
-                    variant="contained" 
-                    onClick={handleAssignRecruitersAction}
-                    disabled={assigningRecruiters}
-                  >
-                    {assigningRecruiters ? <CircularProgress size={24} color="inherit" /> : 'Assign'}
-                  </Button>
-                </Box>
-              </Popover>
-            </Box>
-        </Stack>
-      </Box>    
+                      {getFirstAndLastInitials(recruiter.full_name || 'Unknown')}
+                    </Avatar>
+                    {isEditMode && (
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          bgcolor: 'grey.500',
+                          color: 'white',
+                          '&:hover': { bgcolor: 'grey.700' },
+                          width: 20,
+                          height: 20,
+                        }}
+                        onClick={() => { if (recruiter.user_id) handleRemoveRecruiter(recruiter.user_id); }}
+                        disabled={assigningRecruiters || removingRecruiterId === recruiter.user_id || user?.role_name != AppRole.HeadOfHr && user?.role_name != AppRole.HrManager}
+                      >
+                        {removingRecruiterId === recruiter.user_id ? <CircularProgress size={12} color="inherit" /> : <Close fontSize="inherit" />}
+                      </IconButton>
+                    )}
+                  </Box>
+                </Tooltip>
+              ))}
 
-      
-        {/* display the public application link in a copyable field */}
-        <Box>
-          <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-              Public Application Link
-            </Typography>
-          <Box sx={{display:'flex', borderRadius: 2, p: 2, width: '50%', backgroundColor:theme.palette.secondary.main}}>
-            <p>
-              {selectedRequisition?.sanity_job_list_key == null ? '' : `${selectedRequisition?.public_share_link}` }
-            </p>
+              {isEditMode && (user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
+                <Tooltip title="Assign Recruiters">
+                  <IconButton
+                    onClick={handleRecruiterClick}
+                    size="small"
+                    sx={{
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      width: 32,
+                      height: 32,
+                      '&:hover': { bgcolor: 'primary.dark' }
+                    }}
+                  >
+                    <Add fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Stack>
+
+            <Popover
+              id={recruiterPopoverId}
+              open={openRecruiterPopover}
+              anchorEl={recruiterAnchorEl}
+              onClose={handleCloseRecruiterPopover}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+              PaperProps={{ sx: { width: 300, p: 0, mt: 1, borderRadius: 2 } }}
+            >
+              <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Search by name or email..."
+                  value={recruiterSearch}
+                  onChange={(e) => setRecruiterSearch(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search fontSize="small" color="action" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: isSearchingRecruiters ? (
+                      <InputAdornment position="end">
+                        <CircularProgress size={16} />
+                      </InputAdornment>
+                    ) : null
+                  }}
+                />
+              </Box>
+              <List sx={{ maxHeight: 250, overflow: 'auto', p: 0 }}>
+                {recruiterSearchResults.map((recruiter) => {
+                  const labelId = `checkbox-list-label-${recruiter.mail}`;
+                  const isSelected = !!tempSelectedRecruiters.find(r => r.mail === recruiter.mail);
+                  return (
+                    <ListItem key={recruiter.mail} dense disablePadding>
+                      <ListItemButton onClick={() => handleToggleRecruiter(recruiter)}>
+                        <ListItemAvatar>
+                          <Checkbox
+                            edge="start"
+                            checked={isSelected}
+                            tabIndex={-1}
+                            disableRipple
+                            inputProps={{ 'aria-labelledby': labelId }}
+                          />
+                        </ListItemAvatar>
+                        <ListItemAvatar sx={{ minWidth: 40 }}>
+                          <Avatar
+                            sx={{
+                              width: 30,
+                              height: 30,
+                              bgcolor: alpha('#155dfc', 0.1),
+                              color: 'primary.main',
+                              fontSize: '0.75rem'
+                            }}>
+                            {recruiter.displayName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          id={labelId}
+                          primary={recruiter.displayName}
+                          secondary={recruiter.mail}
+                          primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }}
+                          secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
+                {recruiterSearchResults.length === 0 && !isSearchingRecruiters && recruiterSearch.length >= 2 && (
+                  <ListItem>
+                    <ListItemText primary="No colleagues found" sx={{ textAlign: 'center', color: 'text.secondary' }} />
+                  </ListItem>
+                )}
+                {recruiterSearch.length < 2 && recruiterSearchResults.length === 0 && (
+                  <ListItem>
+                    <ListItemText primary="Type at least 2 characters to search" sx={{ textAlign: 'center', color: 'text.secondary' }} />
+                  </ListItem>
+                )}
+              </List>
+              <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="caption" sx={{ mb: 1, display: 'block', color: 'text.secondary' }}>
+                  {tempSelectedRecruiters.length} selected
+                </Typography>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={handleAssignRecruitersAction}
+                  disabled={assigningRecruiters || tempSelectedRecruiters.length === 0}
+                >
+                  {assigningRecruiters ? <CircularProgress size={24} color="inherit" /> : 'Confirm Selection'}
+                </Button>
+              </Box>
+            </Popover>
           </Box>
+        </Stack>
+      </Box>
+
+
+      {/* display the public application link in a copyable field */}
+      <Box>
+        <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+          Public Application Link
+        </Typography>
+        <Box sx={{ display: 'flex', borderRadius: 2, p: 2, width: '50%', backgroundColor: theme.palette.secondary.main }}>
+          <p>
+            {selectedRequisition?.sanity_job_list_key == null ? '' : `${selectedRequisition?.public_share_link}`}
+          </p>
         </Box>
-        
-    
+      </Box>
+
+
     </Paper>
   );
 };
