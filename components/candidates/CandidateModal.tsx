@@ -17,7 +17,6 @@ import { getCandidateResume, getSingleCandidate, updateCandidateStatus } from "@
 import { useEffect, useState } from "react";
 import { determineActions } from "@/utils/determineActions";
 import { CandidateActions, CandidateActionButton } from "@/interface/candidate";
-import ScheduleInterviewModal from "./ScheduleInterviewModal"; // Import the new modal
 import { callUpdateCandidateStatus } from "@/redux/slices/candidates";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";

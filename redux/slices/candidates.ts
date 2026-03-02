@@ -198,7 +198,7 @@ export const callScheduleInterview = async (interviewData: {
   publicCvLink: string;
   body: string;
   candidateEmail: string;
-  subject: string
+  subject: string;
 }) => {
   try {
     dispatch(startLoading());

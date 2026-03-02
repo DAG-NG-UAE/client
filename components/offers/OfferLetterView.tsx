@@ -11,6 +11,7 @@ interface OfferLetterViewProps {
 interface OfferClause extends Clauses {
     sort_order?: number;
     clause_id?: string;
+    master_clauses_id?: string;
 }
 
 const OfferLetterView = ({ offer, onBack }: OfferLetterViewProps) => {
