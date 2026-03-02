@@ -29,7 +29,8 @@ const LoginPage = () => {
   const handleMicrosoftSignIn = () => {
     dispatch(clearInterviewState())
     // dispatch(setUserLogout({}))
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+    console.log(`the backend url is => ${backendUrl}`)
     window.location.href = `${backendUrl}/auth/login`;
   };
 
@@ -75,7 +76,7 @@ const LoginPage = () => {
             fullWidth
             startIcon={<MicrosoftIcon sx={{ fontSize: 20 }} />}
             sx={{ mb: 2, py: 1.5, borderColor: theme.palette.divider, color: theme.palette.text.primary }}
-            onClick={handleMicrosoftSignIn} // Add this handler
+            onClick={handleMicrosoftSignIn}
           >
             Sign In With Microsoft
           </Button>
