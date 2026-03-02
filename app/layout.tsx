@@ -38,8 +38,16 @@ export default function RootLayout({
 
   const theme = getAppTheme(isDarkMode ? 'dark' : 'light');
 
-  const isLoginPage = pathname === '/login';
-  const isPublicPage = pathname?.startsWith('/careers') || pathname?.startsWith('/salary-proposal') || pathname?.startsWith('/share'); // Add salary-proposal and share
+  const normalizedPathname = pathname?.toLowerCase() || '';
+  const cleanPathname = normalizedPathname.replace(/\/$/, '') || '/';
+
+  const isLoginPage = cleanPathname === '/login' || cleanPathname.includes('/login/');
+  const isPublicPage =
+    cleanPathname === '/' ||
+    cleanPathname.startsWith('/careers') ||
+    cleanPathname.startsWith('/salary-proposal') ||
+    cleanPathname.startsWith('/share') ||
+    isLoginPage;
 
   return (
     <html lang="en">
