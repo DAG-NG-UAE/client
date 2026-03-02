@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  output: 'export'
+  turbopack: {
+    resolveAlias: {
+      canvas: './empty.js',
+        encoding: './empty.js',
+    },
+  },
+  
 };
 
 export default nextConfig;

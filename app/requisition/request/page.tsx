@@ -1,6 +1,6 @@
 
 "use client";
-
+import dynamic from 'next/dynamic';
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -16,10 +16,20 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { callCreateRequisition, stopLoading } from "@/redux/slices/requisition";
 import { dispatch } from "@/redux/dispatchHandle";
-import RequisitionRequestForm from "@/components/requisition/RequisitionRequestForm";
 import PreferenceTable, {
   PreferenceItem,
 } from "@/components/requisition/PreferenceTable";
+
+
+// 1. Define the dynamic component
+const RequisitionRequestForm = dynamic(
+  () => import('@/components/requisition/RequisitionRequestForm'),
+  { 
+    ssr: false, // This stops the PDF/Canvas error during build
+    loading: () => <div>Loading Form...</div> 
+  }
+);
+
 
 const RequisitionRequest = () => {
   const { user } = useSelector((state: RootState) => state.auth);
