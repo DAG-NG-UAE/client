@@ -384,10 +384,11 @@ export const callUpdatePreOfferDocStatus = async (
   documentId: string,
   status: string,
   candidateId: string,
+  docUrl: string,
 ) => {
   try {
     dispatch(startLoading());
-    await updatePreOfferDocStatus(documentId, status, candidateId);
+    await updatePreOfferDocStatus(documentId, status, candidateId, docUrl);
     enqueueSnackbar(`Document ${status} successfully`, { variant: "success" });
     await callFetchPreOfferDocs(candidateId);
   } catch (error: any) {

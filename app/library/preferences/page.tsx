@@ -94,7 +94,8 @@ const PreferencePage = () => {
         open: false,
         label: '',
         field_type: 'dropdown',
-        category: 'both'
+        category: 'both',
+        is_linear: true
     });
 
     // Initial Fetch for Categories (Tier 1)
@@ -172,9 +173,10 @@ const PreferencePage = () => {
             await createPreferenceAction({
                 label: categoryModal.label,
                 field_type: categoryModal.field_type,
-                category: categoryModal.category
+                category: categoryModal.category,
+                is_linear: categoryModal.is_linear
             });
-            setCategoryModal({ open: false, label: '', field_type: 'dropdown', category: 'both' });
+            setCategoryModal({ open: false, label: '', field_type: 'dropdown', category: 'both', is_linear: true });
         } catch (err) { }
     };
 
@@ -494,6 +496,33 @@ const PreferencePage = () => {
                                 <MenuItem value="both">Both</MenuItem>
                                 <MenuItem value="local">Local Candidate Only</MenuItem>
                                 <MenuItem value="expat">Expat Candidate Only</MenuItem>
+                            </Select>
+                        </FormControl>
+
+                        <FormControl fullWidth>
+                            <InputLabel>Matching Logic</InputLabel>
+                            <Select
+                                value={categoryModal.is_linear ? 'linear' : 'exact'}
+                                label="Matching Logic"
+                                onChange={(e) => setCategoryModal({ ...categoryModal, is_linear: e.target.value === 'linear' })}
+                                renderValue={(value) => value === 'linear' ? 'Progressive (Linear)' : 'Exact Match (Non-Linear)'}
+                            >
+                                <MenuItem value="linear">
+                                    <Box sx={{ py: 0.5 }}>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Option A: Progressive (Linear)</Typography>
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', whiteSpace: 'normal', maxWidth: 400 }}>
+                                            "Higher answers are better. (e.g., If we ask for a Bachelors, a Masters is also a match)."
+                                        </Typography>
+                                    </Box>
+                                </MenuItem>
+                                <MenuItem value="exact">
+                                    <Box sx={{ py: 0.5 }}>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Option B: Exact Match (Non-Linear)</Typography>
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', whiteSpace: 'normal', maxWidth: 400 }}>
+                                            "Only the specific answer selected counts. (e.g., If we ask for 'Yes', then 'No' is a fail, regardless of rank)."
+                                        </Typography>
+                                    </Box>
+                                </MenuItem>
                             </Select>
                         </FormControl>
                     </Box>

@@ -105,8 +105,8 @@ const PreOfferVerificationPage = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleUpdateStatus = async (docId: string, status: string) => {
-        await callUpdatePreOfferDocStatus(docId, status, id);
+    const handleUpdateStatus = async (docId: string, status: string, docUrl: string) => {
+        await callUpdatePreOfferDocStatus(docId, status, id, docUrl);
     };
 
     const allApproved = currentDocs.length > 0 && currentDocs.every((d: any) => d.status === 'approved');
@@ -326,7 +326,7 @@ const PreOfferVerificationPage = () => {
                                         <IconButton
                                             size="small"
                                             color="success"
-                                            onClick={() => handleUpdateStatus(doc.id, 'approved')}
+                                            onClick={() => handleUpdateStatus(doc.id, 'approved', doc.url)}
                                             disabled={!doc.url || doc.status === 'approved'}
                                         >
                                             <CheckCircleIcon fontSize="small" />
@@ -334,7 +334,7 @@ const PreOfferVerificationPage = () => {
                                         <IconButton
                                             size="small"
                                             color="error"
-                                            onClick={() => handleUpdateStatus(doc.id, 'rejected')}
+                                            onClick={() => handleUpdateStatus(doc.id, 'rejected', doc.url)}
                                             disabled={!doc.url || doc.status === 'rejected'}
                                         >
                                             <CancelIcon fontSize="small" />

@@ -5,7 +5,7 @@ import {
     RadioGroup, FormControlLabel, FormLabel, Chip
 } from '@mui/material';
 import { CandidateProfile } from '@/interface/candidate';
-import { callUpdateCandidateStatus, fetchAllCandidates } from '@/redux/slices/candidates';
+import { callUpdateCandidateStatus, fetchAllCandidates, fetchSingleCandidate } from '@/redux/slices/candidates';
 import { getTemplateType } from '@/api/emailTemplate';
 
 interface EmailTemplate {
@@ -105,7 +105,9 @@ export const CandidateRejectionModal: React.FC<CandidateRejectionModalProps> = (
         //call the update candidate slice 
         callUpdateCandidateStatus(params);
         console.log(`Rejecting candidate ${candidate?.candidate_id} with reason: ${actualReason} and template: ${selectedTemplate?.name}`);
-
+        if(candidate?.candidate_id){
+            fetchSingleCandidate(candidate?.candidate_id);
+        }
         // get the candidates who are in the stage the candidate was in previously 
         
         onClose();

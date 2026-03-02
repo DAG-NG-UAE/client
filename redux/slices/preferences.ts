@@ -112,7 +112,7 @@ export const fetchSkillsByPrefKey = async (prefKey: string) => {
     }
 }
 
-export const createPreferenceAction = async (data: { label: string, field_type: string, category: string }) => {
+export const createPreferenceAction = async (data: { label: string, field_type: string, category: string, is_linear: boolean }) => {
     try {
         dispatch(startLoading());
         await createPreference(data);

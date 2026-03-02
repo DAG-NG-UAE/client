@@ -89,6 +89,7 @@ export interface RequirementMatch {
   category_label: string;
   required_label: string;
   candidate_label: string;
+  is_linear: boolean;
 }
 
 export interface CandidateStatusHistory {

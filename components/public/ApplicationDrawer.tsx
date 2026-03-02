@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import {
   Box,
   Typography,
@@ -36,7 +36,7 @@ interface FormInputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
-const FormInput: React.FC<FormInputProps> = ({
+const FormInput: React.FC<FormInputProps> = memo(({
   label,
   required = false,
   placeholder,
@@ -75,13 +75,13 @@ const FormInput: React.FC<FormInputProps> = ({
       }}
     />
   </Box>
-);
+));
 
-const SectionHeader: React.FC<{ title: string }> = ({ title }) => (
+const SectionHeader: React.FC<{ title: string }> = memo(({ title }) => (
   <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#101828' }}>
     {title}
   </Typography>
-);
+));
 
 interface ApplicationDrawerProps {
   open: boolean;
@@ -157,7 +157,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
     }
   };
 
-  const isFormValid =
+  const isFormValid = useMemo(() => (
     fullName !== '' &&
     emailAddress !== '' &&
     phoneNumber !== '' &&
@@ -174,17 +174,19 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       const key = `${item.pref_key}_${index}`;
       const answer = preferenceValues[key];
 
-      // If it requires a skill (has full_skill_list), check skill is selected
+      // If it requires a skill (has full_skill_list), check skill is selected or auto-selected
       const needsSkill = item.full_skill_list && item.full_skill_list.length > 0;
       const isRequiredSkillFixed = item.required_skill_id !== null && item.required_skill_id !== undefined;
+      const autoSkillId = item.full_skill_list?.[0]?.id;
 
-      if (needsSkill && !isRequiredSkillFixed && (answer?.skill === undefined || answer?.skill === null || answer?.skill === '')) return false;
+      if (needsSkill && !isRequiredSkillFixed && !autoSkillId && (answer?.skill === undefined || answer?.skill === null || answer?.skill === '')) return false;
 
       // Check value (proficiency/rank or text)
       if (!answer?.value || answer.value.trim() === '') return false;
 
       return true;
-    }));
+    }))
+  ), [fullName, emailAddress, phoneNumber, availability, experience, location, expectedSalary, cvFile, privacyConsent, source, otherSource, requisitionPreference, preferenceValues]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,11 +234,14 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
         };
 
         const isRequiredSkillFixed = item.required_skill_id !== null && item.required_skill_id !== undefined;
+        const autoSkillId = item.full_skill_list?.[0]?.id;
 
         if (isRequiredSkillFixed) {
           valueObject.skill_id = item.required_skill_id;
         } else if (answer?.skill !== undefined && answer?.skill !== null && answer?.skill !== '') {
           valueObject.skill_id = answer.skill;
+        } else if (autoSkillId) {
+          valueObject.skill_id = autoSkillId;
         } else {
           valueObject.skill_id = null; // Explicit null for non-skill preferences if needed, or just omit. 
         }
@@ -522,76 +527,48 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                     const isRequiredSkillFixed = item.required_skill_id !== null && item.required_skill_id !== undefined;
                     const skillName = isRequiredSkillFixed
                       ? item.full_skill_list?.find(s => s.id === item.required_skill_id)?.name || 'this skill'
-                      : null;
+                      : (hasSkills ? item.full_skill_list?.[0]?.name : null);
+
+                    const labelText = skillName
+                      ? `Rate your ${skillName} skill`
+                      : item.category_label;
 
                     return (
                       <Box key={compositeKey} mb={3}>
                         <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
-                          {isRequiredSkillFixed
-                            ? `How do you rank your ${skillName}?`
-                            : item.category_label} <span style={{ color: '#d32f2f' }}>*</span>
+                          {labelText} <span style={{ color: '#d32f2f' }}>*</span>
                         </Typography>
 
-                        {/* Skill Selection if available and not explicitly fixed by a required_skill_id */}
-                        {hasSkills && !isRequiredSkillFixed && (
-                          <Box mb={2}>
-                            <Select
-                              fullWidth
-                              displayEmpty
-                              value={answer.skill !== undefined ? answer.skill : ''}
-                              onChange={(e) => handlePreferenceSkillChange(compositeKey, e.target.value)}
-                              sx={{
-                                borderRadius: 2,
-                                bgcolor: '#ffffff',
-                                mb: 1
-                              }}
-                            >
-                              <MenuItem value="" disabled>
-                                <Typography color="#888">Select Specific Skill</Typography>
-                              </MenuItem>
-                              {item.full_skill_list?.map(skill => (
-                                <MenuItem key={skill.id} value={skill.id}>
-                                  {skill.name}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </Box>
-                        )}
-
                         {/* Options Selection (Chips) or Text Input */}
-                        {(hasSkills && !answer.skill && !isRequiredSkillFixed) ? (
-                          <FormHelperText>Please select a specific skill first.</FormHelperText>
+                        {hasOptions ? (
+                          <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                            {item.ranking_options?.map((opt) => (
+                              <Chip
+                                key={opt.rank}
+                                label={opt.label}
+                                clickable
+                                color={answer.value === opt.label ? "primary" : "default"}
+                                onClick={() => handlePreferenceValueChange(compositeKey, opt.label)}
+                                sx={{
+                                  borderRadius: '8px',
+                                  '&:hover': { backgroundColor: answer.value === opt.label ? 'primary.dark' : '#e0e0e0' }
+                                }}
+                              />
+                            ))}
+                          </Stack>
                         ) : (
-                          hasOptions ? (
-                            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                              {item.ranking_options?.map((opt) => (
-                                <Chip
-                                  key={opt.rank}
-                                  label={opt.label}
-                                  clickable
-                                  color={answer.value === opt.label ? "primary" : "default"}
-                                  onClick={() => handlePreferenceValueChange(compositeKey, opt.label)}
-                                  sx={{
-                                    borderRadius: '8px',
-                                    '&:hover': { backgroundColor: answer.value === opt.label ? 'primary.dark' : '#e0e0e0' }
-                                  }}
-                                />
-                              ))}
-                            </Stack>
-                          ) : (
-                            <TextField
-                              fullWidth
-                              value={answer.value || ''}
-                              onChange={(e) => handlePreferenceValueChange(compositeKey, e.target.value)}
-                              placeholder="Enter details"
-                              sx={{
-                                bgcolor: '#fff',
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: 'rgba(0,0,0,0.2)'
-                                }
-                              }}
-                            />
-                          )
+                          <TextField
+                            fullWidth
+                            value={answer.value || ''}
+                            onChange={(e) => handlePreferenceValueChange(compositeKey, e.target.value)}
+                            placeholder="Enter details"
+                            sx={{
+                              bgcolor: '#fff',
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(0,0,0,0.2)'
+                              }
+                            }}
+                          />
                         )}
                       </Box>
                     );

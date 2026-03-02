@@ -15,7 +15,7 @@ import {
   Chip,
   InputAdornment,
   Grid,
-  Switch, 
+  Switch,
   FormControlLabel
 } from "@mui/material";
 
@@ -61,14 +61,14 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
 
   useEffect(() => {
     const fetchManager = async () => {
-      if(user?.microsoft_account_id){
+      if (user?.microsoft_account_id) {
         const manager = await getLoggedInUserManager();
         setManager(manager);
       }
     };
     fetchManager();
   }, []);
-  console.log(manager)
+  // console.log(manager)
 
   // --- Form State ---
   // Shared
@@ -76,24 +76,24 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   const [nickname, setNickname] = useState("System Analyst (Lagos Mainland)");
   const [department, setDepartment] = useState("Digital");
   const [raisedBy, setRaisedBy] = useState(user?.full_name || "");
-  const [requesterDesignation, setRequesterDesignation] = useState(user?.job_title || ""); 
-  
+  const [requesterDesignation, setRequesterDesignation] = useState(user?.job_title || "");
+
   // Position
   const [position, setPosition] = useState("System Analyst");
-  
+
   // Dates
   const [resumptionDate, setResumptionDate] = useState<Dayjs | null>(null);
-  
+
   // Manager
   const [reportingManager, setReportingManager] = useState("Shirely werchota (CDO)");
   const [hodEmail, setHodEmail] = useState("isabella.k@bajajnigeria.com");
-  
+
   // Content
   const [justification, setJustification] = useState("");
   const [jobDescription, setJobDescription] = useState<File | null>(null);
   const [jobDescriptionContent, setJobDescriptionContent] = useState("");
   const [isConverting, setIsConverting] = useState(false);
-  
+
   // HOD Approval Logic
   const [requireHodApproval, setRequireHodApproval] = useState(true);
 
@@ -161,7 +161,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setJobDescription(file);
-      
+
       // Convert document
       setIsConverting(true);
       try {
@@ -231,25 +231,45 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
     onNext({ ...commonData, ...specificData, recruitmentType: type });
   };
 
-   // Layout Constants
+  // Layout Constants
   const HALF_WIDTH = "calc(50% - 12px)"; // Gap is 24px (theme.spacing(3)), so we subtract half of that
   const FULL_WIDTH = "100%";
 
+  // --- Validation ---
+  const isEmailValid = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const isFormValid = Boolean(
+    requestDate &&
+    department.trim() &&
+    nickname.trim() &&
+    raisedBy.trim() &&
+    requesterDesignation.trim() &&
+    position.trim() &&
+    resumptionDate &&
+    salaryLocal.trim() &&
+    locations.length > 0 &&
+    locations.every((loc) => loc.location.trim() && loc.headcount && Number(loc.headcount) > 0) &&
+    reportingManager.trim() &&
+    (!requireHodApproval || (hodEmail.trim() && isEmailValid(hodEmail)))
+  );
+
   return (
     <Box component="form" sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-      
+
       {/* --- Row 1 --- */}
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
         <DatePicker
           label="Request Date"
           value={requestDate}
           onChange={(newValue) => setRequestDate(newValue)}
-          readOnly 
+          readOnly
           slotProps={{ textField: { fullWidth: true } }}
         />
       </Box>
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-         <TextField
+        <TextField
           fullWidth
           label="Department"
           placeholder="Department the hire will belong to"
@@ -298,44 +318,44 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
 
       {/* --- Row 4 --- */}
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-         <DatePicker
-            label="Expected Resumption"
-            value={resumptionDate}
-            onChange={(newValue) => setResumptionDate(newValue)}
-            slotProps={{ textField: { fullWidth: true } }}
-            disablePast
-         />
+        <DatePicker
+          label="Expected Resumption"
+          value={resumptionDate}
+          onChange={(newValue) => setResumptionDate(newValue)}
+          slotProps={{ textField: { fullWidth: true } }}
+          disablePast
+        />
       </Box>
 
       <Box sx={{ width: "100%" }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Locations & Headcount</Typography>
-                {locations.map((item, index) => (
-                  <Box key={item.id} sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
-                    <Box sx={{ flex: 1 }}>
-                      <FormControl fullWidth>
-                        <InputLabel>Location</InputLabel>
-                        <Select
-                          value={item.location}
-                          label="Location"
-                          onChange={(e) => handleLocationChange(item.id, "location", e.target.value)}
-                        >
-                           {LOCATIONS_NIGERIA.map((l) => (
-                             <MenuItem key={l} value={l}>{l}</MenuItem>
-                           ))}
-                        </Select>
-                      </FormControl>
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <TextField
-                        fullWidth
-                        label="Headcount"
-                        type="number"
-                        value={item.headcount}
-                        InputProps={{ readOnly: true }} // Fixed to 1 as per request
-                        helperText="Headcount is fixed to 1 per location entry"
-                      />
-                    </Box>
-                    {/* <Box sx={{ width: 100, display: "flex", justifyContent: "center" }}>
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>Locations & Headcount</Typography>
+        {locations.map((item, index) => (
+          <Box key={item.id} sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
+            <Box sx={{ flex: 1 }}>
+              <FormControl fullWidth>
+                <InputLabel>Location</InputLabel>
+                <Select
+                  value={item.location}
+                  label="Location"
+                  onChange={(e) => handleLocationChange(item.id, "location", e.target.value)}
+                >
+                  {LOCATIONS_NIGERIA.map((l) => (
+                    <MenuItem key={l} value={l}>{l}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <TextField
+                fullWidth
+                label="Headcount"
+                type="number"
+                value={item.headcount}
+                onChange={(e) => handleLocationChange(item.id, "headcount", e.target.value)}
+                inputProps={{ min: 1 }}
+              />
+            </Box>
+            {/* <Box sx={{ width: 100, display: "flex", justifyContent: "center" }}>
                       <IconButton onClick={() => handleRemoveLocation(item.id)} disabled={locations.length === 1}>
                         <RemoveCircleOutlineIcon />
                       </IconButton>
@@ -345,53 +365,53 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
                         </IconButton>
                       )}
                     </Box> */}
-                  </Box>
-                ))}
-            </Box>
+          </Box>
+        ))}
+      </Box>
 
-        <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-                <FormControl fullWidth>
-                    <InputLabel>Reason for Hire</InputLabel>
-                    <Select
-                        value={reasonForHire}
-                        label="Reason for Hire"
-                        onChange={(e) => setReasonForHire(e.target.value)}
-                    >
-                        {JOB_REASONS.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-                    </Select>
-                </FormControl>
-            </Box>
-            
-            {reasonForHire === "Replacement" && (
-                 <Box sx={{ flex: "1 1 100%" }}>
-                    <TextField 
-                        fullWidth
-                        label="Replacement For (Name)"
-                        value={replacementFor}
-                        onChange={(e) => setReplacementFor(e.target.value)}
-                        helperText="Please specify the name of the employee being replaced"
-                    />
-                </Box>
-          )}
+      <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+        <FormControl fullWidth>
+          <InputLabel>Reason for Hire</InputLabel>
+          <Select
+            value={reasonForHire}
+            label="Reason for Hire"
+            onChange={(e) => setReasonForHire(e.target.value)}
+          >
+            {JOB_REASONS.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+          </Select>
+        </FormControl>
+      </Box>
+
+      {reasonForHire === "Replacement" && (
+        <Box sx={{ flex: "1 1 100%" }}>
+          <TextField
+            fullWidth
+            label="Replacement For (Name)"
+            value={replacementFor}
+            onChange={(e) => setReplacementFor(e.target.value)}
+            helperText="Please specify the name of the employee being replaced"
+          />
+        </Box>
+      )}
 
       {/* --- CONDITIONAL SECTIONS --- */}
 
       {/* --- LOCAL SPECIFIC --- */}
       {type === "Local" && (
         <>
-            <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-                <TextField 
-                    fullWidth
-                    label="Proposed Monthly Salary"
-                    value={salaryLocal}
-                    onChange={(e) => setSalaryLocal(formatCurrency(e.target.value))}
-                    InputProps={{
-                        startAdornment: <InputAdornment position="start">₦</InputAdornment>,
-                    }}
-                />
-            </Box>
+          <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+            <TextField
+              fullWidth
+              label="Proposed Monthly Salary"
+              value={salaryLocal}
+              onChange={(e) => setSalaryLocal(formatCurrency(e.target.value))}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">₦</InputAdornment>,
+              }}
+            />
+          </Box>
 
-            
+
         </>
       )}
 
@@ -399,163 +419,164 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
       {type === "Expat" && (
         <>
 
-            {/* Expat Salary Row */}
-            <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-                <FormControl fullWidth>
-                    <InputLabel>Currency</InputLabel>
-                    <Select
-                         value={salaryCurrency}
-                         label="Currency"
-                         onChange={(e) => setSalaryCurrency(e.target.value)}
-                    >
-                        <MenuItem value="USD">USD ($)</MenuItem>
-                        <MenuItem value="INR">INR (₹)</MenuItem>
-                        <MenuItem value="NGN">NGN (₦)</MenuItem>
-                    </Select>
-                </FormControl>
-            </Box>
+          {/* Expat Salary Row */}
+          <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+            <FormControl fullWidth>
+              <InputLabel>Currency</InputLabel>
+              <Select
+                value={salaryCurrency}
+                label="Currency"
+                onChange={(e) => setSalaryCurrency(e.target.value)}
+              >
+                <MenuItem value="USD">USD ($)</MenuItem>
+                <MenuItem value="INR">INR (₹)</MenuItem>
+                <MenuItem value="NGN">NGN (₦)</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
 
-            <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-                <TextField 
-                    fullWidth
-                    label="Expected Monthly Salary"
-                    value={salaryExpat}
-                    onChange={(e) => setSalaryExpat(formatCurrency(e.target.value))}
-                />
-            </Box>
+          <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+            <TextField
+              fullWidth
+              label="Expected Monthly Salary"
+              value={salaryExpat}
+              onChange={(e) => setSalaryExpat(formatCurrency(e.target.value))}
+            />
+          </Box>
 
-            <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-                 <FormControl fullWidth>
-                    <InputLabel>Accommodation</InputLabel>
-                    <Select
-                        value={accommodation}
-                        label="Accommodation"
-                        onChange={(e) => setAccommodation(e.target.value)}
-                    >
-                        {ACCOMMODATIONS.map(a => <MenuItem key={a} value={a}>{a}</MenuItem>)}
-                    </Select>
-                </FormControl>
-            </Box>
+          <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+            <FormControl fullWidth>
+              <InputLabel>Accommodation</InputLabel>
+              <Select
+                value={accommodation}
+                label="Accommodation"
+                onChange={(e) => setAccommodation(e.target.value)}
+              >
+                {ACCOMMODATIONS.map(a => <MenuItem key={a} value={a}>{a}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
 
-             <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-                 <FormControl fullWidth>
-                    <InputLabel>Leave Status</InputLabel>
-                    <Select
-                        value={leaveStatus}
-                        label="Leave Status"
-                        onChange={(e) => setLeaveStatus(e.target.value)}
-                    >
-                        {LEAVE_STATUSES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                    </Select>
-                </FormControl>
-            </Box>
+          <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+            <FormControl fullWidth>
+              <InputLabel>Leave Status</InputLabel>
+              <Select
+                value={leaveStatus}
+                label="Leave Status"
+                onChange={(e) => setLeaveStatus(e.target.value)}
+              >
+                {LEAVE_STATUSES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
 
-             <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-                 <FormControl fullWidth>
-                    <InputLabel>Family Status Timing</InputLabel>
-                    <Select
-                        value={familyStatus}
-                        label="Family Status Timing"
-                        onChange={(e) => setFamilyStatus(e.target.value)}
-                    >
-                        {FAMILY_STATUS_TIMINGS.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
-                    </Select>
-                </FormControl>
-            </Box>
+          <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+            <FormControl fullWidth>
+              <InputLabel>Family Status Timing</InputLabel>
+              <Select
+                value={familyStatus}
+                label="Family Status Timing"
+                onChange={(e) => setFamilyStatus(e.target.value)}
+              >
+                {FAMILY_STATUS_TIMINGS.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
         </>
       )}
 
       {/* --- Row: Managers --- */}
-       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+      <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+        <TextField
+          fullWidth
+          label="Reporting Manager"
+          value={reportingManager}
+          onChange={(e) => setReportingManager(e.target.value)}
+        />
+      </Box>
+
+      <Box sx={{ flex: "1 1 100%" }}>
+        {([AppRole.HeadOfHr, AppRole.HrManager, AppRole.Recruiter].includes(user?.role_name as AppRole)) && (
+          <FormControlLabel
+            control={
+              <Switch
+                checked={requireHodApproval}
+                onChange={(e) => setRequireHodApproval(e.target.checked)}
+              />
+            }
+            label="Require HOD Approval?"
+          />
+        )}
+
+        {requireHodApproval && (
           <TextField
-              fullWidth
-              label="Reporting Manager"
-              value={reportingManager}
-              onChange={(e) => setReportingManager(e.target.value)}
+            fullWidth
+            sx={{ mt: 1 }}
+            label="HOD Approval Email"
+            value={hodEmail}
+            onChange={(e) => setHodEmail(e.target.value)}
+            placeholder="e.g. hod@example.com - This person will receive an approval request"
           />
-       </Box>
+        )}
+      </Box>
 
-        <Box sx={{ flex: "1 1 100%" }}>
-            {([AppRole.HeadOfHr, AppRole.HrManager, AppRole.Recruiter].includes(user?.role_name as AppRole)) && (
-               <FormControlLabel
-                  control={
-                    <Switch 
-                       checked={requireHodApproval} 
-                       onChange={(e) => setRequireHodApproval(e.target.checked)} 
-                    />
-                  }
-                  label="Require HOD Approval?"
-               />
-            )}
-            
-            {requireHodApproval && (
-                 <TextField
-                    fullWidth
-                    sx={{ mt: 1 }}
-                    label="HOD Approval Email"
-                    value={hodEmail}
-                    onChange={(e) => setHodEmail(e.target.value)}
-                    placeholder="e.g. hod@example.com - This person will receive an approval request"
-                />
-            )}
-       </Box>
+      {/* --- Justification & Description --- */}
+      <Box sx={{ flex: "1 1 100%" }}>
+        <TextField
+          fullWidth
+          label="Justification / Business Case"
+          multiline
+          minRows={3}
+          value={justification}
+          onChange={(e) => setJustification(e.target.value)}
+          placeholder="Why is this hire necessary? What is the business impact?"
+        />
+      </Box>
 
-       {/* --- Justification & Description --- */}
-       <Box sx={{ flex: "1 1 100%" }}>
-            <TextField
-                fullWidth
-                label="Justification / Business Case"
-                multiline
-                minRows={3}
-                value={justification}
-                onChange={(e) => setJustification(e.target.value)}
-                placeholder="Why is this hire necessary? What is the business impact?"
-            />
-       </Box>
-
-       <Box sx={{ flex: "1 1 100%" }}>
-         {/* File Upload Section */}
-          <Box sx={{ mb: 2 }}>
-            <input
-              accept=".docx,.pdf"
-              style={{ display: "none" }}
-              id="raised-button-file"
-              type="file"
-              onChange={handleFileUpload}
-            />
-            <label htmlFor="raised-button-file">
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<CloudUploadIcon />}
-              >
-                Upload Job Description (PDF/DOCX)
-              </Button>
-            </label>
-            {jobDescription && (
-              <Typography variant="caption" sx={{ ml: 2 }}>
-                {jobDescription.name} - {(jobDescription.size / 1024).toFixed(2)} KB
-              </Typography>
-            )}
-             {isConverting && <Typography variant="caption" sx={{ ml: 2 }}>Converting...</Typography>}
-          </Box>
-
-          {/* Job Description Editor/Preview */}
-          <JobDescription 
-             requisition={{ content: jobDescriptionContent }} 
-             isEditMode={true} 
-             onContentChange={(content) => setJobDescriptionContent(content)}
+      <Box sx={{ flex: "1 1 100%" }}>
+        {/* File Upload Section */}
+        <Box sx={{ mb: 2 }}>
+          <input
+            accept=".docx,.pdf"
+            style={{ display: "none" }}
+            id="raised-button-file"
+            type="file"
+            onChange={handleFileUpload}
           />
-       </Box>
+          <label htmlFor="raised-button-file">
+            <Button
+              variant="outlined"
+              component="span"
+              startIcon={<CloudUploadIcon />}
+            >
+              Upload Job Description (PDF/DOCX)
+            </Button>
+          </label>
+          {jobDescription && (
+            <Typography variant="caption" sx={{ ml: 2 }}>
+              {jobDescription.name} - {(jobDescription.size / 1024).toFixed(2)} KB
+            </Typography>
+          )}
+          {isConverting && <Typography variant="caption" sx={{ ml: 2 }}>Converting...</Typography>}
+        </Box>
+
+        {/* Job Description Editor/Preview */}
+        <JobDescription
+          requisition={{ content: jobDescriptionContent }}
+          isEditMode={true}
+          onContentChange={(content) => setJobDescriptionContent(content)}
+        />
+      </Box>
 
       {/* --- Action Buttons --- */}
       <Box sx={{ width: '100%', mt: 3, display: "flex", justifyContent: "flex-end" }}>
         <Button
-            variant="contained"
-            size="large"
-            onClick={handleSubmit}
+          variant="contained"
+          size="large"
+          onClick={handleSubmit}
+          disabled={!isFormValid}
         >
-            Proceed to Preferences
+          Proceed to Preferences
         </Button>
       </Box>
     </Box>

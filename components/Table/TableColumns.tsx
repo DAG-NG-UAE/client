@@ -2,7 +2,7 @@ import { CandidateProfile } from "@/interface/candidate";
 import { Requisition } from "@/interface/requisition";
 import { TableColumn } from "@/interface/table";
 import { getStatusChipProps } from "@/utils/statusColorMapping";
-import { getRelativeTime } from "@/utils/transform";
+import { formatOfferDate, getRelativeTime } from "@/utils/transform";
 import { Button, Chip, Tooltip } from "@mui/material";
 
 // Table colmun for Pending Requisitions 
@@ -45,6 +45,11 @@ export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
         key: 'locations', 
         label: 'Locations'
     }, 
+    {
+        key: 'expected_start_date', 
+        label: 'Expected Start Date',
+        render: (row) => formatOfferDate(row.expected_start_date!)
+    },
     { 
         key: 'Days open', 
         label: 'Days Open', 

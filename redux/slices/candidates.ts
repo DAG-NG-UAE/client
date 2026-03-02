@@ -176,7 +176,7 @@ export const callUpdateCandidateStatus = async (
     enqueueSnackbar("Candidate status updated", { variant: "success" });
     dispatch(stopLoading());
     // Optionally refetch candidates or update state directly
-    fetchAllCandidates(undefined, "applied");
+    // fetchAllCandidates(undefined, "applied");
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
   } finally {

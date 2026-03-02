@@ -78,7 +78,7 @@ const CandidateRequirementDetail: React.FC<CandidateRequirementDetailProps> = ({
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {requirements.map((req, index) => {
                     // Logic
-                    const isPassed = req.candidate_rank >= req.required_rank;
+                    const isPassed = req.is_linear ? req.candidate_rank >= req.required_rank : req.candidate_rank === req.required_rank;
                     const isCritical = req.weight_score === 100;
                     
                     // Left Side Data
