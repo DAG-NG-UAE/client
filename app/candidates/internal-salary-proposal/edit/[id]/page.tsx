@@ -1,22 +1,34 @@
 "use client";
-
 import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Button, Paper, TextField,
     ToggleButton, ToggleButtonGroup, IconButton, Stack, Divider,
-    Switch, Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Chip
+    Switch, Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Chip,
+    Autocomplete, CircularProgress, alpha,
+    ListItemAvatar, ListItemText
 } from '@mui/material';
 import {
     DeleteOutline as DeleteIcon,
     Add as AddIcon,
     CheckCircle as CheckCircleIcon,
-    Visibility as VisibilityIcon
+    Visibility as VisibilityIcon,
+    Search as SearchIcon,
+    Close as CloseIcon,
+    CheckCircleOutline as CheckCircleOutlineIcon
 } from '@mui/icons-material';
 import { useParams, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { fetchSingleCandidate } from '@/redux/slices/candidates';
 import { callFetchInternalSalaryOffer, callSendInternalSalaryOffer } from '@/redux/slices/offer';
+import { searchInterviewers } from '@/api/interview';
+
+interface Interviewer {
+    id: string;
+    displayName: string;
+    mail: string;
+    jobTitle: string;
+}
 
 const EditPackagePage = () => {
     const params = useParams();
@@ -70,7 +82,31 @@ const EditPackagePage = () => {
         monthlyNet: 0
     });
 
-    const [approverEmails, setApproverEmails] = useState('isabellakpai@gmail.com, okorofth@gmail.com');
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<Interviewer[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedApprovers, setSelectedApprovers] = useState<Interviewer[]>([]);
+
+    // Simple debounce implementation for search
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (!searchQuery || searchQuery.length < 2) {
+                setSearchResults([]);
+                return;
+            }
+            setIsSearching(true);
+            try {
+                const results = await searchInterviewers(searchQuery);
+                setSearchResults(results || []);
+            } catch (error) {
+                console.error("Search failed", error);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     // Populate state from internalOffer if available
     useEffect(() => {
@@ -93,9 +129,17 @@ const EditPackagePage = () => {
                     ...b,
                     active: offerBenefitNames.includes(b.name)
                 })));
+            }
 
-                // Add any benefit from offer that isn't in default list?
-                // Skipping for simplicity, assuming default list covers most or custom additions handled differently.
+            if (internalOffer.approvals) {
+                // Map existing approvals to Interviewer format if possible
+                const existing = internalOffer.approvals.map(a => ({
+                    id: a.id,
+                    displayName: a.email.split('@')[0], // Fallback name
+                    mail: a.email,
+                    jobTitle: 'Approver'
+                }));
+                setSelectedApprovers(existing as any);
             }
         }
     }, [internalOffer]);
@@ -123,10 +167,10 @@ const EditPackagePage = () => {
     };
 
     const handleSaveAndProceed = async () => {
-        const emailList = approverEmails.split(',').map(e => e.trim()).filter(e => e);
+        const emailList = selectedApprovers.map(a => a.mail).filter(e => e);
         const payload = {
             candidateId: id,
-            requisitionId: selectedCandidate?.requisition_id || 'REQ_DEFAULT', // Fallback if missing
+            requisitionId: selectedCandidate?.requisition_id || 'REQ_DEFAULT',
             emails: emailList.length > 0 ? emailList : ["isabellakpai@gmail.com", "okorofth@gmail.com"],
             internalSalaryOffer: {
                 annual_salary: totals.annualGross,
@@ -265,12 +309,92 @@ const EditPackagePage = () => {
             {/* Approvers Section */}
             <Paper elevation={0} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Approver List</Typography>
-                <TextField
-                    label="Approver Emails (comma separated)"
-                    fullWidth
-                    value={approverEmails}
-                    onChange={(e) => setApproverEmails(e.target.value)}
-                    helperText="These users will receive an email to approve this offer."
+                <Autocomplete
+                    multiple
+                    options={searchResults}
+                    getOptionLabel={(option) => `${option.displayName} (${option.mail})`}
+                    value={selectedApprovers}
+                    onChange={(e, newValue) => setSelectedApprovers(newValue)}
+                    onInputChange={(e, newInputValue) => setSearchQuery(newInputValue)}
+                    loading={isSearching}
+                    filterSelectedOptions
+                    isOptionEqualToValue={(option, value) => option.mail === value.mail}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Search Approvers"
+                            placeholder="Type name or email..."
+                            helperText="These users will receive an email to approve this offer."
+                            InputProps={{
+                                ...params.InputProps,
+                                startAdornment: (
+                                    <>
+                                        <SearchIcon sx={{ color: 'text.disabled', ml: 1, mr: -0.5 }} />
+                                        {params.InputProps.startAdornment}
+                                    </>
+                                ),
+                                endAdornment: (
+                                    <React.Fragment>
+                                        {isSearching ? <CircularProgress color="inherit" size={20} /> : null}
+                                        {params.InputProps.endAdornment}
+                                    </React.Fragment>
+                                ),
+                            }}
+                        />
+                    )}
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props as any;
+                        return (
+                            <Box
+                                key={key}
+                                component="li"
+                                {...optionProps}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    py: 1.5,
+                                    px: 2,
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                    '&:last-child': { borderBottom: 0 }
+                                }}
+                            >
+                                <ListItemAvatar sx={{ minWidth: 48 }}>
+                                    <Box sx={{
+                                        width: 32, height: 32, borderRadius: '50%',
+                                        bgcolor: alpha('#155dfc', 0.1), color: 'primary.main',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontWeight: 700, fontSize: '0.75rem'
+                                    }}>
+                                        {option.displayName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                    </Box>
+                                </ListItemAvatar>
+                                <ListItemText
+                                    primary={option.displayName}
+                                    secondary={
+                                        <Typography variant="caption" color="text.secondary" component="span">
+                                            {option.jobTitle} • {option.mail}
+                                        </Typography>
+                                    }
+                                    primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }}
+                                />
+                                {selectedApprovers.find(i => i.mail === option.mail) && (
+                                    <CheckCircleOutlineIcon color="success" fontSize="small" />
+                                )}
+                            </Box>
+                        );
+                    }}
+                    renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                            <Chip
+                                label={option.displayName}
+                                {...getTagProps({ index })}
+                                key={option.mail}
+                                size="small"
+                                sx={{ borderRadius: 1 }}
+                            />
+                        ))
+                    }
                 />
             </Paper>
 
