@@ -32,8 +32,8 @@ const LoginPage = () => {
     dispatch(setIsLoggingIn(true));
     dispatch(clearInterviewState());
     // dispatch(setUserLogout({}))
-    // const backendUrl =  process.env.NEXT_PUBLIC_API_URL;
-    const backendUrl = 'http://localhost:5000';
+    const backendUrl =  process.env.NEXT_PUBLIC_API_URL;
+    // const backendUrl = 'http://localhost:5000';
     console.log(`the backend url is => ${backendUrl}`);
     window.location.href = `${backendUrl}/auth/login`;
   };
