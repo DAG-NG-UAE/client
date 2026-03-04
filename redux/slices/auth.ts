@@ -14,50 +14,59 @@ const initialState: AuthState = {
     user: null,
     isAuthenticated: false,
     loading: true,
+    isLoggingIn: false,
     error: null,
-  };
+};
 
-  const authSlice = createSlice({ 
-    name: 'auth', 
-    initialState, 
-    reducers: { 
-         // START LOADING
+const authSlice = createSlice({
+    name: 'auth',
+    initialState,
+    reducers: {
+        // START LOADING
         startLoading(state) {
             state.loading = true;
         },
-    
+
         // HAS ERROR
         hasError(state, action) {
             state.loading = false;
             state.error = action.payload;
+            state.isLoggingIn = false;
         },
 
         // Fetch user 
-        setUser(state, action) { 
+        setUser(state, action) {
             state.loading = false;
             state.user = action.payload;
             state.isAuthenticated = true;
+            state.isLoggingIn = false;
         },
 
-        setUserLogout(state, action){ 
+        setUserLogout(state, action) {
             console.log('we want to log you out')
-            state.loading = false; 
-            state.user = null; 
-            state.isAuthenticated = false
+            state.loading = false;
+            state.user = null;
+            state.isAuthenticated = false;
+            state.isLoggingIn = false;
+        },
+
+        setIsLoggingIn(state, action) {
+            state.isLoggingIn = action.payload;
         }
     }
-  })
+})
 
-  export default authSlice.reducer;
+export default authSlice.reducer;
 
-export const { 
+export const {
     setUser,
     setUserLogout,
     startLoading,
-    hasError
-} = authSlice.actions
+    hasError,
+    setIsLoggingIn
+} = authSlice.actions;
 
-export const fetchUsers = async() => { 
+export const fetchUsers = async () => {
     try {
         dispatch(startLoading())
         const response = await axiosInstance.get('/user/me');
@@ -67,8 +76,8 @@ export const fetchUsers = async() => {
     }
 }
 
-export const logoutUser = async () => { 
-    try{ 
+export const logoutUser = async () => {
+    try {
         dispatch(startLoading())
         const response = await axiosInstance.post('/auth/logout');
         dispatch(clearSelectedRequisition())
@@ -81,7 +90,7 @@ export const logoutUser = async () => {
         dispatch(clearRequisition())
         dispatch(clearOfferState())
         dispatch(resetSchedule())
-    }catch(error: any){ 
+    } catch (error: any) {
         dispatch(hasError(error?.response?.data || error));
     }
 }
