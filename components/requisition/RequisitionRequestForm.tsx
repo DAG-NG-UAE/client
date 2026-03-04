@@ -248,7 +248,9 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
     requesterDesignation.trim() &&
     position.trim() &&
     resumptionDate &&
-    salaryLocal.trim() &&
+    resumptionDate.isAfter(dayjs().subtract(1, 'day')) &&
+    resumptionDate.isBefore(dayjs().add(1, 'year').add(1, 'day')) &&
+    (type === "Local" ? salaryLocal.trim() : salaryExpat.trim()) &&
     locations.length > 0 &&
     locations.every((loc) => loc.location.trim() && loc.headcount && Number(loc.headcount) > 0) &&
     reportingManager.trim() &&
@@ -257,6 +259,16 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
 
   return (
     <Box component="form" sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+
+      {/* --- Section 1: General Information --- */}
+      <Box sx={{ width: '100%', mb: 0.5 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          General Information
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Basic details about this requisition request
+        </Typography>
+      </Box>
 
       {/* --- Row 1 --- */}
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
@@ -271,6 +283,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
         <TextField
           fullWidth
+          required
           label="Department"
           placeholder="Department the hire will belong to"
           value={department}
@@ -278,10 +291,21 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
         />
       </Box>
 
+      {/* --- Section 2: Position Details --- */}
+      <Box sx={{ width: '100%', mt: 1, mb: 0.5 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          Position Details
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Tell us about the role you are hiring for
+        </Typography>
+      </Box>
+
       {/* --- Row 2 --- */}
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
         <TextField
           fullWidth
+          required
           label="Requisition Internal Name"
           placeholder="e.g. Q1 Expansion Data Team"
           value={nickname}
@@ -302,6 +326,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
         <TextField
           fullWidth
+          required
           label="Your Designation"
           value={requesterDesignation}
           onChange={(e) => setRequesterDesignation(e.target.value)}
@@ -310,6 +335,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
         <TextField
           fullWidth
+          required
           label="Position Hiring For"
           value={position}
           onChange={(e) => setPosition(e.target.value)}
@@ -322,17 +348,31 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
           label="Expected Resumption"
           value={resumptionDate}
           onChange={(newValue) => setResumptionDate(newValue)}
-          slotProps={{ textField: { fullWidth: true } }}
+          maxDate={dayjs().add(1, 'year')}
+          slotProps={{
+            textField: {
+              fullWidth: true,
+              required: true,
+              error: resumptionDate ? (resumptionDate.isBefore(dayjs(), 'day') || resumptionDate.isAfter(dayjs().add(1, 'year'))) : false,
+              helperText: resumptionDate && resumptionDate.isBefore(dayjs(), 'day')
+                ? "Date cannot be in the past"
+                : resumptionDate && resumptionDate.isAfter(dayjs().add(1, 'year'))
+                  ? "Date cannot be more than 1 year in the future"
+                  : ""
+            }
+          }}
           disablePast
         />
       </Box>
 
-      <Box sx={{ width: "100%" }}>
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>Locations & Headcount</Typography>
+      <Box sx={{ width: "100%", mt: 1 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+          Locations & Headcount <Box component="span" sx={{ color: 'error.main' }}>*</Box>
+        </Typography>
         {locations.map((item, index) => (
           <Box key={item.id} sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
             <Box sx={{ flex: 1 }}>
-              <FormControl fullWidth>
+              <FormControl fullWidth required>
                 <InputLabel>Location</InputLabel>
                 <Select
                   value={item.location}
@@ -348,6 +388,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
             <Box sx={{ flex: 1 }}>
               <TextField
                 fullWidth
+                required
                 label="Headcount"
                 type="number"
                 value={item.headcount}
@@ -394,32 +435,35 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
         </Box>
       )}
 
-      {/* --- CONDITIONAL SECTIONS --- */}
+      {/* --- Section 3: Compensation & Hiring Reason --- */}
+      <Box sx={{ width: '100%', mt: 1, mb: 0.5 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          Compensation & Hiring Reason
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Salary details and the business case for this role
+        </Typography>
+      </Box>
 
       {/* --- LOCAL SPECIFIC --- */}
       {type === "Local" && (
-        <>
-          <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-            <TextField
-              fullWidth
-              label="Proposed Monthly Salary"
-              value={salaryLocal}
-              onChange={(e) => setSalaryLocal(formatCurrency(e.target.value))}
-              InputProps={{
-                startAdornment: <InputAdornment position="start">₦</InputAdornment>,
-              }}
-            />
-          </Box>
-
-
-        </>
+        <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
+          <TextField
+            fullWidth
+            required
+            label="Proposed Monthly Salary"
+            value={salaryLocal}
+            onChange={(e) => setSalaryLocal(formatCurrency(e.target.value))}
+            InputProps={{
+              startAdornment: <InputAdornment position="start">₦</InputAdornment>,
+            }}
+          />
+        </Box>
       )}
 
       {/* --- EXPAT SPECIFIC --- */}
       {type === "Expat" && (
         <>
-
-          {/* Expat Salary Row */}
           <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
             <FormControl fullWidth>
               <InputLabel>Currency</InputLabel>
@@ -438,6 +482,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
           <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
             <TextField
               fullWidth
+              required
               label="Expected Monthly Salary"
               value={salaryExpat}
               onChange={(e) => setSalaryExpat(formatCurrency(e.target.value))}
@@ -485,10 +530,21 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
         </>
       )}
 
+      {/* --- Section 4: Reporting & Approvals --- */}
+      <Box sx={{ width: '100%', mt: 1, mb: 0.5 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          Reporting & Approvals
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Management structure and approval workflow
+        </Typography>
+      </Box>
+
       {/* --- Row: Managers --- */}
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
         <TextField
           fullWidth
+          required
           label="Reporting Manager"
           value={reportingManager}
           onChange={(e) => setReportingManager(e.target.value)}
@@ -511,6 +567,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
         {requireHodApproval && (
           <TextField
             fullWidth
+            required
             sx={{ mt: 1 }}
             label="HOD Approval Email"
             value={hodEmail}
@@ -520,7 +577,16 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
         )}
       </Box>
 
-      {/* --- Justification & Description --- */}
+      {/* --- Section 5: Justification & Documentation --- */}
+      <Box sx={{ width: '100%', mt: 1, mb: 0.5 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          Justification & Documentation
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Explain the business need and provide job specifications
+        </Typography>
+      </Box>
+
       <Box sx={{ flex: "1 1 100%" }}>
         <TextField
           fullWidth

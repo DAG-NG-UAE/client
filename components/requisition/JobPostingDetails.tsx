@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { getFirstAndLastInitials } from '@/utils/transform';
 import { callAssignRecruiters, callRemoveRecruiters, callAddRequisitionLocation, callUpdateRequisitionLocation, callDeleteRequisitionLocation } from '@/redux/slices/requisition';
-import { Check, Edit, Close as CloseIcon } from '@mui/icons-material';
+import { Check, Edit, Close as CloseIcon, ContentCopy as CopyIcon } from '@mui/icons-material';
 
 interface JobPostingDetailsProps {
   requisition: Partial<Requisition>;
@@ -34,6 +34,16 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
 
   const [publishing, setPublishing] = useState(false);
   const [unpublishing, setUnpublishing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    const link = requisition.public_share_link || selectedRequisition?.public_share_link;
+    if (link) {
+      navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
 
 
@@ -208,8 +218,8 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                 {requisition.sanity_job_list_key ? 'Published' : 'Unpublished'}
               </Typography>
 
-              {/* Toggle Switch */}
-              {
+              {/* Toggle Switch - Only visible to HR and Recruiters */}
+              {[AppRole.HeadOfHr, AppRole.HrManager, AppRole.Recruiter].includes(user?.role_name as AppRole) && (
                 requisition.current_job_description_id ? (
                   <Tooltip title={requisition.sanity_job_list_key ? "Unpublish" : "Publish"}>
                     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
@@ -257,7 +267,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                     <span><Switch disabled /></span>
                   </Tooltip>
                 )
-              }
+              )}
             </Stack>
           </Box>
 
@@ -426,17 +436,52 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
       </Box>
 
 
-      {/* display the public application link in a copyable field */}
-      <Box>
-        <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-          Public Application Link
-        </Typography>
-        <Box sx={{ display: 'flex', borderRadius: 2, p: 2, width: '50%', backgroundColor: theme.palette.secondary.main }}>
-          <p>
-            {selectedRequisition?.sanity_job_list_key == null ? '' : `${selectedRequisition?.public_share_link}`}
-          </p>
+      {/* display the public application link in a copyable field - only if published */}
+      {requisition.sanity_job_list_key && (
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+            Public Application Link
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderRadius: 2,
+              p: 1.5,
+              px: 2,
+              width: { xs: '100%', md: '60%' },
+              backgroundColor: alpha(theme.palette.primary.main, 0.05),
+              border: '1px dashed',
+              borderColor: alpha(theme.palette.primary.main, 0.3)
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                fontFamily: 'monospace',
+                color: 'primary.main',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                mr: 2
+              }}
+            >
+              {requisition.public_share_link || selectedRequisition?.public_share_link}
+            </Typography>
+
+            <Tooltip title={copied ? "Copied!" : "Copy Link"}>
+              <IconButton
+                size="small"
+                onClick={handleCopyLink}
+                color={copied ? "success" : "primary"}
+              >
+                <CopyIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
-      </Box>
+      )}
 
 
     </Paper>

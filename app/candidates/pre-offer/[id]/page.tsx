@@ -43,7 +43,7 @@ const PreOfferVerificationPage = () => {
     // Determine which docs to show/use
     const currentDocs = preOfferDocs && preOfferDocs.length > 0 ? preOfferDocs : STANDARD_DOCUMENTS;
 
-    const verificationLink = preOfferToken ? `http://localhost:3001/?token=${preOfferToken}` : '';
+    const verificationLink = preOfferToken ? `${process.env.NEXT_PUBLIC_CANDIDATE_FRONTEND_DEV}/?token=${preOfferToken}` : '';
 
     // UI State
     const [copied, setCopied] = useState(false);

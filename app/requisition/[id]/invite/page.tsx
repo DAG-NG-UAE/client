@@ -61,7 +61,8 @@ const InvitePage = () => {
     // Auto-generate the default message with a link to the requisition
     const defaultMessage = useMemo(() => {
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-        const requisitionLink = `${baseUrl}/requisition/${id}`;
+        // Use encodeURIComponent to handle spaces or special characters in the ID
+        const requisitionLink = `${baseUrl}/requisition/${encodeURIComponent(id)}`;
         return `Hi, I would like to invite you to collaborate as an interviewer for the requisition: ${selectedRequisition?.position || 'this position'}.\n\nYou can view the details here: ${requisitionLink}\n\nYour expertise would be greatly valued in evaluating the candidates.`;
     }, [id, selectedRequisition]);
 
@@ -126,7 +127,9 @@ const InvitePage = () => {
                 users,
                 message: inviteMessage
             });
-            // router.push(`/requisition/${id}`);
+            // Clear the selected list after successful invite
+            setSelectedInterviewers([]);
+            // Success feedback would be good here, but for now we just clear the list as requested
         } catch (error) {
             console.error("Failed to send invites", error);
         }

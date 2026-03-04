@@ -4,6 +4,8 @@ import { Email, Assignment, Description, Visibility, MoveDown, Delete } from "@m
 import React from "react";
 import Link from 'next/link';
 import { fetchSingleCandidate } from "@/redux/slices/candidates";
+import { User } from "@/interface/user";
+import { AppRole } from "@/utils/constants";
 
 
 export const PingHiringManagersButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
@@ -62,9 +64,10 @@ interface AppliedActionsProps {
     onMove?: (candidate: Partial<CandidateProfile>) => void;
     onDelete?: (candidate: Partial<CandidateProfile>) => void;
     children?: React.ReactNode;
+    user: User | null;
 }
 
-export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, children }: AppliedActionsProps) => {
+export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, children, user }: AppliedActionsProps) => {
     return (
         <Box sx={{ display: 'flex', gap: 1 }}>
             {children}
@@ -78,25 +81,30 @@ export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, childr
                 </IconButton>
             </Tooltip>
             
-            <Tooltip title="Move Candidate">
-                <IconButton 
-                    size="small" 
-                    onClick={(e) => { e.stopPropagation(); onMove && onMove(candidate); }}
-                   sx={{ color: 'text.secondary', '&:hover': { color: 'info.main' } }}
-                >
-                    <MoveDown fontSize="small" />
-                </IconButton>
-            </Tooltip>
+            {(user?.role_name == AppRole.Recruiter || user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
+                <>
+                <Tooltip title="Move Candidate">
+                    <IconButton 
+                        size="small" 
+                        onClick={(e) => { e.stopPropagation(); onMove && onMove(candidate); }}
+                    sx={{ color: 'text.secondary', '&:hover': { color: 'info.main' } }}
+                    >
+                        <MoveDown fontSize="small" />
+                    </IconButton>
+                </Tooltip>
 
-             <Tooltip title="Delete Candidate">
-                <IconButton 
-                    size="small" 
-                    onClick={(e) => { e.stopPropagation(); onDelete && onDelete(candidate); }}
-                    sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
-                >
-                    <Delete fontSize="small" />
-                </IconButton>
-            </Tooltip>
+                <Tooltip title="Delete Candidate">
+                    <IconButton 
+                        size="small" 
+                        onClick={(e) => { e.stopPropagation(); onDelete && onDelete(candidate); }}
+                        sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                    >
+                        <Delete fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+                </>
+
+            )}
         </Box>
     );
 };

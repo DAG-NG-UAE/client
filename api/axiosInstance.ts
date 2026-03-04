@@ -3,8 +3,9 @@ import { setUserLogout } from "@/redux/slices/auth";
 import { dispatch } from '@/redux/dispatchHandle';
 
 // Base URL for your API (can be configured via environment variables)
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL; // Backend url - Base URL should not include specific endpoints like /api or /requisition
+// export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL; // Backend url - Base URL should not include specific endpoints like /api or /requisition
 
+export const API_BASE_URL = 'http://localhost:5000';
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Send cookies with requests

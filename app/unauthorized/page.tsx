@@ -23,9 +23,9 @@ const UnauthorizedPage = () => {
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                 You do not have permission to view this page.
             </Typography>
-            <Button variant="contained" onClick={() => router.back()}>
+            {/* <Button variant="contained" onClick={() => router.back()}>
                 Go Back
-            </Button>
+            </Button> */}
         </Box>
     );
 };

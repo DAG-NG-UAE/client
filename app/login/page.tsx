@@ -7,7 +7,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { dispatch } from '@/redux/dispatchHandle';
 import { clearError, clearInterviewState } from '@/redux/slices/interview';
-import { setUserLogout } from '@/redux/slices/auth';
+import { setIsLoggingIn, setUserLogout } from '@/redux/slices/auth';
+import { CircularProgress } from '@mui/material';
 
 // Custom icon for Microsoft
 const MicrosoftIcon = (props: any) => (
@@ -21,16 +22,19 @@ const MicrosoftIcon = (props: any) => (
 
 const LoginPage = () => {
   const theme = useTheme();
-  const {candidates} = useSelector((state:RootState) => state.candidates)
+  const { candidates } = useSelector((state: RootState) => state.candidates);
+  const { isLoggingIn } = useSelector((state: RootState) => state.auth);
 
-  console.log(`the candidates are => ${JSON.stringify(candidates)}`)
+  console.log(`the candidates are => ${JSON.stringify(candidates)}`);
 
 
   const handleMicrosoftSignIn = () => {
-    dispatch(clearInterviewState())
+    dispatch(setIsLoggingIn(true));
+    dispatch(clearInterviewState());
     // dispatch(setUserLogout({}))
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
-    console.log(`the backend url is => ${backendUrl}`)
+    // const backendUrl =  process.env.NEXT_PUBLIC_API_URL;
+    const backendUrl = 'http://localhost:5000';
+    console.log(`the backend url is => ${backendUrl}`);
     window.location.href = `${backendUrl}/auth/login`;
   };
 
@@ -74,11 +78,22 @@ const LoginPage = () => {
           <Button
             variant="outlined"
             fullWidth
-            startIcon={<MicrosoftIcon sx={{ fontSize: 20 }} />}
-            sx={{ mb: 2, py: 1.5, borderColor: theme.palette.divider, color: theme.palette.text.primary }}
+            disabled={isLoggingIn}
+            startIcon={isLoggingIn ? <CircularProgress size={20} color="inherit" /> : <MicrosoftIcon sx={{ fontSize: 20 }} />}
+            sx={{
+              mb: 2,
+              py: 1.5,
+              borderColor: theme.palette.divider,
+              color: theme.palette.text.primary,
+              '&.Mui-disabled': {
+                backgroundColor: theme.palette.action.disabledBackground,
+                color: theme.palette.text.disabled,
+                borderColor: theme.palette.divider,
+              }
+            }}
             onClick={handleMicrosoftSignIn}
           >
-            Sign In With Microsoft
+            {isLoggingIn ? 'Signing In...' : 'Sign In With Microsoft'}
           </Button>
 
           <Typography variant="body2" color="text.secondary" sx={{ mt: 4, mb: 1, textTransform: 'uppercase' }}>
@@ -90,7 +105,7 @@ const LoginPage = () => {
           </Typography>
         </CardContent>
       </Card>
-      
+
       <Box sx={{ mt: 4, textAlign: 'center' }}>
         <Typography variant="body2" sx={{ color: theme.palette.primary.contrastText }}>
           Need help? Contact IT Support at <Link href="mailto:support@company.com" underline="hover" sx={{ color: theme.palette.primary.contrastText }}>support@company.com</Link>

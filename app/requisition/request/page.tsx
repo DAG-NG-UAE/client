@@ -19,6 +19,7 @@ import { dispatch } from "@/redux/dispatchHandle";
 import PreferenceTable, {
   PreferenceItem,
 } from "@/components/requisition/PreferenceTable";
+import { useRouter } from 'next/navigation';
 
 
 // 1. Define the dynamic component
@@ -32,6 +33,7 @@ const RequisitionRequestForm = dynamic(
 
 
 const RequisitionRequest = () => {
+  const router = useRouter();
   const { user } = useSelector((state: RootState) => state.auth);
   const { loading } = useSelector((state: RootState) => state.requisitions);
 
@@ -172,6 +174,9 @@ const RequisitionRequest = () => {
 
     console.log("Submitting Payload:", JSON.stringify(payload, null, 2));
     await callCreateRequisition(payload);
+
+    //send them to the requisition page
+    router.push("/requisition");
   };
 
   return (

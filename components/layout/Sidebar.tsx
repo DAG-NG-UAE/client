@@ -316,7 +316,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             ))}
           </List>
         </Collapse>
-        
+
       </List>
       {user && (
         <Box sx={{
@@ -324,7 +324,7 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
           borderTop: `1px solid ${theme.palette.divider}`,
           display: 'flex',
           alignItems: 'center',
-          gap: theme.spacing(1),
+          gap: theme.spacing(1.5),
         }}>
           <Box sx={{
             width: 40,
@@ -335,13 +335,41 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             alignItems: 'center',
             justifyContent: 'center',
             color: theme.palette.primary.contrastText,
-            fontWeight: theme.typography.fontWeightMedium,
+            fontWeight: 700,
+            fontSize: '0.875rem',
+            flexShrink: 0,
           }}>
-            {/* {user.full_name.charAt(0).toUpperCase()} */}kk
+            {user.full_name
+              ?.split(' ')
+              .map((n: string) => n[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2) || "U"}
           </Box>
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: theme.typography.fontWeightMedium }}>{user.full_name}</Typography>
-            <Typography variant="body2" color="text.secondary"> {user.job_title !== null ? user.job_title : formatRoleName(user.role_name)}</Typography>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {user.full_name}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+              sx={{
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {user.job_title !== null ? user.job_title : formatRoleName(user.role_name)}
+            </Typography>
           </Box>
         </Box>
       )}

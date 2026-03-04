@@ -10,8 +10,8 @@ import {
 } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSingleCandidate } from '@/api/candidate';
-import { useDispatch, useSelector } from '@/redux/store';
-import { setCandidate, setStep } from '@/redux/slices/schedule';
+import { useDispatch, useSelector, RootState } from '@/redux/store';
+import { setCandidate, setStep, Interviewer } from '@/redux/slices/schedule';
 import { callScheduleInterview } from '@/redux/slices/candidates';
 import { useSnackbar } from 'notistack';
 import dayjs from 'dayjs';
@@ -21,6 +21,10 @@ import { ScheduleSidebar } from '@/components/candidates/schedule/Sidebar';
 import { CalendarHeader } from '@/components/candidates/schedule/CalendarHeader';
 import { CalendarGrid } from '@/components/candidates/schedule/CalendarGrid';
 import { ReviewAndConfirm } from '@/components/candidates/schedule/ReviewAndConfirm';
+
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import LoadingOverlay from '@/components/common/LoadingOverlay';
 
 export default function SchedulePage() {
     const router = useRouter();
@@ -35,7 +39,9 @@ export default function SchedulePage() {
         candidate, step, date, interviewTitle, startTime, endTime,
         internalInterviewers, duration, locationType, locationDetails,
         candidateEmailBody, interviewerContext
-    } = useSelector((state) => state.schedule);
+    } = useSelector((state: RootState) => state.schedule);
+
+    const { loading: isScheduling } = useSelector((state: RootState) => state.candidates);
 
     useEffect(() => {
         if (candidateId) {
@@ -67,7 +73,7 @@ export default function SchedulePage() {
 
         try {
 
-            console.log(`the argument we want to pass are => ${candidate?.candidate_name}, ${interviewTitle}, ${combinedDateTime}, ${duration}, ${locationType}, ${locationDetails}, ${internalInterviewers.map(i => i.email!).filter(Boolean)}, ${candidateEmailBody}, ${candidate?.email}, ${interviewTitle}`)
+            // console.log(`the argument we want to pass are => ${candidate?.candidate_name}, ${interviewTitle}, ${combinedDateTime}, ${duration}, ${locationType}, ${locationDetails}, ${internalInterviewers.map(i => i.email!).filter(Boolean)}, ${candidateEmailBody}, ${candidate?.email}, ${interviewTitle}`)
             await callScheduleInterview({
                 candidate_id: candidateId,
                 candidate_name: candidate?.candidate_name,
@@ -92,47 +98,54 @@ export default function SchedulePage() {
     };
 
     return (
-        <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'white' }}>
-            {step === 1 ? (
-                <>
-                    <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-                        <ScheduleSidebar />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'white' }}>
+                <LoadingOverlay
+                    open={isScheduling}
+                    message="Scheduling Interview..."
+                    subtitle="Sending calendar invitations and candidate notification email. Please wait."
+                />
+                {step === 1 ? (
+                    <>
+                        <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+                            <ScheduleSidebar />
 
-                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <CalendarHeader />
-                            <CalendarGrid />
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                <CalendarHeader />
+                                <CalendarGrid />
+                            </Box>
                         </Box>
-                    </Box>
 
-                    {/* Page Footer */}
-                    <Box sx={{ p: 2, borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Stack direction="row" spacing={3} alignItems="center">
-                            {/* <FormControlLabel
+                        {/* Page Footer */}
+                        <Box sx={{ p: 2, borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Stack direction="row" spacing={3} alignItems="center">
+                                {/* <FormControlLabel
                                 control={<Switch defaultChecked color="primary" />}
                                 label={<Typography variant="body2" fontWeight={600}>Notify Candidate via SMS</Typography>}
                             /> */}
-                            {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f0fdf4', px: 1.5, py: 0.5, borderRadius: 2 }}>
+                                {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f0fdf4', px: 1.5, py: 0.5, borderRadius: 2 }}>
                                 <CheckCircle sx={{ color: '#22c55e', fontSize: 16 }} />
                                 <Typography variant="caption" sx={{ color: '#166534', fontWeight: 600 }}>All Calendars Synced</Typography>
                             </Box> */}
-                        </Stack>
-                        <Stack direction="row" spacing={2}>
-                            <Button variant="outlined" startIcon={<WhatsApp />} sx={{ textTransform: 'none', borderRadius: 2 }}>Copy WhatsApp Invitation</Button>
-                            <Button
-                                variant="contained"
-                                onClick={() => dispatch(setStep(2))}
-                                disabled={!startTime}
-                                endIcon={<ArrowForwardIos sx={{ fontSize: 12 }} />}
-                                sx={{ textTransform: 'none', borderRadius: 2, bgcolor: '#3b82f6' }}
-                            >
-                                Send Invites
-                            </Button>
-                        </Stack>
-                    </Box>
-                </>
-            ) : (
-                <ReviewAndConfirm onConfirm={handleConfirmSchedule} />
-            )}
-        </Box>
+                            </Stack>
+                            <Stack direction="row" spacing={2}>
+                                <Button variant="outlined" startIcon={<WhatsApp />} sx={{ textTransform: 'none', borderRadius: 2 }}>Copy WhatsApp Invitation</Button>
+                                <Button
+                                    variant="contained"
+                                    onClick={() => dispatch(setStep(2))}
+                                    disabled={!startTime}
+                                    endIcon={<ArrowForwardIos sx={{ fontSize: 12 }} />}
+                                    sx={{ textTransform: 'none', borderRadius: 2, bgcolor: '#3b82f6' }}
+                                >
+                                    Send Invites
+                                </Button>
+                            </Stack>
+                        </Box>
+                    </>
+                ) : (
+                    <ReviewAndConfirm onConfirm={handleConfirmSchedule} />
+                )}
+            </Box>
+        </LocalizationProvider>
     );
 }

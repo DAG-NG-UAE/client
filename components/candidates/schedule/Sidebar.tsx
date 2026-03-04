@@ -7,6 +7,8 @@ import {
     List, ListItem, ListItemAvatar, ListItemText, Paper, CircularProgress,
     ListItemButton
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
 import { Search, Add, Person } from '@mui/icons-material';
 import { useSelector, useDispatch } from '@/redux/store';
 import { setMeetingDetails, removeInterviewer, addInterviewer, updateInterviewer, setLocation, setEditPreview } from '@/redux/slices/schedule';
@@ -253,8 +255,9 @@ export const MeetingDetailsSidebar = () => {
         dispatch(setMeetingDetails({ title: e.target.value }));
     };
 
-    const handleDateChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newDate = e.target.value;
+    const handleDateChange = async (newValue: dayjs.Dayjs | null) => {
+        if (!newValue) return;
+        const newDate = newValue.format('YYYY-MM-DD');
         dispatch(setMeetingDetails({ date: newDate }));
 
         // we also want to refetch the availability of all the interviewers for the new date
@@ -300,19 +303,24 @@ export const MeetingDetailsSidebar = () => {
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                 />
             </Box>
-            <Stack direction="row" spacing={2}>
-                <Box sx={{ flex: 1 }}>
+            <Stack spacing={2.5}>
+                <Box>
                     <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>Date</Typography>
-                    <TextField
-                        fullWidth
-                        type="date"
-                        value={date}
+                    <DatePicker
+                        value={date ? dayjs(date) : null}
                         onChange={handleDateChange}
-                        size="small"
-                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                        minDate={dayjs()}
+                        maxDate={dayjs().add(1, 'year')}
+                        slotProps={{
+                            textField: {
+                                size: 'small',
+                                fullWidth: true,
+                                sx: { '& .MuiOutlinedInput-root': { borderRadius: 2 } }
+                            }
+                        }}
                     />
                 </Box>
-                <Box sx={{ flex: 1 }}>
+                <Box>
                     <Typography variant="caption" sx={{ fontWeight: 600, mb: 0.5, display: 'block' }}>Duration</Typography>
                     <Select
                         fullWidth

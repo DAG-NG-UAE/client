@@ -422,7 +422,7 @@ const InternalApprovalPage = () => {
                             </Button>
                         )}
 
-                        {!isArchived && (
+                        {/* {!isArchived && (
                             <>
                                 <Divider sx={{ mb: 2 }}>
                                     <Typography variant="caption" color="text.secondary">ADMIN OVERRIDES</Typography>
@@ -442,7 +442,7 @@ const InternalApprovalPage = () => {
                                     Bypasses entire approval chain. Requires HR Admin logging.
                                 </Typography>
                             </>
-                        )}
+                        )} */}
                     </Paper>
                 </Box>
             </Box>
