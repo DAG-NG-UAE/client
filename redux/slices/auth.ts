@@ -15,6 +15,7 @@ const initialState: AuthState = {
     isAuthenticated: false,
     loading: true,
     isLoggingIn: false,
+    isLoggingOut: false,
     error: null,
 };
 
@@ -32,6 +33,7 @@ const authSlice = createSlice({
             state.loading = false;
             state.error = action.payload;
             state.isLoggingIn = false;
+            state.isLoggingOut = false;
         },
 
         // Fetch user 
@@ -40,6 +42,7 @@ const authSlice = createSlice({
             state.user = action.payload;
             state.isAuthenticated = true;
             state.isLoggingIn = false;
+            state.isLoggingOut = false;
         },
 
         setUserLogout(state, action) {
@@ -48,10 +51,14 @@ const authSlice = createSlice({
             state.user = null;
             state.isAuthenticated = false;
             state.isLoggingIn = false;
+            state.isLoggingOut = false;
         },
 
         setIsLoggingIn(state, action) {
             state.isLoggingIn = action.payload;
+        },
+        setIsLoggingOut(state, action) {
+            state.isLoggingOut = action.payload;
         }
     }
 })
@@ -63,7 +70,8 @@ export const {
     setUserLogout,
     startLoading,
     hasError,
-    setIsLoggingIn
+    setIsLoggingIn,
+    setIsLoggingOut
 } = authSlice.actions;
 
 export const fetchUsers = async () => {
@@ -78,8 +86,10 @@ export const fetchUsers = async () => {
 
 export const logoutUser = async () => {
     try {
-        dispatch(startLoading())
+        dispatch(setIsLoggingOut(true))
         const response = await axiosInstance.post('/auth/logout');
+        // Add a small delay so the user can see the "Sad to see you go" message
+        await new Promise(resolve => setTimeout(resolve, 1500));
         dispatch(clearSelectedRequisition())
         dispatch(clearSelectedCandidate())
         dispatch(clearCandidates())

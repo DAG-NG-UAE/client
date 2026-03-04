@@ -19,5 +19,6 @@ export interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   isLoggingIn: boolean;
+  isLoggingOut: boolean;
   error: string | null;
 }

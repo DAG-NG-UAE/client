@@ -16,6 +16,9 @@ import { Provider as ReduxProvider } from 'react-redux';
 import { store, persistor } from '../redux/store'
 import { PersistGate } from 'redux-persist/integration/react';
 import { NotistackProvider } from "@/components/NotistackProvider";
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import LoadingOverlay from '@/components/common/LoadingOverlay';
 
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ["latin"] });
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' }); // Configure Inter
@@ -58,6 +61,7 @@ export default function RootLayout({
               <ThemeProvider theme={theme}>
                 <CssBaseline />
                 <NotistackProvider>
+                  <LogoutOverlay />
                   {isLoginPage || isPublicPage ? (
                     // Public layout
                     <Box sx={{
@@ -110,3 +114,14 @@ export default function RootLayout({
     </html>
   );
 }
+
+const LogoutOverlay = () => {
+  const { isLoggingOut } = useSelector((state: RootState) => state.auth);
+  return (
+    <LoadingOverlay
+      open={isLoggingOut}
+      message="Sad to see you go..."
+      subtitle="Come back soon! 👋"
+    />
+  );
+};
