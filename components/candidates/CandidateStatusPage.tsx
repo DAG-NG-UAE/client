@@ -170,6 +170,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
                router.push(`/candidates/view/${c.candidate_id}`)
              }}
              onDelete={(c) => console.log('Delete', c)} // Placeholder
+             user={user}
         >
             {specificAction}
         </AppliedActionsStub>

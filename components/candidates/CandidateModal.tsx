@@ -20,10 +20,11 @@ import { CandidateActions, CandidateActionButton } from "@/interface/candidate";
 import { callUpdateCandidateStatus } from "@/redux/slices/candidates";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { CandidateStatus } from "@/utils/constants";
+import { AppRole, CandidateStatus } from "@/utils/constants";
 import { CandidateRejectionModal } from "./CandidateRejectionModal";
 import { CandidateStatusType } from "@/types/candidate";
 import { useRouter } from "next/navigation";
+import user from "@/redux/slices/user";
 
 interface CandidateModalProps {
     open: boolean;
@@ -59,6 +60,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     const [currentAction, setCurrentAction] = useState<CandidateActionButton | null>(null);
     const [updateCandidate, setUpdateCandidate] = useState(false);
     const { loading } = useSelector((state: RootState) => state.candidates)
+    const {user} = useSelector((state: RootState) => state.auth)
     const [openRejectionModal, setOpenRejectionModal] = useState(false);
 
     const handleAction = (action: CandidateActionButton) => {
@@ -225,6 +227,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     />
                                 )}
                             </Box>
+                            {(user?.role_name === AppRole.Recruiter || user?.role_name === AppRole.HeadOfHr || user?.role_name === AppRole.HrManager) && (
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 {rejectionAction && (
                                     <Button
@@ -247,6 +250,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     </Button>
                                 )}
                             </Box>
+                            )}
                         </Box>
                     </Paper>
 

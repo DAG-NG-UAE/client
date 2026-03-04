@@ -93,7 +93,7 @@ export const ReviewAndConfirm = ({ onConfirm }: ReviewAndConfirmProps) => {
                                 </Box>
                             </Box>
 
-                            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+                            {/* <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
                                 <Paper elevation={0} sx={{ flex: 1, p: 2, bgcolor: '#eff6ff', border: '1px solid #bfdbfe', textAlign: 'center', borderRadius: 2 }}>
                                     <Box sx={{ mb: 1, fontSize: 20 }}>📄</Box>
                                     <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', color: '#1e40af' }}>View Resume</Typography>
@@ -104,7 +104,7 @@ export const ReviewAndConfirm = ({ onConfirm }: ReviewAndConfirmProps) => {
                                     <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', color: '#701a75' }}>Open Scorecard</Typography>
                                     <Typography variant="caption" sx={{ fontSize: 9, color: '#a21caf', fontWeight: 600 }}>INTERVIEWER_PACK.PDF</Typography>
                                 </Paper>
-                            </Stack>
+                            </Stack> */}
 
                             <Stack spacing={2}>
                                 <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary', fontSize: 10, letterSpacing: 1 }}>Meeting Details</Typography>
