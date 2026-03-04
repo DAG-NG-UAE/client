@@ -70,87 +70,87 @@ const getDesignTokens = (mode: PaletteMode) => ({
     mode,
     ...(mode === "light"
       ? {
-          // Light mode palette
-          primary: {
-            main: "#155dfc", // Selected item on sidebar, also new primary for theme
-            contrastText: "#FFFFFF",
-          },
-          secondary: {
-            main: "#E9EAF0", // oklch(0.95 0.0058 264.53) converted
-            contrastText: "#030213",
-          },
-          background: {
-            default: "#f3f4f6", // New background color
-            paper: "#ffffff",
-          },
-          text: {
-            primary: "#252525", // oklch(0.145 0 0) converted
-            secondary: "#717182",
-          },
-          divider: "rgba(0, 0, 0, 0.1)",
-          action: {
-            active: "#B5B5B5",
-          },
-          error: {
-            main: "#d4183d",
-            contrastText: "#ffffff",
-          },
-          info: {
-            main: "#459569", // Pending color
-          },
-          warning: {
-            main: "#fef9c2", // In Review color
-          },
-          success: {
-            main: "#459569", // Open color: similar to pending as per image.
-          },
-          icons: {
-            container: "#dbeafe", // Icon container background
-            main: "#5f92fd", // Icon color
-          },
-          loginBackground: "#1557f5", // New login page background color
-        }
+        // Light mode palette
+        primary: {
+          main: "#155dfc", // Selected item on sidebar, also new primary for theme
+          contrastText: "#FFFFFF",
+        },
+        secondary: {
+          main: "#E9EAF0", // oklch(0.95 0.0058 264.53) converted
+          contrastText: "#030213",
+        },
+        background: {
+          default: "#f3f4f6", // New background color
+          paper: "#ffffff",
+        },
+        text: {
+          primary: "#252525", // oklch(0.145 0 0) converted
+          secondary: "#717182",
+        },
+        divider: "rgba(0, 0, 0, 0.1)",
+        action: {
+          active: "#B5B5B5",
+        },
+        error: {
+          main: "#d4183d",
+          contrastText: "#ffffff",
+        },
+        info: {
+          main: "#459569", // Pending color
+        },
+        warning: {
+          main: "#fef9c2", // In Review color
+        },
+        success: {
+          main: "#459569", // Open color: similar to pending as per image.
+        },
+        icons: {
+          container: "#dbeafe", // Icon container background
+          main: "#5f92fd", // Icon color
+        },
+        loginBackground: "#1557f5", // New login page background color
+      }
       : {
-          // Dark mode palette (adjusting for new sidebar color)
-          primary: {
-            main: "#155dfc", // Selected item on sidebar
-            contrastText: "#FFFFFF",
-          },
-          secondary: {
-            main: "#262626", // A darker secondary for dark mode
-            contrastText: "#FBFBFB",
-          },
-          background: {
-            default: "#101828", // Sidebar background as default for dark mode
-            paper: "#252525", // Dark card
-          },
-          text: {
-            primary: "#FBFBFB", // Light text for dark mode
-            secondary: "#B5B5B5",
-          },
-          divider: "#454545", // Darker divider
-          action: {
-            active: "#707070",
-          },
-          error: {
-            main: "#7D4742",
-            contrastText: "#B87B75",
-          },
-          info: {
-            main: "#459569",
-          },
-          warning: {
-            main: "#fef9c2",
-          },
-          success: {
-            main: "#459569",
-          },
-          icons: {
-            container: "#dbeafe", // Icon container background for dark mode
-            main: "#5f92fd", // Icon color for dark mode
-          },
-          loginBackground: "#1557f5", // Login page background color for dark mode
-        }),
+        // Dark mode palette (adjusting for new sidebar color)
+        primary: {
+          main: "#155dfc", // Selected item on sidebar
+          contrastText: "#FFFFFF",
+        },
+        secondary: {
+          main: "#262626", // A darker secondary for dark mode
+          contrastText: "#FBFBFB",
+        },
+        background: {
+          default: "#101828", // Sidebar background as default for dark mode
+          paper: "#252525", // Dark card
+        },
+        text: {
+          primary: "#FBFBFB", // Light text for dark mode
+          secondary: "#B5B5B5",
+        },
+        divider: "#454545", // Darker divider
+        action: {
+          active: "#707070",
+        },
+        error: {
+          main: "#7D4742",
+          contrastText: "#B87B75",
+        },
+        info: {
+          main: "#459569",
+        },
+        warning: {
+          main: "#fef9c2",
+        },
+        success: {
+          main: "#459569",
+        },
+        icons: {
+          container: "#dbeafe", // Icon container background for dark mode
+          main: "#5f92fd", // Icon color for dark mode
+        },
+        loginBackground: "#1557f5", // Login page background color for dark mode
+      }),
   },
   typography,
   shape,
@@ -249,6 +249,16 @@ const getDesignTokens = (mode: PaletteMode) => ({
         },
       },
     },
+    MuiFormLabel: {
+      styleOverrides: {
+        asterisk: {
+          color: "#d4183d", // Set asterisk color to red
+          "&.Mui-error": {
+            color: "#d4183d",
+          },
+        },
+      },
+    },
   },
 });
 
@@ -309,6 +319,13 @@ export const getApprovalTheme = () =>
               borderRadius: "0.75rem", // xl
               backgroundColor: "#1e293b", // Keeping card bg distinct
               border: "1px solid #334155", // Subtle border
+            },
+          },
+        },
+        MuiFormLabel: {
+          styleOverrides: {
+            asterisk: {
+              color: "#ef4444", // Red color for dark mode
             },
           },
         },

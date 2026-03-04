@@ -5,6 +5,7 @@ import { getStatusChipProps } from '@/utils/statusColorMapping';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import SettingsBackupRestoreIcon from '@mui/icons-material/SettingsBackupRestore';
 import CandidateModal from '../CandidateModal';
 import { dispatch } from '@/redux/dispatchHandle';
 import { fetchAllCandidates, fetchSingleCandidate, setSelectedCandidate } from '@/redux/slices/candidates';
@@ -21,25 +22,25 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
     const statusProps = getStatusChipProps(candidate.current_status);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
-    const {user} = useSelector((state: RootState) => state.auth);
-    
+    const { user } = useSelector((state: RootState) => state.auth);
+
     const handleCloseModal = () => {
         setIsModalOpen(false);
         //when the modal closes we want to refetch the candidate data
         fetchSingleCandidate(candidate.candidate_id)
-      };
+    };
 
-    const handleRowClick = (candidate:Partial<CandidateProfile>) =>{
+    const handleRowClick = (candidate: Partial<CandidateProfile>) => {
         dispatch(setSelectedCandidate(candidate))
         setIsModalOpen(true);
-      }
+    }
 
-    const handleRejectRow = (candidate:Partial<CandidateProfile>) =>{
+    const handleRejectRow = (candidate: Partial<CandidateProfile>) => {
         dispatch(setSelectedCandidate(candidate))
         setRejectionModalOpen(true);
-      }
+    }
 
-    const handleCloseRejectionModal =() => { 
+    const handleCloseRejectionModal = () => {
         setRejectionModalOpen(false);
         //when the modal closes we want to refetch the candidate data
         fetchSingleCandidate(candidate.candidate_id)
@@ -49,75 +50,86 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
 
     return (
         <>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.5 }}>
-                    <Typography variant="h4" fontWeight={800} sx={{ color: 'text.primary' }}>
-                        {candidate.candidate_name}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 0.5 }}>
+                        <Typography variant="h4" fontWeight={800} sx={{ color: 'text.primary' }}>
+                            {candidate.candidate_name}
+                        </Typography>
+                        {candidate.current_status && (
+                            <Chip
+                                {...statusProps}
+                                size="small"
+                                sx={{ ...statusProps.sx, fontWeight: 700, textTransform: 'uppercase', height: 24 }}
+                            />
+                        )}
+                    </Box>
+                    <Typography variant="body1" color="text.secondary">
+                        Applied for <Box component="span" fontWeight={600} color="text.primary">{candidate.role_applied_for}</Box>
                     </Typography>
-                    {candidate.current_status && (
-                        <Chip 
-                            {...statusProps} 
-                            size="small" 
-                            sx={{ ...statusProps.sx, fontWeight: 700, textTransform: 'uppercase', height: 24 }} 
-                        />
-                    )}
                 </Box>
-                <Typography variant="body1" color="text.secondary">
-                    Applied for <Box component="span" fontWeight={600} color="text.primary">{candidate.role_applied_for}</Box>
-                </Typography>
-            </Box>
 
-            {(user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
-            <Box sx={{ display: 'flex', gap: 1.5 }}>
-                {/* //TODO:: consider adding the option for them to bring the candidate back into the pipeline  */}
-                {candidate.current_status !== CandidateStatus.REJECTED && ( 
-                    <Button 
-                        variant="outlined" 
-                        color="inherit" 
-                        startIcon={<CloseIcon />}
-                        sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary' }}
-                        onClick={() => handleRejectRow(candidate)}
-                    >
-                        Reject
-                    </Button>
+                {(user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
+                    <Box sx={{ display: 'flex', gap: 1.5 }}>
+                        {candidate.current_status === CandidateStatus.REJECTED ? (
+                            <Button
+                                variant="outlined"
+                                color="success"
+                                startIcon={<SettingsBackupRestoreIcon />}
+                                sx={{ textTransform: 'none', fontWeight: 600 }}
+                                onClick={() => handleRowClick(candidate)}
+                            >
+                                Restore to Pipeline
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                startIcon={<CloseIcon />}
+                                sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.secondary' }}
+                                onClick={() => handleRejectRow(candidate)}
+                            >
+                                Reject
+                            </Button>
+                        )}
+
+                        {candidate.current_status === CandidateStatus.SHORTLISTED && (
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                startIcon={<CalendarMonthIcon />}
+                                sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.primary' }}
+                                onClick={() => handleRowClick(candidate)}
+                            >
+                                Schedule
+                            </Button>
+                        )}
+                        {candidate.current_status !== CandidateStatus.REJECTED && (
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                endIcon={<ArrowForwardIcon />}
+                                sx={{ textTransform: 'none', fontWeight: 600, px: 3 }}
+                                onClick={() => handleRowClick(candidate)}
+                            >
+                                Move Stage
+                            </Button>
+                        )}
+                    </Box>
                 )}
-                
-                 {candidate.current_status == CandidateStatus.SHORTLISTED && (
-                 <Button 
-                    variant="outlined" 
-                    color="inherit"
-                    startIcon={<CalendarMonthIcon />}
-                    sx={{ textTransform: 'none', fontWeight: 600, borderColor: 'divider', color: 'text.primary' }}
-                    onClick={() => handleRowClick(candidate)}
-                 >
-                    Schedule
-                 </Button>
-                 )}
-                 <Button 
-                    variant="contained" 
-                    color="primary"
-                    endIcon={<ArrowForwardIcon />}
-                    sx={{ textTransform: 'none', fontWeight: 600, px: 3 }}
-                    onClick={() => handleRowClick(candidate)}
-                 >
-                    Move Stage
-                 </Button>
             </Box>
-            )}
-        </Box>
-        <CandidateModal
-          open={isModalOpen}
-          onClose={handleCloseModal}
-          candidate={candidate}
-        />
-        <CandidateRejectionModal
-          open={rejectionModalOpen}
-          onClose={handleCloseRejectionModal}
-          candidate={candidate}
-        />
+            <CandidateModal
+                open={isModalOpen}
+                onClose={handleCloseModal}
+                candidate={candidate}
+            />
+            <CandidateRejectionModal
+                open={rejectionModalOpen}
+                onClose={handleCloseRejectionModal}
+                candidate={candidate}
+            />
         </>
-        
+
     );
 };
 
