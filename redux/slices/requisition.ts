@@ -321,10 +321,11 @@ export const callCreateRequisition = async (
     dispatch(startLoading());
     await createRequisition(requisition);
     enqueueSnackbar("Talent Request sent successfully", { variant: "success" });
+    return true;
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    return false;
   } finally {
-    dispatch(clearError());
     dispatch(stopLoading());
   }
 };
