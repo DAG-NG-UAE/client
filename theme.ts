@@ -72,43 +72,43 @@ const getDesignTokens = (mode: PaletteMode) => ({
       ? {
         // Light mode palette
         primary: {
-          main: "#155dfc", // Selected item on sidebar, also new primary for theme
+          main: "#673ab7", // Premium Purple
           contrastText: "#FFFFFF",
         },
         secondary: {
-          main: "#E9EAF0", // oklch(0.95 0.0058 264.53) converted
+          main: "#E9EAF0",
           contrastText: "#030213",
         },
         background: {
-          default: "#f3f4f6", // New background color
+          default: "#f8f7ff", // Very light purple tint
           paper: "#ffffff",
         },
         text: {
-          primary: "#252525", // oklch(0.145 0 0) converted
+          primary: "#1a102d", // Matching deep purple-black for text
           secondary: "#717182",
         },
-        divider: "rgba(0, 0, 0, 0.1)",
+        divider: "rgba(103, 58, 183, 0.1)", // Purple-tinted divider
         action: {
-          active: "#B5B5B5",
+          active: "#673ab7",
         },
         error: {
           main: "#d4183d",
           contrastText: "#ffffff",
         },
         info: {
-          main: "#459569", // Pending color
+          main: "#459569",
         },
         warning: {
-          main: "#fef9c2", // In Review color
+          main: "#fef9c2",
         },
         success: {
-          main: "#459569", // Open color: similar to pending as per image.
+          main: "#459569",
         },
         icons: {
-          container: "#dbeafe", // Icon container background
-          main: "#5f92fd", // Icon color
+          container: "#f3e5f5", // Light purple container
+          main: "#673ab7", // Purple icon
         },
-        loginBackground: "#1557f5", // New login page background color
+        loginBackground: "#673ab7",
       }
       : {
         // Dark mode palette (adjusting for new sidebar color)
@@ -196,19 +196,19 @@ const getDesignTokens = (mode: PaletteMode) => ({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: "#f3f4f6", // Main content header background in light mode
-          color: "#101828", // "HR Portal" text if it were in the AppBar, but it's in sidebar
-          boxShadow: "none",
-          borderBottom: "1px solid rgba(0, 0, 0, 0.1)", // Add border for separation
+          backgroundColor: "#673ab7", // Match the new header purple
+          color: "#ffffff",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          borderBottom: "none",
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: "#101828", // New sidebar background color
-          color: "#FFFFFF", // New sidebar foreground color
-          borderRight: "1px solid #364152", // New sidebar border color
+          backgroundColor: "#1a102d", // Premium deep purple-black
+          color: "#FFFFFF",
+          borderRight: "1px solid #362a4d",
         },
       },
     },
@@ -216,15 +216,15 @@ const getDesignTokens = (mode: PaletteMode) => ({
       styleOverrides: {
         root: {
           "&.Mui-selected": {
-            backgroundColor: "#155dfc", // Selected item color
-            color: "#FFFFFF", // Selected item text color
+            backgroundColor: "#673ab7", // Selected item purple
+            color: "#FFFFFF",
             "&:hover": {
-              backgroundColor: "#155dfc", // Keep same on hover
+              backgroundColor: "#7e57c2", // Slightly lighter purple on hover
             },
           },
           "&:hover": {
-            backgroundColor: "#0F4DBA", // Darker blue for hover state
-            color: "#FFFFFF", // Hover state text color
+            backgroundColor: "rgba(103, 58, 183, 0.1)", // Light purple tint hover
+            color: "#673ab7",
           },
         },
       },

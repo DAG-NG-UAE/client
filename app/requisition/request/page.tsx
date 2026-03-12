@@ -9,6 +9,8 @@ import {
   Tabs,
   Tab,
   CircularProgress,
+  alpha,
+  useTheme
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -20,26 +22,30 @@ import PreferenceTable, {
   PreferenceItem,
 } from "@/components/requisition/PreferenceTable";
 import { useRouter } from 'next/navigation';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import Link from 'next/link';
+import { IconButton, Tooltip } from '@mui/material';
 
 
 // 1. Define the dynamic component
 const RequisitionRequestForm = dynamic(
   () => import('@/components/requisition/RequisitionRequestForm'),
-  { 
+  {
     ssr: false, // This stops the PDF/Canvas error during build
-    loading: () => <div>Loading Form...</div> 
+    loading: () => <div>Loading Form...</div>
   }
 );
 
 
 const RequisitionRequest = () => {
+  const theme = useTheme();
   const router = useRouter();
   const { user } = useSelector((state: RootState) => state.auth);
   const { loading } = useSelector((state: RootState) => state.requisitions);
 
   // 0: Local, 1: Expat
   const [activeTab, setActiveTab] = useState(0);
-  
+
   // 0: Form, 1: Preferences
   const [step, setStep] = useState(0);
 
@@ -104,7 +110,7 @@ const RequisitionRequest = () => {
 
     // Construct locationsSummary HTML string
     let locationsSummary = "";
-    
+
     // Process locations array for both types
     if (locations && Array.isArray(locations)) {
       console.log("Locations:", locations);
@@ -120,17 +126,17 @@ const RequisitionRequest = () => {
     let preferencesSummary: any[] = [];
     const activePreferences = preferences.filter(p => p.askCandidate);
     console.log("Active Preferences:", activePreferences);
-    if(activePreferences.length > 0) {
+    if (activePreferences.length > 0) {
 
-        activePreferences.forEach((p) => {
-            preferencesSummary.push({
-              pref_key: p.pref_key,
-              min_required_rank: p.min_required_rank,
-              weight_score: p.weight_score,
-              ask_candidate: true,
-              skill_id: p.skill_id
-            });
+      activePreferences.forEach((p) => {
+        preferencesSummary.push({
+          pref_key: p.pref_key,
+          min_required_rank: p.min_required_rank,
+          weight_score: p.weight_score,
+          ask_candidate: true,
+          skill_id: p.skill_id
         });
+      });
     }
 
     const payload = {
@@ -148,20 +154,20 @@ const RequisitionRequest = () => {
       reason: reason || null,
       hodApproval: hodEmail,
       submittedBy: user?.email,
-      locationsSummary: locationsSummary, 
+      locationsSummary: locationsSummary,
       preferencesSummary: preferencesSummary,
       proposedSalaryCurrency,
       internalName,
       recruitmentType: activeTab === 0 ? "Local" : "Expat",
-      
+
       // Pass locations array
       locations: locations,
-      
+
       requiredHodApproval,
       replacementFor,
       jobDescription,
       originalFileName,
-      
+
       accommodation,
       leaveStatus,
       familyStatus,
@@ -203,13 +209,27 @@ const RequisitionRequest = () => {
           }}
         >
           {/* Header */}
-          <Typography
-            variant="h4"
-            gutterBottom
-            sx={{ color: "text.primary", fontWeight: "bold" }}
-          >
-            Talent Request Form
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Typography
+              variant="h4"
+              sx={{ color: "text.primary", fontWeight: "bold" }}
+            >
+              Talent Request Form
+            </Typography>
+            <Tooltip title="How to fill this form?">
+              <IconButton
+                component={Link}
+                href="/how-to-use#step-2"
+                sx={{
+                  color: 'primary.main',
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                }}
+              >
+                <HelpOutlineIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
           <Typography variant="body2" color="textSecondary" sx={{ mb: 4 }}>
             Please fill out the details below to raise a new requisition.
           </Typography>

@@ -128,8 +128,9 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '64px',
-        backgroundColor: theme.palette.mode === 'light' ? '#030213' : theme.palette.background.default,
-        color: theme.palette.mode === 'light' ? 'oklch(0.985 0 0)' : theme.palette.text.primary,
+        backgroundColor: '#1a102d', // Match sidebar background
+        color: '#ffffff',
+        borderBottom: '1px solid rgba(255,255,255,0.05)'
       }}>
         <Typography variant="h6" noWrap component="div">
           HR Portal

@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { logoutUser } from '@/redux/slices/auth';
 import { RootState } from '@/redux/store';
+import SystemManual from '../manual/SystemManual';
+import BookIcon from '@mui/icons-material/MenuBook';
 
 const drawerWidth = 240;
 
@@ -20,7 +22,7 @@ interface HeaderProps {
 const Header = ({ handleDrawerToggle, desktopOpen = true, handleDesktopToggle }: HeaderProps) => {
   const theme = useTheme();
   const router = useRouter();
-  const {isAuthenticated} = useSelector((state: RootState) => state.auth)
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth)
 
   const handleLogout = () => {
     logoutUser();
@@ -41,10 +43,8 @@ const Header = ({ handleDrawerToggle, desktopOpen = true, handleDesktopToggle }:
       sx={{
         width: { sm: desktopOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
         ml: { sm: desktopOpen ? `${drawerWidth}px` : 0 },
-        // boxShadow: 'none',
-        // borderBottom: `1px solid ${theme.palette.divider}`,
-        // backgroundColor: theme.palette.background.default,
-        // color: theme.palette.text.primary,
+        bgcolor: 'primary.main',
+        color: 'primary.contrastText',
         transition: theme.transitions.create(['width', 'margin'], {
           easing: theme.transitions.easing.sharp,
           duration: theme.transitions.duration.leavingScreen,
@@ -71,6 +71,15 @@ const Header = ({ handleDrawerToggle, desktopOpen = true, handleDesktopToggle }:
           <MenuIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }} />
+        <Button
+          color="inherit"
+          startIcon={<BookIcon />}
+          onClick={() => router.push('/how-to-use')}
+          sx={{ mr: 2, textTransform: 'none', fontWeight: 600 }}
+        >
+          How to Use
+        </Button>
+        <SystemManual />
         <Button color="inherit" onClick={handleLogout}>
           Logout
         </Button>
