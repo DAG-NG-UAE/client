@@ -179,10 +179,12 @@ const RequisitionRequest = () => {
     };
 
     console.log("Submitting Payload:", JSON.stringify(payload, null, 2));
-    await callCreateRequisition(payload);
+    const success = await callCreateRequisition(payload);
 
-    //send them to the requisition page
-    router.push("/requisition");
+    // Only redirect if the submission was successful
+    if (success) {
+      router.push("/requisition");
+    }
   };
 
   return (
