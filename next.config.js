@@ -1,15 +1,14 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   trailingSlash: true, // Helps with S3/Static routing
   typescript: {
     ignoreBuildErrors: true, // Prevents the validator from killing the build
   },
-  
+
   turbopack: {
     resolveAlias: {
       canvas: './empty.js',
-        encoding: './empty.js',
+      encoding: './empty.js',
     },
   },
 
@@ -18,7 +17,6 @@ const nextConfig: NextConfig = {
     config.resolve.alias.encoding = false;
     return config;
   },
-  
 };
 
-export default nextConfig;
+module.exports = nextConfig;
