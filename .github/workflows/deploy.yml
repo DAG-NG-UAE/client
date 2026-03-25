@@ -1,0 +1,82 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: af-south-1
+
+      - name: Pull env file from S3
+        run: |
+          aws s3 cp s3://${{ secrets.ARTIFACTS_BUCKET }}/config/dag-client.env .env.production || true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js app
+        # Uses webpack (default for next build — NOT turbopack, which has a CSS binary conflict)
+        # NEXT_PUBLIC_API_URL is sourced from .env.production and baked into the bundle here
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      - name: Package deployment artifact
+        run: |
+          zip -r deployment.zip . \
+            --exclude "*.git*" \
+            --exclude "node_modules/*" \
+            --exclude "*.env*" \
+            --exclude ".env*" \
+            --exclude "terraform/*" \
+            --exclude ".github/*" \
+            --exclude "*.test.*"
+
+      - name: Upload artifact to S3
+        run: |
+          aws s3 cp deployment.zip \
+            s3://${{ secrets.ARTIFACTS_BUCKET }}/dag-client/${{ github.sha }}.zip
+
+      - name: Trigger CodeDeploy deployment
+        run: |
+          DEPLOYMENT_ID=$(aws deploy create-deployment \
+            --application-name ${{ secrets.CODEDEPLOY_APP_NAME }} \
+            --deployment-group-name ${{ secrets.CODEDEPLOY_DEPLOYMENT_GROUP }} \
+            --s3-location bucket=${{ secrets.ARTIFACTS_BUCKET }},key=dag-client/${{ github.sha }}.zip,bundleType=zip \
+            --description "Deploy ${{ github.sha }} by ${{ github.actor }}" \
+            --query "deploymentId" \
+            --output text)
+
+          echo "Deployment ID: $DEPLOYMENT_ID"
+          echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
+
+      - name: Wait for deployment to complete
+        run: |
+          aws deploy wait deployment-successful \
+            --deployment-id ${{ env.DEPLOYMENT_ID }}
+
+          echo "Deployment ${{ env.DEPLOYMENT_ID }} succeeded."
