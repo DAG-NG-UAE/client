@@ -7,6 +7,7 @@ import {
     DialogContent, DialogActions, TextField, ToggleButton, ToggleButtonGroup
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
+import dayjs from 'dayjs';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -17,9 +18,10 @@ import PendingIcon from '@mui/icons-material/Pending';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { callFetchPreOfferDocs, callSavePreOfferDocs, callUpdatePreOfferDocStatus } from '@/redux/slices/offer';
+import { callFetchPreOfferDocs, callSavePreOfferDocs, callSendPreOfferDocs, callUpdatePreOfferDocStatus } from '@/redux/slices/offer';
 import { callUpdateCandidateStatus, fetchSingleCandidate } from '@/redux/slices/candidates';
 import { getCandidateDocuments } from '@/api/candidate';
+import { enqueueSnackbar } from 'notistack';
 
 const STANDARD_DOCUMENTS = [
     {
@@ -123,6 +125,22 @@ const PreOfferVerificationPage = () => {
         await callUpdateCandidateStatus(payload);
         router.push(`/candidates/internal-salary-proposal/${id}`);
     };
+
+    const handleSendRequest = async () => {
+        if (commChannel === 'email') {
+            await callSendPreOfferDocs({
+                candidateId: id,
+                requisitionId: selectedCandidate?.requisition_id,
+                requestedDocs: currentDocs as any,
+                link: verificationLink
+            });
+        } else {
+            enqueueSnackbar(
+                'Copy the portal link above and share it with the candidate on WhatsApp. Their contact details are on their profile.',
+                { variant: 'info', autoHideDuration: 6000 }
+            );
+        }
+    }
 
     return (
         <Box sx={{ bgcolor: '#F5F6F8', minHeight: '100vh', p: { xs: 2, md: 4 } }}>
@@ -231,11 +249,11 @@ const PreOfferVerificationPage = () => {
                                 </Box>
 
                                 <Typography variant="caption" color="text.secondary">
-                                    Please complete this by EOD Thursday.
+                                    Please complete this by EOD {dayjs().add(3, 'days').format('dddd')}.
                                 </Typography>
                             </Box>
                             {preOfferToken && (
-                                <Button variant="contained" fullWidth sx={{ mt: 2, textTransform: 'none' }} disabled={!preOfferToken}>
+                                <Button variant="contained" onClick={handleSendRequest} fullWidth sx={{ mt: 2, textTransform: 'none' }} disabled={!preOfferToken}>
                                     {commChannel === 'email' ? 'Send Email Request' : 'Send WhatsApp Message'}
                                 </Button>
                             )}

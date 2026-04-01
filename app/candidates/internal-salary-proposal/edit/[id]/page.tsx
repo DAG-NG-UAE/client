@@ -427,7 +427,7 @@ const EditPackagePage = () => {
                 <Button
                     variant="contained"
                     startIcon={<CheckCircleIcon />}
-                    sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#1565C0', px: 4 }}
+                    sx={{ textTransform: 'none', fontWeight: 700, px: 4 }}
                     onClick={handleSaveAndProceed}
                 >
                     Save & Proceed to Approval

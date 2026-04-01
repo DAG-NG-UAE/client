@@ -142,7 +142,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
     } else if (status === 'interview_scheduled') {
       specificAction = (
         <>
-          <Tooltip title="Reschedule Interview">
+          {/* <Tooltip title="Reschedule Interview">
             <IconButton onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
               dispatch(setSelectedCandidate(candidate));
@@ -150,7 +150,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
             }}>
               <EventRepeatIcon color="primary" fontSize="small" />
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip title="Cancel Interview">
             <IconButton onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
@@ -174,7 +174,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
                   <RestartAltIcon color="primary" />
               </IconButton>
           </Tooltip>
-          <Tooltip title="Move to Regretted">
+          {/* <Tooltip title="Move to Regretted">
               <IconButton >
                   <FolderIcon color="error" />
               </IconButton>
@@ -183,7 +183,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
                 <IconButton >
                   <ArchiveIcon color="warning" />
               </IconButton>
-          </Tooltip>
+          </Tooltip> */}
         </>
       )
     }

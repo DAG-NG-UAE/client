@@ -22,6 +22,7 @@ import {
   getOfferLetter,
   resolveRequisition,
   savePreOfferDocs,
+  sendPreOfferNotification,
   fetchPreOfferDocs,
   fetchInternalSalaryOffer,
   sendInternalSalaryOffer,
@@ -382,6 +383,28 @@ export const callUpdateJoiningDocsStatus = async (
       {
         variant: "error",
       },
+    );
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callSendPreOfferDocs = async (payload: {
+  candidateId: string;
+  requisitionId?: string;
+  requestedDocs: { displayName: string }[];
+  link: string;
+}) => {
+  try {
+    dispatch(startLoading());
+    const docNames = payload.requestedDocs.map((d) => d.displayName);
+    await sendPreOfferNotification(payload.candidateId, docNames, payload.link);
+    enqueueSnackbar("Document request sent to candidate", { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data?.message || error));
+    enqueueSnackbar(
+      error?.response?.data?.message || "Failed to send document request",
+      { variant: "error" },
     );
   } finally {
     dispatch(stopLoading());

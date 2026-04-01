@@ -62,7 +62,7 @@ export default function SendOffer({ candidate, offerId, offerToken, offerDetails
   const [emailTo, setEmailTo] = useState(candidate.email || '');
   const [emailCc, setEmailCc] = useState('');
   const [emailSubject, setEmailSubject] = useState(`Job Offer - ${offerDetails.position} - ${candidate.candidate_name || 'Candidate'}`);
-  const magicLink = `http://localhost:3001?token=${offerToken}`;
+  const magicLink = `${process.env.NEXT_PUBLIC_BASE_URL}?token=${offerToken}`;
   const emailBodyTemplate = `Dear ${candidate.candidate_name || 'Candidate'}
   
 
