@@ -77,9 +77,6 @@ const LibraryLandingPage = () => {
                     </Typography>
                 </Box>
                 <Stack direction="row" spacing={2} alignItems="center">
-                    <IconButton sx={{ bgcolor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                        <NotificationsIcon />
-                    </IconButton>
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
@@ -88,7 +85,6 @@ const LibraryLandingPage = () => {
                             px: 3,
                             py: 1,
                             borderRadius: 2,
-                            bgcolor: '#155dfc',
                             textTransform: 'none',
                             fontWeight: 600,
                             '&:hover': { bgcolor: '#0F4DBA' }
@@ -100,7 +96,7 @@ const LibraryLandingPage = () => {
             </Box>
 
             {/* Filters & Search */}
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }} alignItems="center">
+            {/* <Stack direction="row" spacing={2} sx={{ mb: 3 }} alignItems="center">
                 <TextField
                     placeholder="Search categories, skills, or scales..."
                     value={search}
@@ -120,14 +116,7 @@ const LibraryLandingPage = () => {
                         ),
                     }}
                 />
-                <Button
-                    variant="outlined"
-                    startIcon={<FilterListIcon />}
-                    sx={{ bgcolor: '#fff', color: theme.palette.text.primary, borderColor: theme.palette.divider, textTransform: 'none', px: 3 }}
-                >
-                    Filter
-                </Button>
-            </Stack>
+            </Stack> */}
 
             {/* Categories Table */}
             <TableContainer component={Paper} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}`, overflow: 'hidden' }}>

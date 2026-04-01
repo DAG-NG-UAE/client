@@ -118,6 +118,7 @@ export const fetchRequisitions = async (
     dispatch(setRequisitions(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load requisitions. Please try again.", { variant: "error" });
   }
 };
 
@@ -128,6 +129,7 @@ export const fetchRequisitionById = async (id: string) => {
     dispatch(setSelectedRequisition(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load requisition. Please try again.", { variant: "error" });
   }
 };
 
@@ -148,6 +150,7 @@ export const handleApproveRequisition = async ({
     // Optionally refetch requisitions or update state directly
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to approve requisition. Please try again.", { variant: "error" });
   }
 };
 
@@ -160,6 +163,7 @@ export const putRequisitionOnHold = async (requisitionId: string) => {
     await fetchRequisitions("pending");
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to put requisition on hold. Please try again.", { variant: "error" });
   }
 };
 
@@ -226,6 +230,7 @@ export const callRemoveRecruiters = async (
     enqueueSnackbar("Recruiter removed ", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to remove recruiter. Please try again.", { variant: "error" });
   } finally {
     dispatch(clearError());
     dispatch(stopLoading());
@@ -244,6 +249,7 @@ export const callAddRequisitionLocation = async (
     enqueueSnackbar("Location added successfully", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to add location. Please try again.", { variant: "error" });
   } finally {
     dispatch(clearError());
     dispatch(stopLoading());
@@ -268,6 +274,7 @@ export const callUpdateRequisitionLocation = async (
     enqueueSnackbar("Location updated successfully", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to update location. Please try again.", { variant: "error" });
   } finally {
     dispatch(clearError());
     dispatch(stopLoading());
@@ -289,6 +296,7 @@ export const callDeleteRequisitionLocation = async (
     );
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to remove location. Please try again.", { variant: "error" });
   } finally {
     dispatch(clearError());
     dispatch(stopLoading());
@@ -308,6 +316,7 @@ export const saveJobDescription = async (
     });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to save job description. Please try again.", { variant: "error" });
   } finally {
     dispatch(clearError());
     dispatch(stopLoading());
@@ -324,6 +333,7 @@ export const callCreateRequisition = async (
     return true;
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to submit talent request. Please try again.", { variant: "error" });
     return false;
   } finally {
     dispatch(stopLoading());
@@ -345,6 +355,7 @@ export const callInviteInterviewers = async ({
     enqueueSnackbar("Invitations sent successfully", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to send invitations. Please try again.", { variant: "error" });
   } finally {
     dispatch(clearError());
     dispatch(stopLoading());

@@ -13,7 +13,7 @@ import { dispatch } from '@/redux/dispatchHandle';
 import { AppRole } from '@/utils/constants';
 
 const PendingRequisitionPage = () => {
-  const {requisitions, selectedRequisition, loading} = useSelector((state: RootState) => state.requisitions)
+  const {requisitions, selectedRequisition, loading, error} = useSelector((state: RootState) => state.requisitions)
   const [drawerOpen, setDrawerOpen] = useState(false);
   const status = loading
 
@@ -47,6 +47,8 @@ const PendingRequisitionPage = () => {
         columns={columns}
         data={requisitions}
         loading={status == true && !drawerOpen}
+        error={error}
+        onRetry={() => fetchRequisitions('pending')}
         onRowClick={handleRowClick}
         keyExtractor={(requisition) => requisition.requisition_id}
       />

@@ -32,7 +32,7 @@ export const ReviewAndConfirm = ({ onConfirm }: ReviewAndConfirmProps) => {
     // Initialize email body if empty
     React.useEffect(() => {
         if (!candidateEmailBody && candidate) {
-            const body = `Hi ${candidate.candidate_name?.split(' ')[0]},\n\nWe're excited to move forward with your application for the ${interviewTitle} position. We've scheduled your interview with our search committee.\n\nPlease find the details of the call below. We look forward to speaking with you!`;
+            const body = `Hi ${candidate.candidate_name?.split(' ')[0]},\n\nWe're excited to move forward with your application for the ${interviewTitle} position. We've scheduled your interview with our search committee.\n\nDate: ${dayjs(date).format('dddd, MMMM D, YYYY')}\nTime: ${startTime} - ${endTime} WAT (West Africa Time, UTC+1)\nDuration: ${duration} minutes\n\nPlease find further details of the call below. We look forward to speaking with you!`;
             dispatch(setEmailCustomization({ emailBody: body }));
         }
     }, [candidate, interviewTitle, dispatch, candidateEmailBody]);
@@ -257,7 +257,6 @@ export const ReviewAndConfirm = ({ onConfirm }: ReviewAndConfirmProps) => {
                         sx={{
                             textTransform: 'none',
                             borderRadius: 2,
-                            bgcolor: '#1d4ed8',
                             px: 4,
                             '&.Mui-disabled': { bgcolor: '#94a3b8', color: 'white' }
                         }}

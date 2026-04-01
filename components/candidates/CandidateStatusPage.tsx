@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, IconButton, Tooltip } from '@mui/material'; // Import IconButton
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 
 import SummaryStats from '@/components/SummaryStats';
 import { AppRole, statusDetails } from '@/utils/constants';
 import { RootState, useSelector } from '@/redux/store';
 import { fetchPositions } from '@/redux/slices/positions';
-import { fetchAllCandidates, setSelectedCandidate, clearSelectedCandidate } from '@/redux/slices/candidates';
+import { fetchAllCandidates, setSelectedCandidate, clearSelectedCandidate, callCancelInterview } from '@/redux/slices/candidates';
 import TableComponent from '../Table/Table';
 import { getColumnsForStatus } from '@/utils/candidateColumnConfig';
 import { CandidateProfile } from '@/interface/candidate';
@@ -21,6 +21,8 @@ import CandidateRequirementDetail from './CandidateRequirementDetail';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import FolderIcon from '@mui/icons-material/Folder';
 import ArchiveIcon from '@mui/icons-material/Archive';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 
 
 interface CandidateStatusPageProps {
@@ -36,10 +38,12 @@ const summaryData = [
 
 const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requisitionIdFromUrl = searchParams.get('requisitionId') ?? undefined;
   const details = statusDetails[status] || { title: 'Candidates', subtitle: 'Manage all candidates.' };
 
   const {positions} = useSelector((state: RootState) => state.positions)
-  const {candidates, selectedCandidate, meta} = useSelector((state:RootState) => state.candidates)
+  const {candidates, selectedCandidate, meta, error} = useSelector((state:RootState) => state.candidates)
   const {user} = useSelector((state:RootState) => state.auth)
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,13 +54,15 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   };
 
   console.log(`the candidates are => ${JSON.stringify(candidates)}`)
-  useEffect(() => { 
-    if (status) {
+  useEffect(() => {
+    if (requisitionIdFromUrl) {
+      fetchAllCandidates(requisitionIdFromUrl, undefined)
+    } else if (status) {
       console.log('on landing to this page are you called?')
       console.log('the status for the candidate is =>', status)
       fetchAllCandidates(undefined, status)
     }
-  }, [status])
+  }, [status, requisitionIdFromUrl])
 
   const allRoles = [
     { text: 'All Roles', value: 'all' },
@@ -133,7 +139,29 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
           </IconButton>
         </Tooltip>
       )
-    } else if (status === 'offer_rejected'){ 
+    } else if (status === 'interview_scheduled') {
+      specificAction = (
+        <>
+          <Tooltip title="Reschedule Interview">
+            <IconButton onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              dispatch(setSelectedCandidate(candidate));
+              router.push(`/candidates/schedule`);
+            }}>
+              <EventRepeatIcon color="primary" fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Cancel Interview">
+            <IconButton onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              if (candidate.interview_id) callCancelInterview(candidate.interview_id);
+            }}>
+              <EventBusyIcon color="error" fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </>
+      )
+    } else if (status === 'offer_rejected'){
       specificAction = (
         <>
           <Tooltip title="Redo Proposal">
@@ -190,7 +218,7 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   
 
   // State to track selected role/requisition
-  const [selectedRole, setSelectedRole] = useState('all');
+  const [selectedRole, setSelectedRole] = useState(requisitionIdFromUrl ?? 'all');
 
   // ... (previous useEffect) ...
 
@@ -253,6 +281,8 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
                   />
               )}
               actions={hasActions ? renderActions : undefined}
+              error={error}
+              onRetry={() => fetchAllCandidates(undefined, status)}
               keyExtractor={(candidates) => candidates.candidate_id}
               totalCount={meta?.total || 0}
               page={(meta?.page || 1) - 1} // MUI is 0-indexed

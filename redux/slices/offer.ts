@@ -166,6 +166,7 @@ export const fetchMasterClauses = async () => {
     dispatch(setMasterClauses(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load clauses. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -190,6 +191,7 @@ export const fetchAllOffers = async (
     dispatch(setOffers(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load offers. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -202,6 +204,7 @@ export const fetchOfferById = async (id: string) => {
     dispatch(setCurrentOffer(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load offer. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -214,6 +217,7 @@ export const fetchCandidateJoiningDetails = async (id: string) => {
     dispatch(setJoiningDetails(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load joining details. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -226,6 +230,7 @@ export const fetchGuarantor = async (id: string) => {
     dispatch(setGuarantor(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load guarantor details. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -238,6 +243,7 @@ export const fetchOfferLetter = async (id: string) => {
     dispatch(setCurrentOffer(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load offer letter. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -310,6 +316,7 @@ export const callFetchPreOfferDocs = async (candidateId: string) => {
     }
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load pre-offer documents. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -330,6 +337,7 @@ export const callFetchInternalSalaryOffer = async (candidateId: string) => {
     dispatch(hasError(error?.response?.data || error));
     dispatch(setInternalOffer(null));
     dispatch(setInternalOffersHistory([]));
+    enqueueSnackbar("Failed to load salary offer. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }

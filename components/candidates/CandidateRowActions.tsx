@@ -93,7 +93,7 @@ export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, childr
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip title="Delete Candidate">
+                {/* <Tooltip title="Delete Candidate">
                     <IconButton 
                         size="small" 
                         onClick={(e) => { e.stopPropagation(); onDelete && onDelete(candidate); }}
@@ -101,7 +101,7 @@ export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, childr
                     >
                         <Delete fontSize="small" />
                     </IconButton>
-                </Tooltip>
+                </Tooltip> */}
                 </>
 
             )}

@@ -10,6 +10,7 @@ import {
   getSingleCandidate,
   updateCandidateStatus,
   scheduleInterview,
+  cancelInterview,
   getCandidateTotalEvaluation,
   getCandidateEvaluationDetails,
 } from "@/api/candidate";
@@ -136,8 +137,11 @@ export const fetchAllCandidates = async (
       `in the candidate slice I called the get all candidates => ${JSON.stringify(response)}`,
     );
     dispatch(setCandidates(response));
+    // clear any error from this function 
+    dispatch(clearError())
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load candidates. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -150,6 +154,7 @@ export const fetchCandidatesForRequisition = async (requisitionId: string) => {
     dispatch(setCandidates(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load candidates. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -162,6 +167,7 @@ export const fetchSingleCandidate = async (candidateId: string) => {
     dispatch(setSelectedCandidate(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load candidate details. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -179,6 +185,7 @@ export const callUpdateCandidateStatus = async (
     // fetchAllCandidates(undefined, "applied");
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to update candidate status. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -210,6 +217,22 @@ export const callScheduleInterview = async (interviewData: {
     dispatch(stopLoading());
   } catch (error: any) {
     dispatch(hasError(error?.response?.data?.message || error?.message || error));
+    enqueueSnackbar(error?.response?.data?.message || "Failed to schedule interview. Please try again.", { variant: "error" });
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callCancelInterview = async (interview_id: string) => {
+  try {
+    dispatch(startLoading());
+    await cancelInterview(interview_id);
+    enqueueSnackbar("Interview cancelled successfully", { variant: "success" });
+    fetchAllCandidates(undefined, "interview_scheduled");
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data?.message || "Failed to cancel interview. Please try again."));
+    enqueueSnackbar(error?.response?.data?.message || "Failed to cancel interview. Please try again.", { variant: "error" });
+    setTimeout(() => dispatch(clearError()), 5000);
   } finally {
     dispatch(stopLoading());
   }
@@ -222,6 +245,7 @@ export const callGetCandidateTotalEvaluation = async (candidateId: string) => {
     dispatch(setCandidateTotalEvaluation(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load evaluation data. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -236,6 +260,7 @@ export const callGetCandidateEvaluationDetails = async (
     dispatch(setCandidateEvaluationDetails(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load evaluation details. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }

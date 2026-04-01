@@ -587,7 +587,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                   <Checkbox
                     checked={privacyConsent}
                     onChange={(e) => setPrivacyConsent(e.target.checked)}
-                    sx={{ color: '#155dfc', '&.Mui-checked': { color: '#155dfc' } }}
+                    // sx={{ color: '#155dfc', '&.Mui-checked': { color: '#155dfc' } }}
                   />
                 }
                 label={
@@ -611,8 +611,8 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                 disabled={!isFormValid || submitting}
                 sx={{
                   py: 1.5,
-                  bgcolor: '#155dfc',
-                  '&:hover': { bgcolor: '#0F4DBA' },
+                  // bgcolor: '#155dfc',
+                  // '&:hover': { bgcolor: '#0F4DBA' },
                   '&:disabled': { bgcolor: '#e0e0e0' }
                 }}
               >

@@ -206,7 +206,7 @@ export default function SystemManual() {
                     fontWeight: 600,
                     borderRadius: 2,
                     mx: 2,
-                    bgcolor: alpha("#fff", 0.1),
+                    // bgcolor: alpha("#fff", 0.1),
                     '&:hover': { bgcolor: alpha("#fff", 0.2) }
                 }}
             >

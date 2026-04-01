@@ -221,7 +221,7 @@ const PreferencePage = () => {
                             </IconButton>
                         </Box>
 
-                        <Box sx={{ px: 2, pb: 2 }}>
+                        {/* <Box sx={{ px: 2, pb: 2 }}>
                             <TextField
                                 fullWidth
                                 size="small"
@@ -237,7 +237,7 @@ const PreferencePage = () => {
                                     sx: { borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.03) }
                                 }}
                             />
-                        </Box>
+                        </Box> */}
 
                         <List sx={{ flexGrow: 1, overflow: 'auto', px: 1 }}>
                             {loading && page === 1 && preferences.length === 0 ? (
@@ -396,7 +396,7 @@ const PreferencePage = () => {
                                     size="small"
                                     startIcon={<AddIcon />}
                                     variant="contained"
-                                    sx={{ bgcolor: '#155dfc' }}
+                                    
                                     onClick={() => openSkillModal('add')}
                                     disabled={!selectedPrefKey}
                                 >
@@ -405,7 +405,7 @@ const PreferencePage = () => {
                             </Stack>
                         </Box>
 
-                        <Box sx={{ px: 2, pb: 2, display: 'flex', gap: 1 }}>
+                        {/* <Box sx={{ px: 2, pb: 2, display: 'flex', gap: 1 }}>
                             <TextField
                                 fullWidth
                                 size="small"
@@ -421,7 +421,7 @@ const PreferencePage = () => {
                                     sx: { borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.03) }
                                 }}
                             />
-                        </Box>
+                        </Box> */}
 
                         <Box sx={{ overflow: 'auto', flexGrow: 1 }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>

@@ -21,4 +21,6 @@ export interface TableProps<T> {
   onPageChange?: (event: unknown, newPage: number) => void;
   onRowsPerPageChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   renderDetailPanel?: (row: T) => React.ReactNode;
+  error?: string | null;
+  onRetry?: () => void;
 }

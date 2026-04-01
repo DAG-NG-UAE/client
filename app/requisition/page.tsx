@@ -17,7 +17,7 @@ import { RequisitionRowActions } from '@/components/requisition/RequisitionActio
 
 
 const RequisitionPage = () => {
-  const {requisitions, loading, meta} = useSelector((state:RootState) => state.requisitions)
+  const {requisitions, loading, meta, error} = useSelector((state:RootState) => state.requisitions)
  
   console.log(`the requisitions are => ${JSON.stringify(requisitions)}`)
   const columns = RequisitionColumns
@@ -83,6 +83,8 @@ const RequisitionPage = () => {
           data={requisitions}
           actions={(requisition) => <RequisitionRowActions requisition={requisition} />}
           loading={status == true}
+          error={error}
+          onRetry={() => fetchRequisitions()}
           onRowClick={handleRowClick}
           keyExtractor={(requisitions) => requisitions.requisition_id}
           totalCount={meta?.total || 0}
