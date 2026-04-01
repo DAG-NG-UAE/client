@@ -3,8 +3,21 @@
 import { SnackbarProvider, enqueueSnackbar, useSnackbar } from 'notistack';
 import React from 'react';
 import { IconButton } from '@mui/material';
+import GlobalStyles from '@mui/material/GlobalStyles';
 import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
+
+const snackbarGlobalStyles = (
+  <GlobalStyles styles={{
+    '.SnackbarItem-contentRoot': {
+      backgroundColor: '#673ab7 !important',
+      color: '#ffffff !important',
+    },
+    '.SnackbarItem-contentRoot .SnackbarItem-message': {
+      color: '#ffffff !important',
+    },
+  }} />
+);
 
 // This component uses the hook to properly target the specific snackbar
 const SnackbarCloseButton = ({ snackbarKey }: { snackbarKey: string | number }) => {
@@ -22,7 +35,9 @@ const SnackbarCloseButton = ({ snackbarKey }: { snackbarKey: string | number }) 
 
 export function NotistackProvider({ children }: { children: React.ReactNode }) {
   return (
-    <SnackbarProvider 
+    <>
+    {snackbarGlobalStyles}
+    <SnackbarProvider
       maxSnack={3} 
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       TransitionComponent={Slide}
@@ -35,6 +50,7 @@ export function NotistackProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
     </SnackbarProvider>
+    </>
   );
 }
 

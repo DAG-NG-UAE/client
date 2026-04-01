@@ -180,7 +180,7 @@ const InvitePage = () => {
 
                     <Box sx={{ mb: 4 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: 'text.primary' }}>
-                            Find people by name or email
+                            Find DAG staff by name or email
                         </Typography>
                         <Autocomplete
                             fullWidth
@@ -212,8 +212,8 @@ const InvitePage = () => {
                                     }}
                                 />
                             )}
-                            renderOption={(props, option) => (
-                                <Box component="li" {...props} sx={{ py: 1.5, px: 2, borderBottom: '1px solid', borderColor: 'divider', '&:last-child': { borderBottom: 0 } }}>
+                            renderOption={({ key, ...props }, option) => (
+                                <Box key={key} component="li" {...props} sx={{ py: 1.5, px: 2, borderBottom: '1px solid', borderColor: 'divider', '&:last-child': { borderBottom: 0 } }}>
                                     <ListItemAvatar>
                                         <Avatar sx={{ bgcolor: alpha('#155dfc', 0.1), color: 'primary.main', fontWeight: 600 }}>
                                             {option.displayName.split(' ').map(n => n[0]).join('').toUpperCase()}

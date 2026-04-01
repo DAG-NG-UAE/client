@@ -204,13 +204,13 @@ const SignatureSlot = ({ title, role, description }: SignatureSlotProps) => {
                         onChange={handleFileUpload}
                       />
                   </IconButton>
-                <IconButton
+                {/* <IconButton
                   size="small"
                   onClick={handleRemoveSignature}
                   sx={{ bgcolor: theme.palette.background.paper }}
                 >
                   <DeleteIcon fontSize="small" color="error" />
-                </IconButton>
+                </IconButton> */}
               </Box>
             </>
           ) : (

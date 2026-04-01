@@ -22,6 +22,7 @@ import {
   getOfferLetter,
   resolveRequisition,
   savePreOfferDocs,
+  sendPreOfferNotification,
   fetchPreOfferDocs,
   fetchInternalSalaryOffer,
   sendInternalSalaryOffer,
@@ -166,6 +167,7 @@ export const fetchMasterClauses = async () => {
     dispatch(setMasterClauses(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load clauses. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -190,6 +192,7 @@ export const fetchAllOffers = async (
     dispatch(setOffers(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load offers. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -202,6 +205,7 @@ export const fetchOfferById = async (id: string) => {
     dispatch(setCurrentOffer(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load offer. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -214,6 +218,7 @@ export const fetchCandidateJoiningDetails = async (id: string) => {
     dispatch(setJoiningDetails(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load joining details. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -226,6 +231,7 @@ export const fetchGuarantor = async (id: string) => {
     dispatch(setGuarantor(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load guarantor details. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -238,6 +244,7 @@ export const fetchOfferLetter = async (id: string) => {
     dispatch(setCurrentOffer(response));
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load offer letter. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -310,6 +317,7 @@ export const callFetchPreOfferDocs = async (candidateId: string) => {
     }
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to load pre-offer documents. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -330,6 +338,7 @@ export const callFetchInternalSalaryOffer = async (candidateId: string) => {
     dispatch(hasError(error?.response?.data || error));
     dispatch(setInternalOffer(null));
     dispatch(setInternalOffersHistory([]));
+    enqueueSnackbar("Failed to load salary offer. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
@@ -374,6 +383,28 @@ export const callUpdateJoiningDocsStatus = async (
       {
         variant: "error",
       },
+    );
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callSendPreOfferDocs = async (payload: {
+  candidateId: string;
+  requisitionId?: string;
+  requestedDocs: { displayName: string }[];
+  link: string;
+}) => {
+  try {
+    dispatch(startLoading());
+    const docNames = payload.requestedDocs.map((d) => d.displayName);
+    await sendPreOfferNotification(payload.candidateId, docNames, payload.link);
+    enqueueSnackbar("Document request sent to candidate", { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data?.message || error));
+    enqueueSnackbar(
+      error?.response?.data?.message || "Failed to send document request",
+      { variant: "error" },
     );
   } finally {
     dispatch(stopLoading());

@@ -138,6 +138,16 @@ export const resolveRequisition = async (offerId: string) => {
   }
 };
 
+export const sendPreOfferNotification = async (candidateId: string, currentDocs: string[], link: string) => {
+  try {
+    const response = await axiosInstance.post('/offer/pre/notify', { candidateId, requestedDocs: currentDocs, link });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending pre-offer notification', error);
+    throw error;
+  }
+};
+
 export const savePreOfferDocs = async (payload: any) => {
   try {
     const response = await axiosInstance.post(`offer/pre`, payload);

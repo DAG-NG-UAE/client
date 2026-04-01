@@ -220,7 +220,17 @@ export const getCvByShareToken = async (token: string) => {
 };
 
 
-export const getCandidateDocuments = async (url: string ) => { 
+export const cancelInterview = async (interview_id: string) => {
+  try {
+    const response = await axiosInstance.post('/interview/cancel', { interview_id });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error cancelling interview:', error);
+    throw error;
+  }
+};
+
+export const getCandidateDocuments = async (url: string ) => {
   try{ 
     const response = await axiosInstance.get(`/candidate/public/documents?url=${url}`);
     console.log("The response from get candidate documents is ", response.data.data)

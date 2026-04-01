@@ -4,11 +4,7 @@ import { Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typograp
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PeopleIcon from '@mui/icons-material/People';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
-import BusinessIcon from '@mui/icons-material/Business';
 import SettingsIcon from '@mui/icons-material/Settings';
-import HistoricalIcon from '@mui/icons-material/History';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import WarningIcon from '@mui/icons-material/Warning'
@@ -21,14 +17,10 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
 import PersonOffIcon from '@mui/icons-material/PersonOff';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import AssignmentIcon from '@mui/icons-material/Assignment';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import SendIcon from '@mui/icons-material/Send';
@@ -200,14 +192,32 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
                     '&.Mui-selected': {
                       backgroundColor: theme.palette.primary.main,
                       color: theme.palette.primary.contrastText,
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.main,
-                      },
+                      '&:hover': { backgroundColor: theme.palette.primary.main },
                     },
                   }}
                 >
                   <ListItemIcon sx={{ color: 'inherit' }}><SettingsIcon /></ListItemIcon>
                   <ListItemText primary="Preferences" />
+                </ListItemButton>
+                <ListItemButton
+                  selected={pathname.startsWith('/library/evaluations')}
+                  onClick={() => {
+                    router.push('/library/evaluations');
+                    if (mobileOpen) handleDrawerToggle();
+                  }}
+                  sx={{
+                    pl: 4,
+                    margin: theme.spacing(0.5, 1),
+                    borderRadius: theme.shape.borderRadius,
+                    '&.Mui-selected': {
+                      backgroundColor: theme.palette.primary.main,
+                      color: theme.palette.primary.contrastText,
+                      '&:hover': { backgroundColor: theme.palette.primary.main },
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'inherit' }}><AssignmentIcon /></ListItemIcon>
+                  <ListItemText primary="Evaluations" />
                 </ListItemButton>
               </List>
             </Collapse>

@@ -70,6 +70,8 @@ export interface CandidateProfile {
   // notes is already above
 
   // Interview details
+  interview_id?: string; 
+  interview_event_id?: string;
   interview_date?: string;
   interview_time?: string;
   interview_location?: string;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TableProps } from "@/interface/table";
-import { Box, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography, Checkbox, CircularProgress, TablePagination } from "@mui/material";
+import { Box, Button, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography, Checkbox, CircularProgress, TablePagination } from "@mui/material";
 import TableContainer from "@mui/material/TableContainer";
 
 function TableComponent<T>({
@@ -11,6 +11,8 @@ function TableComponent<T>({
     actions,
     loading,
     emptyMessage = 'No Data Available at this time',
+    error,
+    onRetry,
     totalCount,
     page = 0,
     rowsPerPage = 10,
@@ -78,6 +80,19 @@ function TableComponent<T>({
                         <TableRow>
                             <TableCell colSpan={columns.length + (renderDetailPanel !== undefined ? 1 : 0) + (actions !== undefined ? 1 : 0)} align="center">
                                 <CircularProgress />
+                            </TableCell>
+                        </TableRow>
+                    ) : error ? (
+                        <TableRow>
+                            <TableCell colSpan={columns.length + (renderDetailPanel !== undefined ? 1 : 0) + (actions !== undefined ? 1 : 0)} align="center">
+                                <Box sx={{ py: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+                                    <Typography color="text.secondary">Failed to load data. Please try again.</Typography>
+                                    {onRetry && (
+                                        <Button variant="outlined" size="small" onClick={onRetry}>
+                                            Try again
+                                        </Button>
+                                    )}
+                                </Box>
                             </TableCell>
                         </TableRow>
                     ) : safeData.length === 0 ? (

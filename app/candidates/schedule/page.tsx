@@ -135,7 +135,7 @@ export default function SchedulePage() {
                                     onClick={() => dispatch(setStep(2))}
                                     disabled={!startTime}
                                     endIcon={<ArrowForwardIos sx={{ fontSize: 12 }} />}
-                                    sx={{ textTransform: 'none', borderRadius: 2, bgcolor: '#3b82f6' }}
+                                    sx={{ textTransform: 'none', borderRadius: 2}}
                                 >
                                     Send Invites
                                 </Button>

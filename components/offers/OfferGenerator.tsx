@@ -68,7 +68,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { formatOfferDate } from '@/utils/transform';
 import { generateOffer, updateOffer } from '@/api/offer';
 import { enqueueSnackbar } from 'notistack';
-import { getAllSignatures } from '@/api/signature';
+import { getAllSignatures, getSignatureDisplay } from '@/api/signature';
 import { Signature } from '@/interface/signature';
 import { fetchApprovedSalaryProposalForCandidate } from '@/redux/slices/salaryProposal';
 
@@ -222,6 +222,17 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
 
   // Authorized Personnels to sign
   const [selectedSignatory, setSelectedSignatory] = useState<Signature | null>(null);
+  const [signatureUrl, setSignatureUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!selectedSignatory?.signature_path) {
+      setSignatureUrl(undefined);
+      return;
+    }
+    getSignatureDisplay(selectedSignatory.signature_path)
+      .then(url => setSignatureUrl(url))
+      .catch(() => setSignatureUrl(undefined));
+  }, [selectedSignatory]);
 
   // Send Offer State
   const [showSendOffer, setShowSendOffer] = useState(false);
@@ -316,16 +327,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
   console.log('-----------------------------------------------------')
   console.log(`the master clauses are ${JSON.stringify(masterClauses)}`)
 
-  // populate default mandatories ONLY if not editing an existing offer (or if existing offer has no clauses?)
-  // If we are editing, we trust the effect above to set clauses.
-  // If we assume new offer always starts with 0 selected clauses, then this logic holds.
-  useEffect(() => {
-    if (!existingOfferId && masterClauses && masterClauses?.length > 0 && selectedClauses?.length === 0) {
-      const mandatory = masterClauses.filter(c => c.is_mandatory)
-        .map(c => ({ ...c, instanceId: `mandatory-${c.master_clause_id}`, sort_order: 0 })) as ExtendedClause[];
-      if (mandatory.length > 0) dispatch(setSelectedClauses(mandatory));
-    }
-  }, [masterClauses, existingOfferId, selectedClauses, dispatch]);
+  // New offers always start with no clauses selected — user picks manually from the library.
 
   const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 10, 150));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 10, 50));
@@ -427,7 +429,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
     } else {
       const response = await generateOffer(payload);
       if (response.offer_id && response.token) {
-        enqueueSnackbar(`offer generated. Offer token is ${response.token}`, { variant: "success" });
+        enqueueSnackbar(`Offer generated and saved successfully`, { variant: "success" });
         setGeneratedOfferId(response.offer_id);
         setGeneratedOfferToken(response.token);
         setShowSendOffer(true);
@@ -1097,7 +1099,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
                 <Box sx={{ position: 'relative', width: 'fit-content' }}>
                   {/* The Signature Image */}
                   <img
-                    src={selectedSignatory ? `http://localhost:5000/${selectedSignatory.signature_path.replace(/\\/g, '/').replace(/^\/+/, '')}` : undefined}
+                    src={signatureUrl}
                     style={{
                       height: '70px',
                       display: 'block',

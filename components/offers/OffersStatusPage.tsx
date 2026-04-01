@@ -19,7 +19,7 @@ const OfferStatusPage = ({status}: {status: string}) => {
     console.log(status)
     const details = offerStatusDetail[status] || { title: 'Offers', subtitle: 'Manage all offers.' };
 
-    const { offers, loading, meta } = useSelector((state: RootState) => state.offers);
+    const { offers, loading, meta, error } = useSelector((state: RootState) => state.offers);
     const { positions } = useSelector((state: RootState) => state.positions);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedRole, setSelectedRole] = useState("all");
@@ -178,6 +178,8 @@ const OfferStatusPage = ({status}: {status: string}) => {
               data={offers}
               onRowClick={handleRowClick}
               actions={hasActions ? renderActions : undefined}
+              error={error}
+              onRetry={() => fetchAllOffers(status === 'all' ? undefined : status)}
               keyExtractor={(offers) => offers.offer_id}
               totalCount={meta?.total || 0}
               page={(meta?.page || 1) - 1} // MUI is 0-indexed

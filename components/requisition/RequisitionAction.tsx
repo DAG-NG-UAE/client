@@ -1,6 +1,16 @@
 import { Requisition } from "@/interface/requisition";
-import { Edit, Visibility, PersonAdd } from "@mui/icons-material";
+import { Edit, Visibility, PersonAdd, PeopleAlt } from "@mui/icons-material";
 import { Box, IconButton, Tooltip, Link, alpha } from "@mui/material";
+
+const iconSx = (hoverColor: string) => ({
+  color: '#64748b',
+  '&:hover': {
+    color: hoverColor,
+    bgcolor: alpha(hoverColor, 0.08),
+    transform: 'translateY(-1px)',
+  },
+  transition: 'all 0.2s',
+});
 
 export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Requisition> }) => {
   return (
@@ -10,14 +20,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
           component={Link}
           href={`/requisition/${requisition.requisition_id}`}
           size="small"
-          sx={{
-            color: '#1976d2', // Professional Blue
-            '&:hover': {
-              bgcolor: alpha('#1976d2', 0.1),
-              transform: 'translateY(-1px)'
-            },
-            transition: 'all 0.2s'
-          }}
+          sx={iconSx('#0369a1')}
         >
           <Visibility fontSize="small" />
         </IconButton>
@@ -28,14 +31,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
           component={Link}
           href={`/requisition/${requisition.requisition_id}/edit`}
           size="small"
-          sx={{
-            color: '#ed6c02', // Deep Orange for better visibility than yellow
-            '&:hover': {
-              bgcolor: alpha('#ed6c02', 0.1),
-              transform: 'translateY(-1px)'
-            },
-            transition: 'all 0.2s'
-          }}
+          sx={iconSx('#b45309')}
         >
           <Edit fontSize="small" />
         </IconButton>
@@ -46,16 +42,20 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
           component={Link}
           href={`/requisition/${requisition.requisition_id}/invite`}
           size="small"
-          sx={{
-            color: '#2e7d32', // Forest Green to match "Approved" status
-            '&:hover': {
-              bgcolor: alpha('#2e7d32', 0.1),
-              transform: 'translateY(-1px)'
-            },
-            transition: 'all 0.2s'
-          }}
+          sx={iconSx('#15803d')}
         >
           <PersonAdd fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title="View Candidates" arrow>
+        <IconButton
+          component={Link}
+          href={`/candidates/all?requisitionId=${requisition.requisition_id}`}
+          size="small"
+          sx={iconSx('#6d28d9')}
+        >
+          <PeopleAlt fontSize="small" />
         </IconButton>
       </Tooltip>
     </Box>
