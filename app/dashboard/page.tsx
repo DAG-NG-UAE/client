@@ -20,16 +20,18 @@ import {
 } from '@mui/material';
 import { useTheme, keyframes } from '@mui/material/styles';
 import { useRouter } from 'next/navigation';
-import { 
-  Work as WorkIcon, 
-  Group as GroupIcon, 
-  CheckCircle as CheckCircleIcon, 
-  Schedule as ScheduleIcon, 
-  Send as SendIcon, 
+import {
+  Work as WorkIcon,
+  Group as GroupIcon,
+  CheckCircle as CheckCircleIcon,
+  Schedule as ScheduleIcon,
   Timer as TimerIcon,
   TrendingUp as TrendingUpIcon,
   MoreVert as MoreVertIcon,
-
+  Feedback as FeedbackIcon,
+  RequestQuote as RequestQuoteIcon,
+  ThumbUp as ThumbUpIcon,
+  ThumbDown as ThumbDownIcon,
 } from '@mui/icons-material';
 import { getRequisitions } from '../../api/requisitionApi';
 import withAuth from '@/components/auth/withAuth';
@@ -216,29 +218,48 @@ const DashboardPage = () => {
           />
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
-          <KPICard 
-            title="Pe. Interviews" 
-            value={data?.pending_feedback || 0} 
-            icon={<ScheduleIcon />} 
-            color="#ed6c02"
+          <KPICard
+            title="Scheduled Interviews"
+            value={data?.funnel_interview_scheduled || 0}
+            icon={<ScheduleIcon />}
+            color="#0891b2"
           />
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
-          <KPICard 
-            title="Offers Sent" 
-            value={data.funnel_offered || 0} 
-            icon={<SendIcon />} 
-            color="#009688"
+          <KPICard
+            title="Pending Interview Feedback"
+            value={data?.funnel_pending_feedback || 0}
+            icon={<FeedbackIcon />}
+            color="#d97706"
           />
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
-          <KPICard 
-            title="Offer Revision" 
-            value={data?.revise_offers || 0} 
-            icon={<ScheduleIcon />} 
-            color="#ed6c02"
+          <KPICard
+            title="Pending Salary Proposals"
+            value={data?.funnel_salary_proposal || 0}
+            icon={<RequestQuoteIcon />}
+            color="#7c3aed"
+          />
+        </Box>
+
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard
+            title="Offer Accepted"
+            value={data?.revise_offers || 0}
+            icon={<ThumbUpIcon />}
+            color="#16a34a"
             blink={(data?.revise_offers || 0) > 0}
-            onClick={() => router.push('/offers/revision_requested')}
+            // onClick={() => router.push('/offers/revision_requested')}
+          />
+        </Box>
+        <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
+          <KPICard
+            title="Offer Rejected"
+            value={data?.revise_offers || 0}
+            icon={<ThumbDownIcon />}
+            color="#dc2626"
+            blink={(data?.revise_offers || 0) > 0}
+            // onClick={() => router.push('/offers/revision_requested')}
           />
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>

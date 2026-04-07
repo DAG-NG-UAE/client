@@ -5,6 +5,10 @@ const nextConfig = {
     ignoreBuildErrors: true, // Prevents the validator from killing the build
   },
 
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : false,
+  },
+
   turbopack: {
     resolveAlias: {
       canvas: './empty.js',
