@@ -73,19 +73,19 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   // --- Form State ---
   // Shared
   const [requestDate, setRequestDate] = useState<Dayjs | null>(dayjs());
-  const [nickname, setNickname] = useState("System Analyst (Lagos Mainland)");
-  const [department, setDepartment] = useState("Digital");
+  const [nickname, setNickname] = useState("");
+  const [department, setDepartment] = useState("");
   const [raisedBy, setRaisedBy] = useState(user?.full_name || "");
   const [requesterDesignation, setRequesterDesignation] = useState(user?.job_title || "");
 
   // Position
-  const [position, setPosition] = useState("System Analyst");
+  const [position, setPosition] = useState("");
 
   // Dates
   const [resumptionDate, setResumptionDate] = useState<Dayjs | null>(null);
 
   // Manager
-  const [reportingManager, setReportingManager] = useState("Shirely werchota (CDO)");
+  const [reportingManager, setReportingManager] = useState("");
   const [hodEmail, setHodEmail] = useState("isabella.k@bajajnigeria.com");
 
   // Content
@@ -103,7 +103,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   ]);
 
   // -- Local Specific --
-  const [salaryLocal, setSalaryLocal] = useState("500000");
+  const [salaryLocal, setSalaryLocal] = useState("");
   const [reasonForHire, setReasonForHire] = useState("New Headcount"); // Defaulted to New Headcount
   const [replacementFor, setReplacementFor] = useState("");
 

@@ -223,61 +223,66 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
             </Collapse>
           </>
         )}
-        {/* Recruitment collapsible menu */}
-        <ListItemButton
-          onClick={handleRecruitmentClick}
-          selected={pathname.startsWith('/recruitment')}
-          sx={{
-            margin: theme.spacing(0.5, 1),
-            borderRadius: theme.shape.borderRadius,
-            '&.Mui-selected': {
-              backgroundColor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText,
-              '&:hover': {
+        <>
+          {/* Recruitment collapsible menu */}
+          <ListItemButton
+            onClick={handleRecruitmentClick}
+            selected={pathname.startsWith('/recruitment')}
+            sx={{
+              margin: theme.spacing(0.5, 1),
+              borderRadius: theme.shape.borderRadius,
+              '&.Mui-selected': {
                 backgroundColor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
+                '&:hover': {
+                  backgroundColor: theme.palette.primary.main,
+                },
               },
-            },
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover,
-            },
-          }}
-        >
-          <ListItemIcon sx={{ color: 'inherit' }}><WorkIcon /> </ListItemIcon>
-          <ListItemText primary="Recruitment" />
-          {isRecruitmentOpen ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-        <Collapse in={isRecruitmentOpen} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-            {recruitmentMenuItems.map((item) => (
-              <ListItemButton
-                key={item.text}
-                selected={pathname === item.path}
-                onClick={() => {
-                  router.push(item.path);
-                  if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile
-                }}
-                sx={{
-                  pl: 4,
-                  margin: theme.spacing(0.5, 1),
-                  borderRadius: theme.shape.borderRadius,
-                  '&.Mui-selected': {
-                    backgroundColor: theme.palette.primary.main,
-                    color: theme.palette.primary.contrastText,
-                    '&:hover': {
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit' }}><WorkIcon /> </ListItemIcon>
+            <ListItemText primary="Recruitment" />
+            {isRecruitmentOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={isRecruitmentOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              {recruitmentMenuItems.map((item) => (
+                <ListItemButton
+                  key={item.text}
+                  selected={pathname === item.path}
+                  onClick={() => {
+                    router.push(item.path);
+                    if (mobileOpen) handleDrawerToggle(); // Close drawer on mobile
+                  }}
+                  sx={{
+                    pl: 4,
+                    margin: theme.spacing(0.5, 1),
+                    borderRadius: theme.shape.borderRadius,
+                    '&.Mui-selected': {
                       backgroundColor: theme.palette.primary.main,
+                      color: theme.palette.primary.contrastText,
+                      '&:hover': {
+                        backgroundColor: theme.palette.primary.main,
+                      },
                     },
-                  },
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            ))}
-          </List>
-        </Collapse>
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              ))}
+            </List>
+          </Collapse>
+        </>
+        
+
+        <>
         {/* Candidates collapsible menu */}
         <ListItemButton
           onClick={handleCandidatesClick}
@@ -328,6 +333,8 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle, desktopOpen = true }: Sidebar
           </List>
         </Collapse>
 
+        </>
+        
       </List>
       {user && (
         <Box sx={{

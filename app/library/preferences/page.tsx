@@ -61,6 +61,8 @@ import {
     updateOptionValueAction,
     createPreferenceAction
 } from '@/redux/slices/preferences';
+import { AppRole } from '@/utils/constants';
+import withAuth from '@/components/auth/withAuth';
 
 const PreferencePage = () => {
     const theme = useTheme();
@@ -629,4 +631,4 @@ const PreferencePage = () => {
     );
 };
 
-export default PreferencePage;
+export default withAuth(PreferencePage,[AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager]);

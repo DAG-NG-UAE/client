@@ -18,6 +18,8 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import { useRouter } from 'next/navigation';
 import { enqueueSnackbar } from '@/components/NotistackProvider';
 import { createEvaluationCriteria, EvaluationCriteriaPayload } from '@/api/evaluation';
+import withAuth from '@/components/auth/withAuth';
+import { AppRole } from '@/utils/constants';
 
 const DEPARTMENT_OPTIONS = [
     'HR & Admin', 'IT', 'Finance', 'Logistics', 'Treasury',
@@ -49,7 +51,7 @@ const emptyItem = (): EvaluationCriteriaPayload => ({
     departments: [],
 });
 
-export default function NewEvaluationPage() {
+ const NewEvaluationPage = () =>{
     const theme = useTheme();
     const router = useRouter();
     const [items, setItems] = useState<EvaluationCriteriaPayload[]>([emptyItem()]);
@@ -429,3 +431,5 @@ export default function NewEvaluationPage() {
         </Box>
     );
 }
+
+export default withAuth(NewEvaluationPage, [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager])
