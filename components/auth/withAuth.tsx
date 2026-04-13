@@ -1,9 +1,20 @@
 "use client";
 import { RootState } from '@/redux/store';
-
+import { AppRole } from '@/utils/constants';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+
+// Maps each role to the first page they are allowed to land on
+const ROLE_HOME: Record<string, string> = {
+  [AppRole.Admin]:           '/dashboard',
+  [AppRole.HeadOfHr]:        '/dashboard',
+  [AppRole.HrManager]:       '/dashboard',
+  [AppRole.Recruiter]:       '/requisition',
+  [AppRole.HiringManager]:   '/requisition',
+  [AppRole.HR]:              '/requisition',
+  [AppRole.StandardEmployee]: '/requisition',
+};
 
 const withAuth = <P extends object>(
   WrappedComponent: React.ComponentType<P>,
@@ -17,7 +28,8 @@ const withAuth = <P extends object>(
       if (!loading && !isAuthenticated) {
         router.push('/login');
       } else if (!loading && user && allowedRoles && !allowedRoles.includes(user.role_name)) {
-        router.push('/unauthorized'); // Or some other page
+        const home = ROLE_HOME[user.role_name] ?? '/requisition';
+        router.push(home);
       }
     }, [isAuthenticated, user, loading, router]);
 
