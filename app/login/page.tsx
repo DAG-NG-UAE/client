@@ -97,7 +97,7 @@ const LoginPage = () => {
           </Button>
 
           <Typography variant="body2" color="text.secondary" sx={{ mt: 4, mb: 1, textTransform: 'uppercase' }}>
-            HR Manager Access Only
+            DAG Nigeria Staff Access Only 
           </Typography>
 
           <Typography variant="body2" color="text.secondary">

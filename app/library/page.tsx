@@ -36,6 +36,8 @@ import { useRouter } from 'next/navigation';
 import { useSelector } from '@/redux/store';
 import { fetchAdminPreferences } from '@/redux/slices/preferences';
 import dayjs from 'dayjs';
+import withAuth from '@/components/auth/withAuth';
+import { AppRole } from '@/utils/constants';
 
 const LibraryLandingPage = () => {
     const theme = useTheme();
@@ -190,4 +192,4 @@ const LibraryLandingPage = () => {
     );
 };
 
-export default LibraryLandingPage;
+export default withAuth(LibraryLandingPage, [AppRole.Admin, AppRole.HeadOfHr, AppRole.HrManager]) ;
