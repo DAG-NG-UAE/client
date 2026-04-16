@@ -103,6 +103,7 @@ const RequisitionRequest = () => {
       headcount,
       location: legacyLocation, // alias just in case
       requiredHodApproval,
+      reportingManager,
       replacementFor,
       jobDescription,
       originalFileName
@@ -164,6 +165,7 @@ const RequisitionRequest = () => {
       locations: locations,
 
       requiredHodApproval,
+      reportingManager,
       replacementFor,
       jobDescription,
       originalFileName,
@@ -181,7 +183,7 @@ const RequisitionRequest = () => {
     console.log("Submitting Payload:", JSON.stringify(payload, null, 2));
     const success = await callCreateRequisition(payload);
 
-    // Only redirect if the submission was successful
+    // // Only redirect if the submission was successful
     if (success) {
       router.push("/requisition");
     }

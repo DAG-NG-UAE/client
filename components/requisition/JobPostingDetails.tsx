@@ -318,7 +318,7 @@ const JobPostingDetails = ({ requisition, isEditMode = false, handlePublishRequi
                 </Tooltip>
               ))}
 
-              {isEditMode && (user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
+              {isEditMode && (user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager || user?.role_name == AppRole.Recruiter) && (
                 <Tooltip title="Assign Recruiters">
                   <IconButton
                     onClick={handleRecruiterClick}

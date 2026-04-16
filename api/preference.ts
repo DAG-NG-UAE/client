@@ -100,7 +100,7 @@ export const updateOptionValue = async (prefKey: string, optionId: number | stri
     }
 }
 
-export const createPreference = async (data: { label: string, field_type: string, category: string, is_linear: boolean }) => {
+export const createPreference = async (data: { label: string, field_type: string, category: string, is_linear: boolean, question_style?: string | null }) => {
     try {
         const response = await axiosInstance.post(`/preference/admin`, data);
         return response.data;

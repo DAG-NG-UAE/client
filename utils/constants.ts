@@ -214,8 +214,40 @@ export const enum AutomationType {
 }
 
 
-export const enum CandidateStatus  { 
-  APPLIED = 'applied', 
-  REJECTED = 'rejected', 
+export const enum CandidateStatus  {
+  APPLIED = 'applied',
+  REJECTED = 'rejected',
   SHORTLISTED = 'shortlisted'
  }
+
+export const QUESTION_STYLE_OPTIONS = [
+  // --- Skill & Knowledge ---
+  { value: 'proficiency',       label: 'Skill proficiency',          template: 'Rate your {item} skill' },
+  { value: 'knowledge',         label: 'Knowledge level',            template: 'How would you rate your knowledge of {item}?' },
+  { value: 'tool_proficiency',  label: 'Tool / software proficiency',template: 'How proficient are you with {item}?' },
+  { value: 'comfort',           label: 'Comfort level',              template: 'How comfortable are you with {item}?' },
+
+  // --- Experience & Background ---
+  { value: 'industry',          label: 'Industry experience',        template: 'How much experience do you have in the {item} industry?' },
+  // --- Language ---
+  { value: 'language',          label: 'Language proficiency',       template: 'What is your proficiency level in {item}?' },
+
+  // --- Location & Mobility ---
+  { value: 'proximity',         label: 'Location proximity',         template: 'How close are you to {item}?' },
+  { value: 'relocation',        label: 'Willingness to relocate',    template: 'How willing are you to relocate to {item}?' },
+  { value: 'travel',            label: 'Willingness to travel',      template: 'How willing are you to travel to {item} regularly?' },
+
+  // --- Qualifications ---
+  { value: 'education',         label: 'Education / qualification',  template: 'What is your highest level of {item} qualification?' },
+  { value: 'certification',     label: 'Certification possession',   template: 'Do you currently hold a {item} certification?' },
+
+  // --- Availability & Schedule ---
+  { value: 'availability',      label: 'Schedule availability',      template: 'Are you available to work {item} hours?' },
+  { value: 'shift',             label: 'Shift preference',           template: 'How open are you to working the {item} shift?' },
+];
+
+export const buildQuestionText = (questionStyle: string | null | undefined, itemName: string): string => {
+  const style = QUESTION_STYLE_OPTIONS.find(o => o.value === questionStyle);
+  const template = style?.template ?? 'Rate your {item} skill';
+  return template.replace('{item}', itemName);
+};

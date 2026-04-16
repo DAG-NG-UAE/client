@@ -83,6 +83,7 @@ export interface RequisitionPreferenceItem {
   pref_key: string;
   field_type: string;
   category_label: string;
+  question_style?: string | null;
   full_skill_list: PreferenceSkill[] | null;
   ranking_options: PreferenceRankingOption[] | null;
   required_skill_id?: number | null;

@@ -4,6 +4,7 @@ export interface Preference {
     label: string;
     field_type: string;
     category: string;
+    question_style?: string | null;
     created_at: string;
     updated_at: string;
     updated_by: string;

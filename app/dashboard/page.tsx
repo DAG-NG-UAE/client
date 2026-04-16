@@ -245,20 +245,20 @@ const DashboardPage = () => {
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
           <KPICard
             title="Offer Accepted"
-            value={data?.revise_offers || 0}
+            value={data?.funnel_offer_accepted || 0}
             icon={<ThumbUpIcon />}
             color="#16a34a"
-            blink={(data?.revise_offers || 0) > 0}
+            blink={(data?.funnel_offer_accepted || 0) > 0}
             // onClick={() => router.push('/offers/revision_requested')}
           />
         </Box>
         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 45%', md: '1 1 30%' }, minWidth: 0 }}>
           <KPICard
             title="Offer Rejected"
-            value={data?.revise_offers || 0}
+            value={data?.funnel_offer_rejected || 0}
             icon={<ThumbDownIcon />}
             color="#dc2626"
-            blink={(data?.revise_offers || 0) > 0}
+            blink={(data?.funnel_offer_rejected || 0) > 0}
             // onClick={() => router.push('/offers/revision_requested')}
           />
         </Box>
@@ -301,9 +301,9 @@ const DashboardPage = () => {
         </Box>
 
         {/* Recent Activity */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        {/* <Box sx={{ flex: 1, minWidth: 0 }}>
              <RecentActivity />
-        </Box>
+        </Box> */}
       </Box>
     </Box>
   );

@@ -61,7 +61,7 @@ import {
     updateOptionValueAction,
     createPreferenceAction
 } from '@/redux/slices/preferences';
-import { AppRole } from '@/utils/constants';
+import { AppRole, QUESTION_STYLE_OPTIONS } from '@/utils/constants';
 import withAuth from '@/components/auth/withAuth';
 
 const PreferencePage = () => {
@@ -97,7 +97,8 @@ const PreferencePage = () => {
         label: '',
         field_type: 'dropdown',
         category: 'both',
-        is_linear: true
+        is_linear: true,
+        question_style: '' as string
     });
 
     // Initial Fetch for Categories (Tier 1)
@@ -176,9 +177,10 @@ const PreferencePage = () => {
                 label: categoryModal.label,
                 field_type: categoryModal.field_type,
                 category: categoryModal.category,
-                is_linear: categoryModal.is_linear
+                is_linear: categoryModal.is_linear,
+                question_style: categoryModal.question_style || null
             });
-            setCategoryModal({ open: false, label: '', field_type: 'dropdown', category: 'both', is_linear: true });
+            setCategoryModal({ open: false, label: '', field_type: 'dropdown', category: 'both', is_linear: true, question_style: '' });
         } catch (err) { }
     };
 
@@ -527,6 +529,33 @@ const PreferencePage = () => {
                                 </MenuItem>
                             </Select>
                         </FormControl>
+
+                        <FormControl fullWidth>
+                            <InputLabel>Question Style</InputLabel>
+                            <Select
+                                value={categoryModal.question_style}
+                                label="Question Style"
+                                onChange={(e) => setCategoryModal({ ...categoryModal, question_style: e.target.value })}
+                            >
+                                {QUESTION_STYLE_OPTIONS.map(opt => (
+                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        {categoryModal.question_style && (() => {
+                            const preview = QUESTION_STYLE_OPTIONS.find(o => o.value === categoryModal.question_style);
+                            return (
+                                <Box sx={{ px: 2, py: 1.5, borderRadius: 2, bgcolor: alpha(theme.palette.info.main, 0.06), border: `1px dashed ${alpha(theme.palette.info.main, 0.3)}` }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.info.main, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                                        Candidate will see
+                                    </Typography>
+                                    <Typography variant="body2" color="text.primary">
+                                        "{preview?.template.replace('{item}', 'Python')}"
+                                    </Typography>
+                                </Box>
+                            );
+                        })()}
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>
