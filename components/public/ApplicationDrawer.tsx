@@ -22,6 +22,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Requisition, RequisitionPreference } from '@/interface/requisition';
 import { apply } from '@/api/candidate';
 import { enqueueSnackbar } from 'notistack';
+import { buildQuestionText } from '@/utils/constants';
 
 // Reusable Form Input Component (Internal to this file for now)
 interface FormInputProps {
@@ -94,10 +95,10 @@ interface ApplicationDrawerProps {
 export default function ApplicationDrawer({ open, onClose, careerDetails, requisitionPreference, requisitionId }: ApplicationDrawerProps) {
   // Form field states
   // console.log(`requisition preference => ${JSON.stringify(requisitionPreference)}`)
-  const [fullName, setFullName] = useState('Nekabari Isabella Kpai');
-  const [emailAddress, setEmailAddress] = useState('isabellakpai@gmail.com');
-  const [phoneNumber, setPhoneNumber] = useState('08100000000');
-  const [expectedSalary, setExpectedSalary] = useState('100000000');
+  const [fullName, setFullName] = useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [expectedSalary, setExpectedSalary] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -530,7 +531,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                       : (hasSkills ? item.full_skill_list?.[0]?.name : null);
 
                     const labelText = skillName
-                      ? `Rate your ${skillName} skill`
+                      ? buildQuestionText(item.question_style, skillName)
                       : item.category_label;
 
                     return (

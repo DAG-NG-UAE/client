@@ -19,9 +19,9 @@ export const CalendarHeader = () => {
                     {displayDate}
                 </Typography>
                 <Stack direction="row" spacing={0} sx={{ border: '1px solid #e2e8f0', borderRadius: 2, overflow: 'hidden' }}>
-                    <IconButton size="small" sx={{ borderRadius: 0, borderRight: '1px solid #e2e8f0', px: 1 }}><ArrowBackIos sx={{ fontSize: 12 }} /></IconButton>
-                    <Button size="small" sx={{ textTransform: 'none', color: '#1e293b', fontWeight: 700, px: 2, borderRight: '1px solid #e2e8f0', borderRadius: 0, bgcolor: '#f8fafc' }}>Today</Button>
-                    <IconButton size="small" sx={{ borderRadius: 0, px: 1 }}><ArrowForwardIos sx={{ fontSize: 12 }} /></IconButton>
+                    {/* <IconButton size="small" sx={{ borderRadius: 0, borderRight: '1px solid #e2e8f0', px: 1 }}><ArrowBackIos sx={{ fontSize: 12 }} /></IconButton> */}
+                    {/* <Button size="small" sx={{ textTransform: 'none', color: '#1e293b', fontWeight: 700, px: 2, borderRight: '1px solid #e2e8f0', borderRadius: 0, bgcolor: '#f8fafc' }}>Today</Button> */}
+                    {/* <IconButton size="small" sx={{ borderRadius: 0, px: 1 }}><ArrowForwardIos sx={{ fontSize: 12 }} /></IconButton> */}
                 </Stack>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

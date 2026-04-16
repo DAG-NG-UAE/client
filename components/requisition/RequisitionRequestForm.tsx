@@ -30,6 +30,14 @@ import { AppRole } from "@/utils/constants";
 import JobDescription from "@/components/requisition/JobDescription";
 import { convertToMarkdown } from "@/utils/documentConverter";
 import { getLoggedInUserManager } from "@/api/user";
+import { searchInterviewers } from "@/api/interview";
+
+interface InterviewerResult {
+  id: string;
+  displayName: string;
+  mail: string;
+  jobTitle: string;
+}
 
 // --- Mock Data Constants ---
 
@@ -86,6 +94,9 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
 
   // Manager
   const [reportingManager, setReportingManager] = useState("");
+  const [managerInput, setManagerInput] = useState("");
+  const [managerOptions, setManagerOptions] = useState<InterviewerResult[]>([]);
+  const [isSearchingManager, setIsSearchingManager] = useState(false);
   const [hodEmail, setHodEmail] = useState("isabella.k@bajajnigeria.com");
 
   // Content
@@ -144,6 +155,25 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
       setRaisedBy(user.full_name);
     }
   }, [user, raisedBy]);
+
+  useEffect(() => {
+    if (!managerInput || managerInput.length < 2) {
+      setManagerOptions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingManager(true);
+      try {
+        const results = await searchInterviewers(managerInput);
+        setManagerOptions(results || []);
+      } catch {
+        setManagerOptions([]);
+      } finally {
+        setIsSearchingManager(false);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [managerInput]);
 
   useEffect(() => {
     if (user?.role_name) {
@@ -276,7 +306,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
           label="Request Date"
           value={requestDate}
           onChange={(newValue) => setRequestDate(newValue)}
-          readOnly
+          maxDate={dayjs().add(1, 'year')}
           slotProps={{ textField: { fullWidth: true } }}
         />
       </Box>
@@ -307,7 +337,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
           fullWidth
           required
           label="Requisition Internal Name"
-          placeholder="e.g. Q1 Expansion Data Team"
+          placeholder="e.g. JobTitle_Location_reason(New or Replacement)"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
         />
@@ -542,12 +572,42 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
 
       {/* --- Row: Managers --- */}
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-        <TextField
-          fullWidth
-          required
-          label="Reporting Manager"
-          value={reportingManager}
-          onChange={(e) => setReportingManager(e.target.value)}
+        <Autocomplete
+          options={managerOptions}
+          getOptionLabel={(option) => option.displayName}
+          filterOptions={(x) => x}
+          loading={isSearchingManager}
+          inputValue={managerInput}
+          onInputChange={(_, value) => {
+            setManagerInput(value);
+            if (!value) setReportingManager("");
+          }}
+          onChange={(_, selected) => {
+            if (selected) {
+              setReportingManager(selected.mail);
+              setManagerInput(selected.mail);
+            }
+          }}
+          renderOption={(props, option) => {
+            const { key, ...rest } = props as any;
+            return (
+              <Box component="li" key={key} {...rest}>
+                <Box>
+                  <Typography variant="body2" fontWeight={600}>{option.displayName}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{option.jobTitle}</Typography>
+                  <Typography variant="caption" color="text.disabled">{option.mail}</Typography>
+                </Box>
+              </Box>
+            );
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              required
+              label="Reporting Manager"
+              placeholder="Type a name to search..."
+            />
+          )}
         />
       </Box>
 
