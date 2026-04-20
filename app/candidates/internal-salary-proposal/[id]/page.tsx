@@ -410,7 +410,7 @@ const InternalApprovalPage = () => {
                              </Stack>
                         </Box>
 
-                        {!isArchived && (
+                        {/* {!isArchived && (
                             <Button 
                                 variant="contained" 
                                 fullWidth 
@@ -420,7 +420,7 @@ const InternalApprovalPage = () => {
                             >
                                 Resend Notifications
                             </Button>
-                        )}
+                        )} */}
 
                         {/* {!isArchived && (
                             <>
