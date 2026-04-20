@@ -21,7 +21,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Skeleton
+  Skeleton,
+  CircularProgress
 } from '@mui/material';
 import {
   Visibility,
@@ -238,6 +239,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
   const [showSendOffer, setShowSendOffer] = useState(false);
   const [generatedOfferId, setGeneratedOfferId] = useState('');
   const [generatedOfferToken, setGeneratedOfferToken] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Sensors for DnD
   const sensors = useSensors(
@@ -380,6 +382,7 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
       enqueueSnackbar("Reporting Manager is required", { variant: "error" });
       return;
     }
+    setIsSubmitting(true);
 
     // 2. Prepare Clauses Mapping
     const clausesPayload = selectedClauses?.map((clause, index) => ({
@@ -421,19 +424,22 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
 
     console.log(`payload: ${JSON.stringify(payload)}`)
 
-    if (existingOfferId) {
-      await updateOffer(payload, existingOfferId);
-      dispatch(clearOfferState())
-      enqueueSnackbar("Offer updated successfully", { variant: "success" });
-
-    } else {
-      const response = await generateOffer(payload);
-      if (response.offer_id && response.token) {
-        enqueueSnackbar(`Offer generated and saved successfully`, { variant: "success" });
-        setGeneratedOfferId(response.offer_id);
-        setGeneratedOfferToken(response.token);
-        setShowSendOffer(true);
+    try {
+      if (existingOfferId) {
+        await updateOffer(payload, existingOfferId);
+        dispatch(clearOfferState())
+        enqueueSnackbar("Offer updated successfully", { variant: "success" });
+      } else {
+        const response = await generateOffer(payload);
+        if (response.offer_id && response.token) {
+          enqueueSnackbar(`Offer generated and saved successfully`, { variant: "success" });
+          setGeneratedOfferId(response.offer_id);
+          setGeneratedOfferToken(response.token);
+          setShowSendOffer(true);
+        }
       }
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -545,9 +551,9 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
           </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" color="inherit" size='small'>
+          {/* <Button variant="outlined" color="inherit" size='small'>
             Save Draft
-          </Button>
+          </Button> */}
           <Button
             variant="outlined"
             startIcon={<Visibility />}
@@ -557,7 +563,14 @@ export default function OfferGenerator({ candidateId, existingOfferId }: OfferGe
           >
             {isPreviewMode ? "Exit Preview" : "Preview as Candidate"}
           </Button>
-          <Button variant="contained" startIcon={<Send />} color="primary" size='small' onClick={handleSendOffer}>
+          <Button
+            variant="contained"
+            startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <Send />}
+            disabled={!selectedClauses?.length || isSubmitting}
+            color="primary"
+            size='small'
+            onClick={handleSendOffer}
+          >
             Finalize & Send Offer
           </Button>
         </Box>

@@ -86,6 +86,9 @@ const EditPackagePage = () => {
     const [searchResults, setSearchResults] = useState<Interviewer[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedApprovers, setSelectedApprovers] = useState<Interviewer[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const isFormValid = totals.annualGross > 0 && totals.monthlyNet > 0 && selectedApprovers.length > 0;
 
     // Simple debounce implementation for search
     useEffect(() => {
@@ -167,26 +170,31 @@ const EditPackagePage = () => {
     };
 
     const handleSaveAndProceed = async () => {
-        const emailList = selectedApprovers.map(a => a.mail).filter(e => e);
-        const payload = {
-            candidateId: id,
-            requisitionId: selectedCandidate?.requisition_id || 'REQ_DEFAULT',
-            emails: emailList.length > 0 ? emailList : ["isabellakpai@gmail.com", "okorofth@gmail.com"],
-            internalSalaryOffer: {
-                annual_salary: totals.annualGross,
-                monthly_net: totals.monthlyNet,
-                currency,
-                bha_breakdown: {
-                    basic: components.basic,
-                    housing: components.housing,
-                    transport: components.transport,
-                    other_allowances: components.variable
-                },
-                benefits: benefits.filter(b => b.active).map(b => ({ name: b.name }))
-            }
-        };
-        await callSendInternalSalaryOffer(payload);
-        router.push(`/candidates/internal-salary-proposal/${id}`);
+        setIsSubmitting(true);
+        try {
+            const emailList = selectedApprovers.map(a => a.mail).filter(e => e);
+            const payload = {
+                candidateId: id,
+                requisitionId: selectedCandidate?.requisition_id || 'REQ_DEFAULT',
+                emails: emailList.length > 0 ? emailList : ["isabellakpai@gmail.com", "okorofth@gmail.com"],
+                internalSalaryOffer: {
+                    annual_salary: totals.annualGross,
+                    monthly_net: totals.monthlyNet,
+                    currency,
+                    bha_breakdown: {
+                        basic: components.basic,
+                        housing: components.housing,
+                        transport: components.transport,
+                        other_allowances: components.variable
+                    },
+                    benefits: benefits.filter(b => b.active).map(b => ({ name: b.name }))
+                }
+            };
+            await callSendInternalSalaryOffer(payload);
+            router.push(`/candidates/internal-salary-proposal/${id}`);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -426,7 +434,8 @@ const EditPackagePage = () => {
                 <Button onClick={() => router.back()} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
                 <Button
                     variant="contained"
-                    startIcon={<CheckCircleIcon />}
+                    startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <CheckCircleIcon />}
+                    disabled={!isFormValid || isSubmitting}
                     sx={{ textTransform: 'none', fontWeight: 700, px: 4 }}
                     onClick={handleSaveAndProceed}
                 >
