@@ -13,6 +13,7 @@ import {
   cancelInterview,
   getCandidateTotalEvaluation,
   getCandidateEvaluationDetails,
+  generateCompetencyToken,
 } from "@/api/candidate";
 import { dispatch } from "../dispatchHandle";
 import { enqueueSnackbar } from "notistack";
@@ -261,6 +262,22 @@ export const callGetCandidateEvaluationDetails = async (
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
     enqueueSnackbar("Failed to load evaluation details. Please try again.", { variant: "error" });
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callGenerateCompetencyToken = async (candidateId: string, requisitionId: string) => {
+  try {
+    dispatch(startLoading());
+    const result = await generateCompetencyToken(candidateId, requisitionId);
+    // you should get the candidates for the requisition you are on again 
+    await fetchCandidatesForRequisition(requisitionId)
+    enqueueSnackbar("Competency link sent to candidate.", { variant: "success" });
+    return result;
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to send competency link. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }

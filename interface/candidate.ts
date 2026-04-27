@@ -81,6 +81,9 @@ export interface CandidateProfile {
   match_score?: number;
   requirement_match?: RequirementMatch[];
   share_token?: string;
+
+  //determine if you will show the share competency link button or not 
+  competency_profile_completed_at?: string
 }
 
 export interface RequirementMatch {
