@@ -6,7 +6,7 @@ import SummaryStats from '../../components/SummaryStats';
 import Filters from '../../components/Filters';
 import withAuth from '@/components/auth/withAuth';
 import { AppRole } from '@/utils/constants';
-import { fetchRequisitions, setSelectedRequisition } from '@/redux/slices/requisition';
+import { fetchRequisitions, setSelectedRequisition, clearError } from '@/redux/slices/requisition';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import TableComponent from '@/components/Table/Table';
@@ -84,7 +84,7 @@ const RequisitionPage = () => {
           actions={(requisition) => <RequisitionRowActions requisition={requisition} />}
           loading={status == true}
           error={error}
-          onRetry={() => fetchRequisitions()}
+          onRetry={() => { dispatch(clearError()); fetchRequisitions(); }}
           onRowClick={handleRowClick}
           keyExtractor={(requisitions) => requisitions.requisition_id}
           totalCount={meta?.total || 0}

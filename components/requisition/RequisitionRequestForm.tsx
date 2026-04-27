@@ -97,7 +97,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   const [managerInput, setManagerInput] = useState("");
   const [managerOptions, setManagerOptions] = useState<InterviewerResult[]>([]);
   const [isSearchingManager, setIsSearchingManager] = useState(false);
-  const [hodEmail, setHodEmail] = useState("isabella.k@bajajnigeria.com");
+  const [hodEmail, setHodEmail] = useState("");
 
   // Content
   const [justification, setJustification] = useState("");
