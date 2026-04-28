@@ -16,7 +16,7 @@ import {
   Paper,
   IconButton,
   CircularProgress,
-  ListItemText,
+  ListItemText
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useParams, useRouter } from "next/navigation";
@@ -341,6 +341,7 @@ export default function AddCandidatePage() {
                   sx={{ borderRadius: 2 }}
                 >
                   <MenuItem value="" disabled>Select Source</MenuItem>
+                  <MenuItem value="LinkedIn">LinkedIn</MenuItem>
                   <MenuItem value="Referral">Referral </MenuItem>
                   <MenuItem value="Direct Application">Direct Application</MenuItem>
                   <MenuItem value="Agency">Agency</MenuItem>

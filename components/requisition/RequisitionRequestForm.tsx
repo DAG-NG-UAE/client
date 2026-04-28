@@ -45,18 +45,19 @@ const LOCATIONS_NIGERIA = ["Lagos", "Kano", "Abuja", "Port-Harcourt", "Ibadan", 
 const DEPARTMENTS = [
   "Audit & Accounts",
   "Digital",
+  "IT",
   "Finance & Accounts",
   "HR & Admin",
   "Logistics",
   "Lubricants",
-  "Production 2W",
-  "Production 3W",
-  "Sales 2W",
-  "Sales 3W",
-  "Service 2W",
-  "Service 2W - Showrrom",
-  "Service 3W",
-  "Showroom - Sales 2W",
+  "Production 2wh",
+  "Production 3wh",
+  "Sales 2wh",
+  "Sales 3wh",
+  "Service 2wh",
+  "Service 2wh - Showrrom",
+  "Service 3wh",
+  "Showroom - Sales 2wh",
   "Spares",
   "Spares-Warehouse",
   "Treasury",
@@ -339,7 +340,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
             onChange={(e) => setDepartment(e.target.value)}
           >
             {DEPARTMENTS.map((d) => (
-              <MenuItem key={d} value={d}>{d}</MenuItem>
+              <MenuItem key={d} value={d.replace(/\s*&\s*/g, "_").replace(/\s*-\s*/g, "_").replace(/\s+/g, "_").replace(/_+/g, "_")}>{d}</MenuItem>
             ))}
           </Select>
         </FormControl>

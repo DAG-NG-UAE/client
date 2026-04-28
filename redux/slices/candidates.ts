@@ -95,6 +95,12 @@ export const candidateSlice = createSlice({
     stopLoading(state) {
       state.loading = false;
     },
+    updateCandidate(state, action: PayloadAction<Partial<CandidateProfile> & { candidate_id: string }>) {
+      const idx = state.candidates.findIndex(c => c.candidate_id === action.payload.candidate_id);
+      if (idx !== -1) {
+        state.candidates[idx] = { ...state.candidates[idx], ...action.payload };
+      }
+    },
     clearCandidates(state) {
       state.candidates = [];
       state.selectedCandidate = null;
@@ -115,6 +121,7 @@ export const {
   clearSelectedCandidate,
   clearError,
   stopLoading,
+  updateCandidate,
   clearCandidates,
 } = candidateSlice.actions;
 
@@ -271,8 +278,7 @@ export const callGenerateCompetencyToken = async (candidateId: string, requisiti
   try {
     dispatch(startLoading());
     const result = await generateCompetencyToken(candidateId, requisitionId);
-    // you should get the candidates for the requisition you are on again 
-    await fetchCandidatesForRequisition(requisitionId)
+    dispatch(updateCandidate({ candidate_id: candidateId, competency_profile_completed_at: new Date().toISOString() }));
     enqueueSnackbar("Competency link sent to candidate.", { variant: "success" });
     return result;
   } catch (error: any) {
