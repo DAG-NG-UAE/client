@@ -16,6 +16,7 @@ import {
   Paper,
   IconButton,
   CircularProgress,
+  ListItemText,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useParams, useRouter } from "next/navigation";
@@ -118,6 +119,7 @@ export default function AddCandidatePage() {
   const [location, setLocation] = useState("");
   const [source, setSource] = useState("");
   const [otherSource, setOtherSource] = useState("");
+  const [stage, setStage] = useState("");
 
   // File handlers
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,7 +145,8 @@ export default function AddCandidatePage() {
       cvFile !== null &&
       privacyConsent &&
       source !== "" &&
-      (source === "Other" ? otherSource !== "" : true),
+      (source === "Other" ? otherSource !== "" : true) &&
+      stage !== "",
     [fullName, emailAddress, phoneNumber, availability, experience, location, expectedSalary, cvFile, privacyConsent, source, otherSource]
   );
 
@@ -172,6 +175,8 @@ export default function AddCandidatePage() {
     if (cvFile) formData.append("cvFile", cvFile, cvFile.name);
     formData.append("requisitionPositionSlot", location);
     formData.append("isSlug", "false");
+    formData.append("old_status", "null");
+    formData.append("new_status", stage);
 
     try {
       const requisitionId = selectedRequisition?.requisition_id!
@@ -338,10 +343,13 @@ export default function AddCandidatePage() {
                   sx={{ borderRadius: 2 }}
                 >
                   <MenuItem value="" disabled>Select Source</MenuItem>
-                  <MenuItem value="Career Website">Career Website</MenuItem>
-                  <MenuItem value="LinkedIn">LinkedIn</MenuItem>
-                  <MenuItem value="Job Mag">Job Mag</MenuItem>
-                  <MenuItem value="Indeed">Indeed</MenuItem>
+                  <MenuItem value="Referral">Referral </MenuItem>
+                  <MenuItem value="Direct Application">Direct Application</MenuItem>
+                  <MenuItem value="Agency">Agency</MenuItem>
+                  <MenuItem value="Social Media">Social Media</MenuItem>
+                  <MenuItem value="Headhunted">Headhunted</MenuItem>
+                  <MenuItem value="Career Fair">Career Fair</MenuItem>
+                  <MenuItem value="Job board">Job board</MenuItem>
                   <MenuItem value="Other">Other</MenuItem>
                 </Select>
               </Box>
@@ -364,6 +372,71 @@ export default function AddCandidatePage() {
                 value={coverLetter}
                 onChange={(e) => setCoverLetter(e.target.value)}
               />
+            </Box>
+
+            <Divider sx={{ my: 4 }} />
+
+            {/* Recruitment Stage */}
+            <Box mb={4}>
+              <SectionTitle title="Recruitment Stage" />
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Select the stage this candidate is entering. This determines where they will appear in the pipeline.
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                value={stage}
+                onChange={(e) => setStage(e.target.value)}
+                sx={{ borderRadius: 2 }}
+                renderValue={(selected) => {
+                  if (!selected) return <Typography color="text.disabled">Select a stage</Typography>;
+                  const labels: Record<string, string> = {
+                    shortlisted: "Shortlisted",
+                    interviewed: "Interviewed",
+                    pre_offer: "Pre-Offer",
+                    internal_salary_proposal: "Internal Salary Proposal",
+                    approved_for_offer: "Approved for Offer",
+                  };
+                  return labels[selected] ?? selected;
+                }}
+              >
+                <MenuItem value="" disabled>Select a stage</MenuItem>
+                <MenuItem value="shortlisted">
+                  <ListItemText
+                    primary="Shortlisted"
+                    secondary="Candidate has been reviewed and selected to move forward in the process."
+                    slotProps={{ secondary: { sx: { fontSize: "0.75rem" } } }}
+                  />
+                </MenuItem>
+                <MenuItem value="interviewed">
+                  <ListItemText
+                    primary="Interviewed"
+                    secondary="Candidate has already completed one or more interview rounds."
+                    slotProps={{ secondary: { sx: { fontSize: "0.75rem" } } }}
+                  />
+                </MenuItem>
+                <MenuItem value="pre_offer">
+                  <ListItemText
+                    primary="Pre-Offer"
+                    secondary="Candidate is in pre-offer discussion — terms and salary are being explored informally."
+                    slotProps={{ secondary: { sx: { fontSize: "0.75rem" } } }}
+                  />
+                </MenuItem>
+                <MenuItem value="internal_salary_proposal">
+                  <ListItemText
+                    primary="Internal Salary Proposal"
+                    secondary="An internal salary package is being drafted and routed for internal approval."
+                    slotProps={{ secondary: { sx: { fontSize: "0.75rem" } } }}
+                  />
+                </MenuItem>
+                <MenuItem value="approved_for_offer">
+                  <ListItemText
+                    primary="Approved for Offer"
+                    secondary="Candidate has been approved internally — a formal offer letter can now be extended."
+                    slotProps={{ secondary: { sx: { fontSize: "0.75rem" } } }}
+                  />
+                </MenuItem>
+              </Select>
             </Box>
 
             <Divider sx={{ my: 4 }} />
