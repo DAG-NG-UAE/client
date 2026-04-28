@@ -163,7 +163,7 @@ export default function ApplyPage(props: { params: Promise<{ id: string }> }) {
             
             <Stack direction="row" spacing={2} divider={<Box sx={{ width: 4, height: 4, bgcolor: 'white', borderRadius: '50%', alignSelf: 'center' }} />} sx={{ opacity: 0.9 }}>
                <Typography variant="h6">
-                 {careerDetails?.department || searchParams.get('department')}
+                 {((careerDetails?.department)?.replace(/_/g, ' ') || searchParams.get('department'))?.replace(/_/g, ' ')}
                </Typography>
                {(careerDetails?.requisition_positions?.length || searchParams.get('location')) && (
                  <Typography variant="h6">

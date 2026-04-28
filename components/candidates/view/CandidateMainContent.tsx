@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Box, Tabs, Tab, Paper, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Tabs, Tab, Paper, Typography, Table, TableBody, TableCell, TableRow, TableHead, CircularProgress } from '@mui/material';
 import { CandidateProfile } from '@/interface/candidate';
 import CandidateRequirementDetail from '../CandidateRequirementDetail';
 import { API_BASE_URL } from '@/api/axiosInstance';
 import CandidateActivityHistory from './CandidateActivityHistory';
+import { getCandidateCompetencyProfile } from '@/api/candidate';
 
 interface Props {
     candidate: CandidateProfile;
@@ -37,9 +38,18 @@ function CustomTabPanel(props: TabPanelProps) {
 
 const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
     const [value, setValue] = useState(0);
+    const [competencyData, setCompetencyData] = useState<Record<string, string> | null>(null);
+    const [competencyLoading, setCompetencyLoading] = useState(false);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
+        if (newValue === 4 && !competencyData && !competencyLoading) {
+            setCompetencyLoading(true);
+            getCandidateCompetencyProfile(candidate.candidate_id)
+                .then((data) => setCompetencyData(data))
+                .catch(() => setCompetencyData(null))
+                .finally(() => setCompetencyLoading(false));
+        }
     };
 
     // Construct Resume URL
@@ -64,6 +74,7 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
                     <Tab label="Activity History" sx={{ textTransform: 'none', fontWeight: 600 }} />
                     <Tab label="Requirement Match" sx={{ textTransform: 'none', fontWeight: 600 }} />
                     <Tab label="Notes" sx={{ textTransform: 'none', fontWeight: 600 }} />
+                    <Tab label="Competency Profile" sx={{ textTransform: 'none', fontWeight: 600 }} />
                 </Tabs>
             </Box>
 
@@ -109,6 +120,53 @@ const CandidateMainContent: React.FC<Props> = ({ candidate }) => {
             {/* NOTES TAB */}
             <CustomTabPanel value={value} index={3}>
                 <Typography color="text.secondary">Notes section.</Typography>
+            </CustomTabPanel>
+
+            {/* COMPETENCY PROFILE TAB */}
+            <CustomTabPanel value={value} index={4}>
+                {competencyLoading && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                        <CircularProgress />
+                    </Box>
+                )}
+
+                {!competencyLoading && !competencyData && (
+                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                        <Typography color="text.secondary">No competency profile uploaded yet.</Typography>
+                    </Box>
+                )}
+
+                {!competencyLoading && competencyData && (
+                    <Box sx={{ overflowX: 'auto' }}>
+                        <Table size="small" sx={{ borderCollapse: 'collapse' }}>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: 'action.selected' }}>
+                                    <TableCell sx={{ fontWeight: 700, width: '45%', border: '1px solid', borderColor: 'divider', py: 1.5, px: 2 }}>
+                                        Field
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 700, border: '1px solid', borderColor: 'divider', py: 1.5, px: 2 }}>
+                                        Value
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {Object.entries(competencyData).map(([key, val], i) => (
+                                    <TableRow
+                                        key={key}
+                                        sx={{ bgcolor: i % 2 === 0 ? 'background.paper' : 'action.hover' }}
+                                    >
+                                        <TableCell sx={{ border: '1px solid', borderColor: 'divider', py: 1.25, px: 2, fontWeight: 500, color: 'text.primary', whiteSpace: 'nowrap' }}>
+                                            {key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                                        </TableCell>
+                                        <TableCell sx={{ border: '1px solid', borderColor: 'divider', py: 1.25, px: 2, color: 'text.secondary' }}>
+                                            {val || '—'}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </Box>
+                )}
             </CustomTabPanel>
         </Paper>
     );

@@ -110,7 +110,6 @@ export default function AddCandidatePage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [expectedSalary, setExpectedSalary] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
-  const [privacyConsent, setPrivacyConsent] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -143,11 +142,10 @@ export default function AddCandidatePage() {
       location !== "" &&
       expectedSalary !== "" &&
       cvFile !== null &&
-      privacyConsent &&
       source !== "" &&
       (source === "Other" ? otherSource !== "" : true) &&
       stage !== "",
-    [fullName, emailAddress, phoneNumber, availability, experience, location, expectedSalary, cvFile, privacyConsent, source, otherSource]
+    [fullName, emailAddress, phoneNumber, availability, experience, location, expectedSalary, cvFile, source, otherSource]
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -168,7 +166,7 @@ export default function AddCandidatePage() {
     formData.append("experience", experience);
     formData.append("expectedSalary", expectedSalary);
     formData.append("coverLetter", coverLetter);
-    formData.append("privacyConsent", String(privacyConsent));
+    formData.append("privacyConsent", "true");
     formData.append("source", source === "Other" ? otherSource : source);
     if (selectedRequisition?.position) formData.append("position", selectedRequisition.position);
     if (selectedRequisition?.department) formData.append("department", selectedRequisition.department);
@@ -333,7 +331,7 @@ export default function AddCandidatePage() {
               {/* Source */}
               <Box mb={3}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
-                  How did you hear about us? <Box component="span" sx={{ color: "#d32f2f" }}>*</Box>
+                  How did you get the candidate? <Box component="span" sx={{ color: "#d32f2f" }}>*</Box>
                 </Typography>
                 <Select
                   fullWidth
@@ -441,27 +439,7 @@ export default function AddCandidatePage() {
 
             <Divider sx={{ my: 4 }} />
 
-            {/* Privacy */}
-            <Box mb={4}>
-              <SectionTitle title="Privacy & Data Protection" />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={privacyConsent}
-                    onChange={(e) => setPrivacyConsent(e.target.checked)}
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    I confirm that I have read and understood the Company Recruitment Privacy Notice.{" "}
-                    <Box component="span" sx={{ color: "#d32f2f" }}>*</Box>
-                  </Typography>
-                }
-              />
-              <Typography variant="caption" color="text.secondary" display="block" mt={2} sx={{ lineHeight: 1.5 }}>
-                Data will be retained for 6 months.
-              </Typography>
-            </Box>
+            
 
             {/* Actions */}
             <Stack direction="row" justifyContent="space-between" alignItems="center">

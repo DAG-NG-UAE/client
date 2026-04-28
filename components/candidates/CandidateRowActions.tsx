@@ -122,8 +122,18 @@ export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, childr
     return (
         <Box sx={{ display: 'flex', gap: 1 }}>
             {children}
-            <ShareCompetencyLinkButton candidate={candidate} />
-            <UploadCompetencyButton candidate={candidate} />
+            {candidate.current_status === 'shortlisted' && (
+                <>
+                    <ShareCompetencyLinkButton candidate={candidate}
+                    ></ShareCompetencyLinkButton>
+
+                    {candidate.competency_profile_completed_at == null && (
+                        <UploadCompetencyButton candidate={candidate}/>
+                    )}
+                    
+                </>
+                
+            )}
             <Tooltip title="View Profile">
                 <IconButton 
                     size="small" 

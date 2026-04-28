@@ -34,6 +34,7 @@ export default function CompetencyUploadPage() {
   const candidateId = params?.id ? String(params.id) : "";
   const [file, setFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [profile, setProfile] = useState<ProfileRow[] | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -82,9 +83,11 @@ export default function CompetencyUploadPage() {
 
   const handleUpload = async () => {
     if (!profile || !candidateId) return;
-    const mapped = mapCompetencyProfile(profile);
+    setUploading(true);
+    const { role_applied_for, ...mapped } = mapCompetencyProfile(profile);
     console.log("Mapped competency profile:", { ...mapped, candidate_id: candidateId });
-    await callUpdateCandidateStatus({ ...mapped, candidate_id: candidateId });
+    await callUpdateCandidateStatus({ ...mapped, candidate_id: candidateId, competency_profile_completed_at: new Date().toISOString() });
+    setUploading(false);
   };
 
   const clearAll = () => {
@@ -167,7 +170,7 @@ export default function CompetencyUploadPage() {
             )}
             <Button
               variant="contained"
-              disabled={!file || parsing}
+              disabled={!file || parsing || uploading}
               onClick={handleParse}
               startIcon={parsing ? <CircularProgress size={16} color="inherit" /> : undefined}
             >
@@ -191,8 +194,8 @@ export default function CompetencyUploadPage() {
                   Step 2 — Review &amp; Upload
                 </Typography>
               </Stack>
-              <Button variant="contained" color="success" onClick={handleUpload}>
-                Upload Profile
+              <Button variant="contained" color="success" onClick={handleUpload} disabled={uploading}>
+                {uploading ? "Uploading..." : "Upload Profile"}
               </Button>
             </Stack>
 

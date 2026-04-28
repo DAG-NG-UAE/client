@@ -230,6 +230,16 @@ export const cancelInterview = async (interview_id: string) => {
   }
 };
 
+export const getCandidateCompetencyProfile = async (candidateId: string) => {
+  try {
+    const response = await axiosInstance.get(`candidate/competency?candidateId=${candidateId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching competency profile:", error);
+    throw error;
+  }
+};
+
 export const generateCompetencyToken = async (candidateId: string, requisitionId: string) => {
   try {
     const response = await axiosInstance.post(`candidate/competency/token`, { candidateId, requisitionId });
