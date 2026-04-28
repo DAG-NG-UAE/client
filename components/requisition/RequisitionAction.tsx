@@ -1,5 +1,5 @@
 import { Requisition } from "@/interface/requisition";
-import { Edit, Visibility, PersonAdd, PeopleAlt } from "@mui/icons-material";
+import { Edit, Visibility, PeopleAlt, AssignmentInd, PersonAdd } from "@mui/icons-material";
 import { Box, IconButton, Tooltip, Link, alpha } from "@mui/material";
 
 const iconSx = (hoverColor: string) => ({
@@ -56,6 +56,17 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
           sx={iconSx('#6d28d9')}
         >
           <PeopleAlt fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title="Add Candidate Manually" arrow>
+        <IconButton
+          component={Link}
+          href={`/requisition/${requisition.requisition_id}/add-candidate`}
+          size="small"
+          sx={iconSx('#15803d')}
+        >
+          <AssignmentInd fontSize="small" />
         </IconButton>
       </Tooltip>
     </Box>

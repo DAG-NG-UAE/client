@@ -13,6 +13,7 @@ import {
   cancelInterview,
   getCandidateTotalEvaluation,
   getCandidateEvaluationDetails,
+  generateCompetencyToken,
 } from "@/api/candidate";
 import { dispatch } from "../dispatchHandle";
 import { enqueueSnackbar } from "notistack";
@@ -94,6 +95,12 @@ export const candidateSlice = createSlice({
     stopLoading(state) {
       state.loading = false;
     },
+    updateCandidate(state, action: PayloadAction<Partial<CandidateProfile> & { candidate_id: string }>) {
+      const idx = state.candidates.findIndex(c => c.candidate_id === action.payload.candidate_id);
+      if (idx !== -1) {
+        state.candidates[idx] = { ...state.candidates[idx], ...action.payload };
+      }
+    },
     clearCandidates(state) {
       state.candidates = [];
       state.selectedCandidate = null;
@@ -114,6 +121,7 @@ export const {
   clearSelectedCandidate,
   clearError,
   stopLoading,
+  updateCandidate,
   clearCandidates,
 } = candidateSlice.actions;
 
@@ -261,6 +269,21 @@ export const callGetCandidateEvaluationDetails = async (
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
     enqueueSnackbar("Failed to load evaluation details. Please try again.", { variant: "error" });
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callGenerateCompetencyToken = async (candidateId: string, requisitionId: string) => {
+  try {
+    dispatch(startLoading());
+    const result = await generateCompetencyToken(candidateId, requisitionId);
+    dispatch(updateCandidate({ candidate_id: candidateId, competency_profile_completed_at: new Date().toISOString() }));
+    enqueueSnackbar("Competency link sent to candidate.", { variant: "success" });
+    return result;
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to send competency link. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }

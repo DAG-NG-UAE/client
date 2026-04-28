@@ -41,7 +41,7 @@ const CoreDetails = ({ requisition }: CoreDetailsProps) => {
           <DetailItem label="Internal Job Title" value={requisition.position} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <DetailItem label="Department" value={requisition.department} />
+          <DetailItem label="Department" value={requisition.department?.replace(/_/g, ' ')} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <DetailItem label="Hiring Manager" value={requisition.requisition_raised_by} />

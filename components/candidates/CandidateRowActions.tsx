@@ -1,11 +1,12 @@
 import { CandidateProfile } from "@/interface/candidate";
 import { Button, IconButton, Tooltip, Box } from "@mui/material";
-import { Email, Assignment, Description, Visibility, MoveDown, Delete } from "@mui/icons-material";
-import React from "react";
+import { Email, Assignment, Description, Visibility, MoveDown, Delete, UploadFile, SendAndArchive } from "@mui/icons-material";
+import React, { useState } from "react";
 import Link from 'next/link';
-import { fetchSingleCandidate } from "@/redux/slices/candidates";
+import { callGenerateCompetencyToken } from "@/redux/slices/candidates";
 import { User } from "@/interface/user";
 import { AppRole } from "@/utils/constants";
+import LoadingOverlay from "@/components/common/LoadingOverlay";
 
 
 export const PingHiringManagersButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
@@ -57,6 +58,56 @@ export const GenerateOfferLetterButton = ({ candidate }: { candidate: Partial<Ca
 };
 
 
+export const ShareCompetencyLinkButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => {
+    const [loading, setLoading] = useState(false);
+
+    const completedAt = candidate.competency_profile_completed_at;
+    const alreadySent = completedAt != null;
+    const tooltipTitle = alreadySent
+        ? `Form shared on ${new Date(completedAt!).toLocaleDateString()}`
+        : "Share Competency Form Link";
+
+    const handleClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!candidate.candidate_id || !candidate.requisition_id) return;
+        setLoading(true);
+        await callGenerateCompetencyToken(candidate.candidate_id, candidate.requisition_id);
+        setLoading(false);
+    };
+
+    return (
+        <>
+            <LoadingOverlay open={loading} message="Sending competency link..." subtitle="We're generating a secure link for the candidate." />
+            <Tooltip title={tooltipTitle}>
+                <span>
+                    <IconButton
+                        size="small"
+                        onClick={handleClick}
+                        disabled={alreadySent}
+                        sx={{ color: 'text.secondary', '&:hover': { color: '#7c3aed' } }}
+                    >
+                        <SendAndArchive fontSize="small" />
+                    </IconButton>
+                </span>
+            </Tooltip>
+        </>
+    );
+};
+
+export const UploadCompetencyButton = ({ candidate }: { candidate: Partial<CandidateProfile> }) => (
+    <Tooltip title="Upload Competency Profile">
+        <IconButton
+            size="small"
+            component={Link}
+            href={`/candidates/competency/${candidate.candidate_id}`}
+            onClick={(e) => e.stopPropagation()}
+            sx={{ color: 'text.secondary', '&:hover': { color: '#0369a1' } }}
+        >
+            <UploadFile fontSize="small" />
+        </IconButton>
+    </Tooltip>
+);
+
 // New Actions for Applied Status
 interface AppliedActionsProps {
     candidate: Partial<CandidateProfile>;
@@ -71,6 +122,18 @@ export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, childr
     return (
         <Box sx={{ display: 'flex', gap: 1 }}>
             {children}
+            {candidate.current_status === 'shortlisted' && (
+                <>
+                    <ShareCompetencyLinkButton candidate={candidate}
+                    ></ShareCompetencyLinkButton>
+
+                    {candidate.competency_profile_completed_at == null && (
+                        <UploadCompetencyButton candidate={candidate}/>
+                    )}
+                    
+                </>
+                
+            )}
             <Tooltip title="View Profile">
                 <IconButton 
                     size="small" 

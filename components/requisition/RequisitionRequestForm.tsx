@@ -41,7 +41,28 @@ interface InterviewerResult {
 
 // --- Mock Data Constants ---
 
-const LOCATIONS_NIGERIA = ["Lagos", "Kano", "Abuja", "Port-Harcourt", "Ibadan", "Sokoto", "Onitsha", "Remote"];
+const LOCATIONS_NIGERIA = ["Lagos", "Kano", "Abuja", "Port-Harcourt", "Ibadan", "Sokoto", "Onitsha"];
+const DEPARTMENTS = [
+  "Audit & Accounts",
+  "Digital",
+  "IT",
+  "Finance & Accounts",
+  "HR & Admin",
+  "Logistics",
+  "Lubricants",
+  "Production 2wh",
+  "Production 3wh",
+  "Sales 2wh",
+  "Sales 3wh",
+  "Service 2wh",
+  "Service 2wh - Showrrom",
+  "Service 3wh",
+  "Showroom - Sales 2wh",
+  "Spares",
+  "Spares-Warehouse",
+  "Treasury",
+  "Tyres",
+];
 const JOB_REASONS = ["New Headcount", "Replacement"];
 const ACCOMMODATIONS = ["Bachelor", "Family"];
 const LEAVE_STATUSES = ["30 Days after 1 Year", "Yearly", "After 2 Years"];
@@ -97,7 +118,7 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
   const [managerInput, setManagerInput] = useState("");
   const [managerOptions, setManagerOptions] = useState<InterviewerResult[]>([]);
   const [isSearchingManager, setIsSearchingManager] = useState(false);
-  const [hodEmail, setHodEmail] = useState("isabella.k@bajajnigeria.com");
+  const [hodEmail, setHodEmail] = useState("");
 
   // Content
   const [justification, setJustification] = useState("");
@@ -311,14 +332,18 @@ const RequisitionRequestForm: React.FC<RequisitionRequestFormProps> = ({
         />
       </Box>
       <Box sx={{ flex: `1 1 ${HALF_WIDTH}`, maxWidth: HALF_WIDTH }}>
-        <TextField
-          fullWidth
-          required
-          label="Department"
-          placeholder="Department the hire will belong to"
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-        />
+        <FormControl fullWidth required>
+          <InputLabel>Department</InputLabel>
+          <Select
+            value={department}
+            label="Department"
+            onChange={(e) => setDepartment(e.target.value)}
+          >
+            {DEPARTMENTS.map((d) => (
+              <MenuItem key={d} value={d.replace(/\s*&\s*/g, "_").replace(/\s*-\s*/g, "_").replace(/\s+/g, "_").replace(/_+/g, "_")}>{d}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
 
       {/* --- Section 2: Position Details --- */}

@@ -16,7 +16,8 @@ export const PendingRequisitionColumns: TableColumn<Partial<Requisition>>[] = [
     },
     { 
         key: 'department', 
-        label: 'Department' 
+        label: 'Department', 
+        render: (row) => row.department?.replace(/_/g, ' ')
     },
     { 
         key: 'locations', 
@@ -35,7 +36,8 @@ export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
     }, 
     { 
         key: 'department', 
-        label: 'Department' 
+        label: 'Department', 
+        render: (row) => row.department?.replace(/_/g, ' ')
     },
     { 
         key: 'requisition_raised_by', 

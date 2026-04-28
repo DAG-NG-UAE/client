@@ -60,10 +60,12 @@ export function determineActions(currentStatus: CandidateStatusType): CandidateA
      case 'interviewed':
        return {
          progressionAction: {
-           label: 'Extend Offer',
-           actionType: 'EXTEND_OFFER',
-           description: 'Triggers the Offer Workflow (approval, salary details).',
-           triggersWorkflow: 'Offer',
+           label: 'Begin Pre-offer Discussion',
+           actionType: 'BEGIN_PRE_OFFER_DISCUSSION',
+           description: 'Simple status change; requires confirmation/notes.',
+           requiresConfirmation: false,
+           requiresNotes: false,
+           targetStatus: 'PRE_OFFER_DISCUSSION',
          },
          rejectionAction: {
            label: 'Reject Candidate',

@@ -219,6 +219,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       formData.append('cvFile', cvFile, cvFile.name);
     }
     formData.append('requisitionPositionSlot', location);
+    formData.append('isSlug', 'true');
 
     // Format Preferences
     // Format Preferences
