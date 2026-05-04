@@ -143,6 +143,20 @@ export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, childr
                     <Visibility fontSize="small" />
                 </IconButton>
             </Tooltip>
+
+            {(user?.role_name == AppRole.HiringManager && candidate.current_status == 'screened') && (
+                <>
+                    <Tooltip title="Move Candidate">
+                        <IconButton 
+                            size="small" 
+                            onClick={(e) => { e.stopPropagation(); onMove && onMove(candidate); }}
+                        sx={{ color: 'text.secondary', '&:hover': { color: 'info.main' } }}
+                        >
+                            <MoveDown fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </>
+            )}
             
             {(user?.role_name == AppRole.Recruiter || user?.role_name == AppRole.HeadOfHr || user?.role_name == AppRole.HrManager) && (
                 <>

@@ -227,7 +227,7 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                                     />
                                 )}
                             </Box>
-                            {(user?.role_name === AppRole.Recruiter || user?.role_name === AppRole.HeadOfHr || user?.role_name === AppRole.HrManager) && (
+                            {(user?.role_name === AppRole.Recruiter || user?.role_name === AppRole.HeadOfHr || user?.role_name === AppRole.HrManager || user?.role_name == AppRole.HiringManager) && (
                             <Box sx={{ display: 'flex', gap: 1 }}>
                                 {rejectionAction && (
                                     <Button

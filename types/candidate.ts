@@ -1,5 +1,6 @@
 export type CandidateStatusType =
   | "applied"
+  | "screened"
   | "shortlisted"
   | "interview_scheduled"
   | "interviewed"

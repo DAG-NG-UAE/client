@@ -6,12 +6,12 @@ export function determineActions(currentStatus: CandidateStatusType): CandidateA
      case 'applied':
        return {
          progressionAction: {
-           label: 'Move to Shortlisted',
+           label: 'Move to Screened',
            actionType: 'SHORTLIST_CANDIDATE',
            description: 'Simple status change; requires confirmation/notes.',
            requiresConfirmation: true,
            requiresNotes: true,
-           targetStatus: 'SHORTLISTED',
+           targetStatus: 'SCREENED',
          },
          rejectionAction: {
            label: 'Reject Candidate',
@@ -22,6 +22,25 @@ export function determineActions(currentStatus: CandidateStatusType): CandidateA
            targetStatus: 'REJECTED', // Assuming 'REJECTED' as a terminal status
          },
        };
+    case "screened": 
+       return{ 
+        progressionAction: { 
+            label: 'Move to Shortlisted',
+            actionType: 'SHORTLIST_CANDIDATE',
+            description: 'Simple status change; requires confirmation/notes.',
+            requiresConfirmation: true,
+            requiresNotes: true,
+            targetStatus: 'SHORTLISTED',
+        }, 
+        rejectionAction: { 
+            label: 'Reject Candidate',
+            actionType: 'REJECT_CANDIDATE',
+            description: 'Simple status change; requires confirmation/notes.',
+            requiresConfirmation: true,
+            requiresNotes: true,
+            targetStatus: 'REJECTED',
+        }
+       }
      case 'shortlisted':
        return {
          progressionAction: {
