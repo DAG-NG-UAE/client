@@ -23,6 +23,7 @@ import { Requisition, RequisitionPreference } from '@/interface/requisition';
 import { apply } from '@/api/candidate';
 import { enqueueSnackbar } from 'notistack';
 import { buildQuestionText } from '@/utils/constants';
+import { isValidEmail, isValidPhone, sanitizePhone, isValidCvFile } from '@/utils/validators';
 
 // Reusable Form Input Component (Internal to this file for now)
 interface FormInputProps {
@@ -97,7 +98,9 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
   // console.log(`requisition preference => ${JSON.stringify(requisitionPreference)}`)
   const [fullName, setFullName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [expectedSalary, setExpectedSalary] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
   const [privacyConsent, setPrivacyConsent] = useState(false);
@@ -135,12 +138,13 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setCvFile(files[0]);
-    } else {
-      setCvFile(null);
+    const file = e.target.files?.[0] ?? null;
+    if (file && !isValidCvFile(file)) {
+      enqueueSnackbar('Only PDF files are accepted.', { variant: 'error' });
+      e.target.value = '';
+      return;
     }
+    setCvFile(file);
   };
 
   const handleDragOver = (event: React.DragEvent) => {
@@ -153,15 +157,20 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
 
   const handleDrop = (event: React.DragEvent) => {
     event.preventDefault();
-    if (event.dataTransfer.files && event.dataTransfer.files[0]) {
-      setCvFile(event.dataTransfer.files[0]);
+    const file = event.dataTransfer.files?.[0] ?? null;
+    if (file && !isValidCvFile(file)) {
+      enqueueSnackbar('Only PDF files are accepted.', { variant: 'error' });
+      return;
     }
+    setCvFile(file);
   };
 
   const isFormValid = useMemo(() => (
     fullName !== '' &&
     emailAddress !== '' &&
+    isValidEmail(emailAddress) &&
     phoneNumber !== '' &&
+    isValidPhone(phoneNumber) &&
     availability !== '' &&
     experience !== '' &&
     location !== '' &&
@@ -318,8 +327,70 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
             <Box mb={4}>
               <SectionHeader title="Personal Information" />
               <FormInput label="Full Name" required placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-              <FormInput label="Email Address" required placeholder="john.doe@email.com" type="email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
-              <FormInput label="Phone Number" required placeholder="(555) 123-4567" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
+                  Email Address <Box component="span" sx={{ color: '#d32f2f' }}>*</Box>
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="john.doe@email.com"
+                  type="email"
+                  variant="outlined"
+                  size="medium"
+                  value={emailAddress}
+                  error={!!emailError}
+                  helperText={emailError}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEmailAddress(val);
+                    if (val && !isValidEmail(val)) {
+                      setEmailError('Please enter a valid email address');
+                    } else {
+                      setEmailError('');
+                    }
+                  }}
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                      backgroundColor: '#ffffff',
+                      color: '#101828',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.2)' }
+                    }
+                  }}
+                />
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#101828' }}>
+                  Phone Number <Box component="span" sx={{ color: '#d32f2f' }}>*</Box>
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="+2348012345678"
+                  type="tel"
+                  variant="outlined"
+                  size="medium"
+                  value={phoneNumber}
+                  error={!!phoneError}
+                  helperText={phoneError}
+                  onChange={(e) => {
+                    const val = sanitizePhone(e.target.value);
+                    setPhoneNumber(val);
+                    if (val && !isValidPhone(val)) {
+                      setPhoneError('Phone number must be 8–15 digits. Only digits and a leading + are allowed.');
+                    } else {
+                      setPhoneError('');
+                    }
+                  }}
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                      backgroundColor: '#ffffff',
+                      color: '#101828',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.2)' }
+                    }
+                  }}
+                />
+              </Box>
               <FormInput label="Position Applied For" required disabled={true} value={careerDetails?.position || ''} />
             </Box>
 
@@ -354,7 +425,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                     type="file"
                     id="cv-upload-input"
                     hidden
-                    accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    accept="application/pdf"
                     onChange={handleFileChange}
                   />
                   {cvFile ? (
@@ -371,7 +442,7 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
                     </>
                   )}
                   <Typography variant="caption" color="#888" display="block" mt={0.5}>
-                    Accepted formats: PDF, DOC, DOCX (Max 5MB)
+                    Accepted format: PDF only (Max 5MB)
                   </Typography>
                 </Box>
               </Box>
