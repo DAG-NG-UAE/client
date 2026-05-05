@@ -102,6 +102,7 @@ const RequisitionRequest = () => {
       // For Local
       headcount,
       location: legacyLocation, // alias just in case
+      recruitmentType,
       requiredHodApproval,
       reportingManager,
       replacementFor,
@@ -159,7 +160,7 @@ const RequisitionRequest = () => {
       preferencesSummary: preferencesSummary,
       proposedSalaryCurrency,
       internalName,
-      recruitmentType: activeTab === 0 ? "Local" : "Expat",
+      recruitmentType,
 
       // Pass locations array
       locations: locations,
@@ -183,7 +184,7 @@ const RequisitionRequest = () => {
     console.log("Submitting Payload:", JSON.stringify(payload, null, 2));
     const success = await callCreateRequisition(payload);
 
-    // // Only redirect if the submission was successful
+    // // // Only redirect if the submission was successful
     if (success) {
       router.push("/requisition");
     }

@@ -23,4 +23,6 @@ export interface TableProps<T> {
   renderDetailPanel?: (row: T) => React.ReactNode;
   error?: string | null;
   onRetry?: () => void;
+  selectedIds?: any[];
+  onToggleSelect?: (id: any, row: T) => void;
 }

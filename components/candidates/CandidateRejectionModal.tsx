@@ -26,7 +26,7 @@ interface CandidateRejectionModalProps {
 }
 
 export const CandidateRejectionModal: React.FC<CandidateRejectionModalProps> = ({ open, onClose, candidate }) => {
-    const [step, setStep] = useState(0); // 0: Reason, 1: Email Template
+    const [ step, setStep] = useState(0); // 0: Reason, 1: Email Template
     const [reason, setReason] = useState('');
     const [comments, setComments] = useState('');
 

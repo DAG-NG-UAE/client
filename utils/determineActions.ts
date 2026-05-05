@@ -56,7 +56,7 @@ export function determineActions(currentStatus: CandidateStatusType): CandidateA
            requiresConfirmation: true,
            requiresNotes: true,
            targetStatus: 'REJECTED',
-           triggersWorkflow: 'Reject Candidate'
+          //  triggersWorkflow: 'Reject Candidate'-- commenting this out cos if the person is shortlisted it opens the candidaterejectionmodal file where you must send the email before rejecting the person 
          },
        };
      case 'interview_scheduled':

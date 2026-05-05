@@ -1,5 +1,5 @@
 import { CandidateProfile } from "@/interface/candidate";
-import axiosInstance, { API_BASE_URL } from "./axiosInstance";
+import axiosInstance from "./axiosInstance";
 import { CandidateEvaluationPayload } from "@/interface/interview";
 
 // get the candidates for a requisition
@@ -108,6 +108,19 @@ export const updateCandidateStatus = async (
     throw error;
   }
 };
+
+export const bulkUpdateCandidateStatus = async (
+  updates: Array<Partial<CandidateProfile>>
+) => {
+  try {
+    const response = await axiosInstance.put(`/candidate/bulk-update`, { candidates: updates });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error bulk updating candidate status");
+    throw error;
+  }
+};
+
 
 export const scheduleInterview = async (interviewData: {
   candidate_id: string;

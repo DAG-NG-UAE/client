@@ -9,7 +9,7 @@ import SummaryStats from '@/components/SummaryStats';
 import { AppRole, statusDetails } from '@/utils/constants';
 import { RootState, useSelector } from '@/redux/store';
 import { fetchPositions } from '@/redux/slices/positions';
-import { fetchAllCandidates, setSelectedCandidate, clearSelectedCandidate, callCancelInterview } from '@/redux/slices/candidates';
+import { fetchAllCandidates, setSelectedCandidate, clearSelectedCandidate, callCancelInterview, callBulkUpdateCandidateStatus } from '@/redux/slices/candidates';
 import TableComponent from '../Table/Table';
 import { getColumnsForStatus } from '@/utils/candidateColumnConfig';
 import { CandidateProfile } from '@/interface/candidate';
@@ -18,6 +18,8 @@ import CandidateModal from './CandidateModal';
 import { FillInterviewFormButton, PingHiringManagersButton, GenerateOfferLetterButton, AppliedActionsStub } from './CandidateRowActions';
 import Filters from '../Filters';
 import CandidateRequirementDetail from './CandidateRequirementDetail';
+import CandidateSelectionTray from './CandidateSelectionTray';
+import CandidateMoveRequisitionModal from './CandidateMoveRequisitionModal';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import FolderIcon from '@mui/icons-material/Folder';
 import ArchiveIcon from '@mui/icons-material/Archive';
@@ -50,7 +52,62 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    dispatch(clearSelectedCandidate()); // Clear selected candidate on modal close
+    dispatch(clearSelectedCandidate());
+  };
+
+  // Persistent tray selection — Map survives searches/filter changes
+  const [selectedCandidates, setSelectedCandidates] = useState<Map<string, Partial<CandidateProfile>>>(new Map());
+
+  const handleToggleSelect = (_id: any, row: Partial<CandidateProfile>) => {
+    const id = row.candidate_id!;
+    setSelectedCandidates(prev => {
+      const next = new Map(prev);
+      next.has(id) ? next.delete(id) : next.set(id, row);
+      return next;
+    });
+  };
+
+  const handleRemoveFromTray = (candidateId: string) => {
+    setSelectedCandidates(prev => {
+      const next = new Map(prev);
+      next.delete(candidateId);
+      return next;
+    });
+  };
+
+  const handleClearTray = () => setSelectedCandidates(new Map());
+
+  const [isMoveRequisitionModalOpen, setIsMoveRequisitionModalOpen] = useState(false);
+
+  const handleBulkMoveToRequisition = async (
+    _targetRequisitionId: string,
+    payload: Array<{ candidate_id: string; old_status: string; new_status: string; requisition_id: string }>
+  ) => {
+    await callBulkUpdateCandidateStatus(payload);
+    setSelectedCandidates(new Map());
+    if (requisitionIdFromUrl) {
+      fetchAllCandidates(requisitionIdFromUrl, undefined)
+    } else if (status) {
+      fetchAllCandidates(undefined, status)
+    }
+  };
+
+  const handleBulkMove = async (targetStage: string) => {
+    const updates = Array.from(selectedCandidates.values()).map(c => ({
+      candidate_id: c.candidate_id,
+      requisition_id: c.requisition_id,
+      email: c.email,
+      old_status: c.current_status,
+      new_status: targetStage,
+      current_status: targetStage,
+    }));
+    await callBulkUpdateCandidateStatus(updates);
+    setSelectedCandidates(new Map());
+    if (requisitionIdFromUrl) {
+      fetchAllCandidates(requisitionIdFromUrl, undefined)
+    } else if (status) {
+      fetchAllCandidates(undefined, status)
+    }
   };
 
   console.log(`the candidates are => ${JSON.stringify(candidates)}`)
@@ -268,39 +325,54 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
 
 
         {candidates && (
-          <Box sx={{ mt: 4 }}>
+          <Box sx={{ mt: 4, pb: selectedCandidates.size > 0 ? 10 : 0 }}>
             <TableComponent
               columns={getColumnsForStatus(status)}
               data={candidates}
-              // onRowClick={handleRowClick} // Removed to prevent modal opening on row click, allowing row click to trigger expansion instead.
               renderDetailPanel={(row) => (
-                  <CandidateRequirementDetail 
-                      requirements={row.requirement_match} 
-                      candidateName={row.candidate_name}
-                      onViewProfile={() => router.push(`/candidates/view/${row.candidate_id}`)}
-                  />
+                <CandidateRequirementDetail
+                  requirements={row.requirement_match}
+                  candidateName={row.candidate_name}
+                  onViewProfile={() => router.push(`/candidates/view/${row.candidate_id}`)}
+                />
               )}
+              selectedIds={Array.from(selectedCandidates.keys())}
+              onToggleSelect={handleToggleSelect}
               actions={hasActions ? renderActions : undefined}
               error={error}
               onRetry={() => fetchAllCandidates(undefined, status)}
-              keyExtractor={(candidates) => candidates.candidate_id}
+              keyExtractor={(c) => c.candidate_id}
               totalCount={meta?.total || 0}
-              page={(meta?.page || 1) - 1} // MUI is 0-indexed
+              page={(meta?.page || 1) - 1}
               rowsPerPage={meta?.limit || 10}
               onPageChange={(e, newPage) => fetchAllCandidates(undefined, status, newPage + 1, meta?.limit)}
               onRowsPerPageChange={(e) => fetchAllCandidates(undefined, status, 1, parseInt(e.target.value, 10))}
-            >
-            </TableComponent>
-            {/* <CandidateTable candidates={candidates} status={status} /> */}
+            />
           </Box>
         )}
-      
+
       </Box>
+
       <CandidateModal
-          open={isModalOpen}
-          onClose={handleCloseModal}
-          candidate={selectedCandidate}
-        />
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        candidate={selectedCandidate}
+      />
+
+      <CandidateSelectionTray
+        selectedCandidates={selectedCandidates}
+        onRemove={handleRemoveFromTray}
+        onClear={handleClearTray}
+        onMove={handleBulkMove}
+        onMoveToRequisition={() => setIsMoveRequisitionModalOpen(true)}
+      />
+
+      <CandidateMoveRequisitionModal
+        open={isMoveRequisitionModalOpen}
+        onClose={() => setIsMoveRequisitionModalOpen(false)}
+        selectedCandidates={selectedCandidates}
+        onMove={handleBulkMoveToRequisition}
+      />
     </>
   );
 };

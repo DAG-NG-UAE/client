@@ -37,7 +37,7 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
 
     const handleRejectRow = (candidate: Partial<CandidateProfile>) => {
         dispatch(setSelectedCandidate(candidate))
-        setRejectionModalOpen(true);
+        setIsModalOpen(true);
     }
 
     const handleCloseRejectionModal = () => {
@@ -123,11 +123,11 @@ const CandidateProfileHeader: React.FC<Props> = ({ candidate }) => {
                 onClose={handleCloseModal}
                 candidate={candidate}
             />
-            <CandidateRejectionModal
+            {/* <CandidateRejectionModal
                 open={rejectionModalOpen}
                 onClose={handleCloseRejectionModal}
                 candidate={candidate}
-            />
+            /> */}
         </>
 
     );
