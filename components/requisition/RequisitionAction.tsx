@@ -18,7 +18,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
       <Tooltip title="View Requisition" arrow>
         <IconButton
           component={Link}
-          href={`/requisition/${requisition.requisition_id}`}
+          href={`/requisition/${encodeURIComponent(requisition.requisition_id ?? '')}`}
           size="small"
           sx={iconSx('#0369a1')}
         >
@@ -29,7 +29,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
       <Tooltip title="Edit Requisition" arrow>
         <IconButton
           component={Link}
-          href={`/requisition/${requisition.requisition_id}/edit`}
+          href={`/requisition/${encodeURIComponent(requisition.requisition_id ?? '')}/edit`}
           size="small"
           sx={iconSx('#b45309')}
         >
@@ -40,7 +40,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
       <Tooltip title="Invite Stakeholders" arrow>
         <IconButton
           component={Link}
-          href={`/requisition/${requisition.requisition_id}/invite`}
+          href={`/requisition/${encodeURIComponent(requisition.requisition_id ?? '')}/invite`}
           size="small"
           sx={iconSx('#15803d')}
         >
@@ -51,7 +51,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
       <Tooltip title="View Candidates" arrow>
         <IconButton
           component={Link}
-          href={`/candidates/all?requisitionId=${requisition.requisition_id}`}
+          href={`/candidates/all?requisitionId=${encodeURIComponent(requisition.requisition_id ?? '')}`}
           size="small"
           sx={iconSx('#6d28d9')}
         >
@@ -62,7 +62,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
       <Tooltip title="Add Candidate Manually" arrow>
         <IconButton
           component={Link}
-          href={`/requisition/${requisition.requisition_id}/add-candidate`}
+          href={`/requisition/${encodeURIComponent(requisition.requisition_id ?? '')}/add-candidate`}
           size="small"
           sx={iconSx('#15803d')}
         >
