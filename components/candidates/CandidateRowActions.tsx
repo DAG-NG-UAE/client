@@ -122,7 +122,7 @@ export const AppliedActionsStub = ({ candidate, onView, onMove, onDelete, childr
     return (
         <Box sx={{ display: 'flex', gap: 1 }}>
             {children}
-            {candidate.current_status === 'shortlisted' && (
+            {(candidate.current_status === 'screened' && user?.role_name !== AppRole.HiringManager) && (
                 <>
                     <ShareCompetencyLinkButton candidate={candidate}
                     ></ShareCompetencyLinkButton>
