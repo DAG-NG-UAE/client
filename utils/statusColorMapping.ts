@@ -1,3 +1,4 @@
+
 import { ChipProps } from "@mui/material";
 
 /**
@@ -50,6 +51,11 @@ const statusConfig: Record<string, StatusChipConfig> = {
   applied: {
     label: "Applied",
     sx: { bgcolor: "#dbeafe", color: "#1e3a8a" }, // Darker blue for text
+    variant: "filled",
+  },
+  "screened": {
+    label: "Screened",
+    sx: { bgcolor: "#cffafe", color: "#0e7490" }, // Cyan 100 / Cyan 700
     variant: "filled",
   },
   shortlisted: {

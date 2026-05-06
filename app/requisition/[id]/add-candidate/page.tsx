@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, memo } from "react";
+import React, { useState, useEffect, memo } from "react";
 import {
   Box,
   Container,
@@ -26,6 +26,7 @@ import { fetchRequisitionById } from "@/redux/slices/requisition";
 import RequisitionHeader from "@/components/requisition/RequisitionHeader";
 import { apply } from "@/api/candidate";
 import { enqueueSnackbar } from "notistack";
+import { isValidEmail, isValidPhone, sanitizePhone, isValidCvFile } from "@/utils/validators";
 
 // ---------------------------------------------------------------------------
 // Reusable sub-components (local)
@@ -107,8 +108,9 @@ export default function AddCandidatePage() {
   // Form state
   const [fullName, setFullName] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [expectedSalary, setExpectedSalary] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -122,31 +124,39 @@ export default function AddCandidatePage() {
 
   // File handlers
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    setCvFile(files && files.length > 0 ? files[0] : null);
+    const file = e.target.files?.[0] ?? null;
+    if (file && !isValidCvFile(file)) {
+      enqueueSnackbar("Only PDF files are accepted.", { variant: "error" });
+      e.target.value = "";
+      return;
+    }
+    setCvFile(file);
   };
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
   const handleDragLeave = (e: React.DragEvent) => e.preventDefault();
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (e.dataTransfer.files?.[0]) setCvFile(e.dataTransfer.files[0]);
+    const file = e.dataTransfer.files?.[0] ?? null;
+    if (file && !isValidCvFile(file)) {
+      enqueueSnackbar("Only PDF files are accepted.", { variant: "error" });
+      return;
+    }
+    setCvFile(file);
   };
 
-  const isFormValid = useMemo(
-    () =>
-      fullName !== "" &&
-      emailAddress !== "" &&
-      phoneNumber !== "" &&
-      availability !== "" &&
-      experience !== "" &&
-      location !== "" &&
-      expectedSalary !== "" &&
-      cvFile !== null &&
-      source !== "" &&
-      (source === "Other" ? otherSource !== "" : true) &&
-      stage !== "",
-    [fullName, emailAddress, phoneNumber, availability, experience, location, expectedSalary, cvFile, source, otherSource]
-  );
+  const isFormValid =
+    fullName !== "" &&
+    emailAddress !== "" &&
+    isValidEmail(emailAddress) &&
+    phoneNumber !== "" &&
+    isValidPhone(phoneNumber) &&
+    availability !== "" &&
+    experience !== "" &&
+    location !== "" &&
+    cvFile !== null &&
+    source !== "" &&
+    (source === "Other" ? otherSource !== "" : true) &&
+    stage !== "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,7 +174,6 @@ export default function AddCandidatePage() {
     formData.append("phoneNumber", phoneNumber);
     formData.append("availability", availability);
     formData.append("experience", experience);
-    formData.append("expectedSalary", expectedSalary);
     formData.append("coverLetter", coverLetter);
     formData.append("privacyConsent", "true");
     formData.append("source", source === "Other" ? otherSource : source);
@@ -222,8 +231,56 @@ export default function AddCandidatePage() {
             <Box mb={4}>
               <SectionTitle title="Personal Information" />
               <FormInput label="Full Name" required placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-              <FormInput label="Email Address" required placeholder="john.doe@email.com" type="email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} />
-              <FormInput label="Phone Number" required placeholder="(555) 123-4567" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
+                  Email Address <Box component="span" sx={{ color: "#d32f2f" }}>*</Box>
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="john.doe@email.com"
+                  type="email"
+                  variant="outlined"
+                  size="medium"
+                  value={emailAddress}
+                  error={!!emailError}
+                  helperText={emailError}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEmailAddress(val);
+                    if (val && !isValidEmail(val)) {
+                      setEmailError("Please enter a valid email address");
+                    } else {
+                      setEmailError("");
+                    }
+                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                />
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500 }}>
+                  Phone Number <Box component="span" sx={{ color: "#d32f2f" }}>*</Box>
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="+2348012345678"
+                  type="tel"
+                  variant="outlined"
+                  size="medium"
+                  value={phoneNumber}
+                  error={!!phoneError}
+                  helperText={phoneError}
+                  onChange={(e) => {
+                    const val = sanitizePhone(e.target.value);
+                    setPhoneNumber(val);
+                    if (val && !isValidPhone(val)) {
+                      setPhoneError("Phone number must be 8–15 digits. Only digits and a leading + are allowed.");
+                    } else {
+                      setPhoneError("");
+                    }
+                  }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                />
+              </Box>
               <FormInput label="Position Applied For" required disabled value={selectedRequisition?.position || ""} />
             </Box>
 
@@ -258,7 +315,7 @@ export default function AddCandidatePage() {
                     type="file"
                     id="cv-upload-input"
                     hidden
-                    accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    accept="application/pdf"
                     onChange={handleFileChange}
                   />
                   {cvFile ? (
@@ -277,12 +334,10 @@ export default function AddCandidatePage() {
                     </>
                   )}
                   <Typography variant="caption" color="text.disabled" display="block" mt={0.5}>
-                    Accepted formats: PDF, DOC, DOCX (Max 5MB)
+                    Accepted format: PDF only (Max 5MB)
                   </Typography>
                 </Box>
               </Box>
-
-              <FormInput label="Expected Salary" required placeholder="e.g., N120,000 - N140,000" value={expectedSalary} onChange={(e) => setExpectedSalary(e.target.value)} />
 
               {/* Experience */}
               <Box mb={3}>
@@ -390,6 +445,7 @@ export default function AddCandidatePage() {
                 renderValue={(selected) => {
                   if (!selected) return <Typography color="text.disabled">Select a stage</Typography>;
                   const labels: Record<string, string> = {
+                    applied: "Applied",
                     shortlisted: "Shortlisted",
                     interviewed: "Interviewed",
                     pre_offer: "Pre-Offer",
@@ -400,6 +456,13 @@ export default function AddCandidatePage() {
                 }}
               >
                 <MenuItem value="" disabled>Select a stage</MenuItem>
+                <MenuItem value="applied">
+                  <ListItemText
+                    primary="Applied"
+                    secondary="Candidate has just applied and is pending initial review."
+                    slotProps={{ secondary: { sx: { fontSize: "0.75rem" } } }}
+                  />
+                </MenuItem>
                 <MenuItem value="shortlisted">
                   <ListItemText
                     primary="Shortlisted"

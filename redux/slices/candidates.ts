@@ -9,6 +9,7 @@ import {
   getCandidatesForRequisition,
   getSingleCandidate,
   updateCandidateStatus,
+  bulkUpdateCandidateStatus,
   scheduleInterview,
   cancelInterview,
   getCandidateTotalEvaluation,
@@ -194,6 +195,21 @@ export const callUpdateCandidateStatus = async (
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
     enqueueSnackbar("Failed to update candidate status. Please try again.", { variant: "error" });
+  } finally {
+    dispatch(stopLoading());
+  }
+};
+
+export const callBulkUpdateCandidateStatus = async (
+  updates: Array<Partial<CandidateProfile> & { new_status: string }>
+) => {
+  try {
+    dispatch(startLoading());
+    await bulkUpdateCandidateStatus(updates);
+    enqueueSnackbar(`${updates.length} candidate(s) moved successfully`, { variant: "success" });
+  } catch (error: any) {
+    dispatch(hasError(error?.response?.data || error));
+    enqueueSnackbar("Failed to bulk update candidates. Please try again.", { variant: "error" });
   } finally {
     dispatch(stopLoading());
   }
