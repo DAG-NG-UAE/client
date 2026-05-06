@@ -23,6 +23,7 @@ const RequisitionEditPage = () => {
  
   useEffect(() => { 
     if(selectedRequisition && selectedRequisition.requisition_id){ 
+      console.log(selectedRequisition.requisition_id)
       fetchRequisitionById(selectedRequisition?.requisition_id)
     }
 

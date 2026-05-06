@@ -20,6 +20,8 @@ const RequisitionViewPage = () => {
   const params = useParams();
   const {loading, selectedRequisition} = useSelector((state:RootState) => state.requisitions)
  
+
+  console.log('the requisition id id => ', selectedRequisition?.requisition_id)
   useEffect(() => { 
     if(selectedRequisition && selectedRequisition.requisition_id){ 
       fetchRequisitionById(selectedRequisition?.requisition_id)
