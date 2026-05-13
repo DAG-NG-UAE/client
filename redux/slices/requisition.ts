@@ -227,7 +227,7 @@ export const callRemoveRecruiters = async (
     await removeRecruiters(requisitionId, userId, recruiterEmail);
     // we want to fetch the requisition and then we want to update the selected requisition
     await fetchRequisitionById(requisitionId);
-    enqueueSnackbar("Recruiter removed ", { variant: "success" });
+    enqueueSnackbar("Stakeholder Removed", { variant: "success" });
   } catch (error: any) {
     dispatch(hasError(error?.response?.data || error));
     enqueueSnackbar("Failed to remove recruiter. Please try again.", { variant: "error" });

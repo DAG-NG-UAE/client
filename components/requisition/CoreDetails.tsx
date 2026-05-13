@@ -43,9 +43,9 @@ const CoreDetails = ({ requisition }: CoreDetailsProps) => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <DetailItem label="Department" value={requisition.department?.replace(/_/g, ' ')} />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        {/* <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <DetailItem label="Hiring Manager" value={requisition.requisition_raised_by} />
-        </Grid>
+        </Grid> */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
            {/* Placeholder for Requester if needed, or just empty */}
            <DetailItem label="Requester" value={requisition.requisition_raised_by} />

@@ -252,6 +252,7 @@ export const inviteInterviewers = async (
   }
 };
 
+
 export const createRequisition = async (requisition: Partial<Requisition>) => {
   try {
     const response = await axiosInstance.post("/requisition", requisition);
