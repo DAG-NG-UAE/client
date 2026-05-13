@@ -263,6 +263,39 @@ export const generateCompetencyToken = async (candidateId: string, requisitionId
   }
 };
 
+export type BulkParseResult =
+  | {
+      filename: string;
+      success: true;
+      data: {
+        filename: string;
+        fullName: string;
+        emailAddress: string;
+        phoneNumber: string;
+        experience: string;
+        currentRole: string;
+        currentCompany: string;
+        qualification: string;
+        location: string;
+        skills: string[];
+      };
+    }
+  | { filename: string; success: false; error: string };
+
+export const bulkParseCvs = async (files: File[]): Promise<BulkParseResult[]> => {
+  try {
+    const formData = new FormData();
+    files.forEach(f => formData.append("cvFile", f, f.name));
+    const response = await axiosInstance.post("/application/bulk", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data.data as BulkParseResult[];
+  } catch (error) {
+    console.error("Error parsing CVs in bulk:", error);
+    throw error;
+  }
+};
+
 export const getCandidateDocuments = async (url: string ) => {
   try{ 
     const response = await axiosInstance.get(`/candidate/public/documents?url=${url}`);
