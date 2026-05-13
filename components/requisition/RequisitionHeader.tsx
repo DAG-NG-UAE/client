@@ -29,9 +29,9 @@ const RequisitionHeader = ({ title, requisitionId, isEditMode = false }: Requisi
           <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
             {title}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          {/* <Typography variant="body2" color="text.secondary">
             Requisition No: {requisitionId}
-          </Typography>
+          </Typography> */}
         </Box>
         
         {!isEditMode && (

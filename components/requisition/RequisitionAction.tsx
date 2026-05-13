@@ -37,7 +37,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
         </IconButton>
       </Tooltip>
 
-      <Tooltip title="Invite Stakeholders" arrow>
+      <Tooltip title="Manage Stakeholders" arrow>
         <IconButton
           component={Link}
           href={`/requisition/${encodeURIComponent(requisition.requisition_id ?? '')}/invite`}

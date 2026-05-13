@@ -26,7 +26,7 @@ export interface CandidateProfile {
   offer_date?: string | null;
   current_gross_salary?: string;
   salary_offered?: number | null;
-  role_applied_for?: string;
+  role_applied_for?: string; //TODO:: Note this is sligtly outdated because if y
   location?: string;
   email?: string;
   mobile_number?: string;
