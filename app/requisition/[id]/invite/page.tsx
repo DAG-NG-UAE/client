@@ -44,6 +44,17 @@ import {
 } from "@/redux/slices/requisition";
 import RequisitionHeader from "@/components/requisition/RequisitionHeader";
 import { searchInterviewers } from "@/api/interview";
+import { AppRole } from "@/utils/constants";
+
+const ROLE_LABELS: Record<string, string> = {
+    [AppRole.Admin]: "Admin",
+    [AppRole.HR]: "HR",
+    [AppRole.Recruiter]: "Recruiter",
+    [AppRole.HiringManager]: "Hiring Manager",
+    [AppRole.StandardEmployee]: "Standard Employee",
+    [AppRole.HeadOfHr]: "Head of HR",
+    [AppRole.HrManager]: "HR Manager",
+};
 
 interface Interviewer {
     id: string;
@@ -376,9 +387,9 @@ export default function InvitePage() {
                                     secondary={s.email}
                                     slotProps={{ primary: { fontWeight: 600 }, secondary: { variant: "caption" } }}
                                 />
-                                {/* {s.role && (
-                                    <Chip label={s.role} size="small" variant="outlined" sx={{ mr: 1, fontSize: "0.7rem" }} />
-                                )} */}
+                                {s.role && (
+                                    <Chip label={ROLE_LABELS[s.role] ?? s.role} size="small" variant="outlined" sx={{ mr: 1, fontSize: "0.7rem" }} />
+                                )}
                                 <Tooltip title="Remove stakeholder" arrow>
                                     <span>
                                         <IconButton

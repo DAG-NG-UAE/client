@@ -72,8 +72,9 @@ export default function CandidateMoveRequisitionModal({
         );
     }, [requisitions, search]);
 
-    const buildPayload = (targetRequisitionId: string) =>
-        eligible.map(c => {
+    const buildPayload = (targetRequisitionId: string) => {
+        const targetPosition = requisitions.find(r => r.requisition_id === targetRequisitionId)?.position ?? '';
+        return eligible.map(c => {
             const currentStatus = c.current_status?.toLowerCase() ?? 'applied';
             const newStatus = RESET_STATUSES.includes(currentStatus) ? 'applied' : currentStatus;
             return {
@@ -81,8 +82,10 @@ export default function CandidateMoveRequisitionModal({
                 old_status: currentStatus,
                 new_status: newStatus,
                 requisition_id: targetRequisitionId,
+                role_applied_for: targetPosition,
             };
         });
+    };
 
     const handleConfirm = async () => {
         if (!selectedReqId || eligible.length === 0) return;

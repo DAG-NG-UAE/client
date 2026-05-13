@@ -10,8 +10,8 @@ import { CandidateProfile } from '@/interface/candidate';
 const MOVE_STAGES = [
     { value: 'screened', label: 'Screened' },
     { value: 'shortlisted', label: 'Shortlisted' },
-    { value: 'interview_scheduled', label: 'Interview Scheduled' },
-    { value: 'interviewed', label: 'Interviewed' },
+    // { value: 'interview_scheduled', label: 'Interview Scheduled' },
+    { value: 'pending_feedback', label: 'Pending Feedback' },
     { value: 'pre_offer', label: 'Pre-Offer' },
     { value: 'internal_salary_proposal', label: 'Internal Salary Proposal' },
     { value: 'approved_for_offer', label: 'Approved for Offer' },
