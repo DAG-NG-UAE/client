@@ -78,7 +78,7 @@ const RequisitionEditPage = () => {
           requisitionId={selectedRequisition.requisition_id} 
           isEditMode 
         />
-        <CoreDetails requisition={selectedRequisition} />
+        <CoreDetails requisition={selectedRequisition} isEditMode />
 
         <JobPostingDetails 
           requisition={selectedRequisition} 

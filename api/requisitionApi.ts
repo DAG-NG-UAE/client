@@ -1,4 +1,3 @@
-import axios from "axios";
 import axiosInstance from "./axiosInstance";
 import { RecruiterSelection, Requisition } from "@/interface/requisition";
 
@@ -252,6 +251,22 @@ export const inviteInterviewers = async (
   }
 };
 
+
+export const updateReportingManager = async (
+  requisitionId: string,
+  newReportingManager: { email: string; displayName: string },
+) => {
+  try {
+    const response = await axiosInstance.put(
+      `requisition/reporting-manager?requisitionId=${requisitionId}`,
+      { newReportingManager },
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating reporting manager:', error);
+    throw error;
+  }
+};
 
 export const createRequisition = async (requisition: Partial<Requisition>) => {
   try {

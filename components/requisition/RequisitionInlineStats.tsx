@@ -21,9 +21,9 @@ const RequisitionInlineStats = ({ requisition }: Props) => {
     const hasError = useSelector((state: RootState) => state.summary.errorIds.includes(id));
 
     useEffect(() => {
-        if (!id || grouped) return;
+        if (!id) return;
         fetchRequisitionStats(id);
-    }, [id, grouped]);
+    }, [id]);
 
     if (isLoading) {
         return (

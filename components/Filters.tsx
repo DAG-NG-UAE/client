@@ -5,69 +5,73 @@ import {
   InputAdornment,
   Select,
   MenuItem,
-  Button,
   FormControl,
   SelectChangeEvent,
   IconButton,
+  Autocomplete,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import AutorenewIcon from '@mui/icons-material/Autorenew'; // Import RefreshIcon
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
-interface MenuItems { 
-  text: string; 
+interface MenuItems {
+  text: string;
   value: string;
 }
 
 interface FilterProps {
   menuItems: MenuItems[];
-  textPlaceholder?: string;   
+  textPlaceholder?: string;
   isCandidate?: boolean;
-  allDepartments?: MenuItems[];
   allYears?: MenuItems[];
-  refreshPosition?:() => void;
-  filterFunction?: (status:string) => void; // Fixed type to match usage
+  statusMenuItems?: MenuItems[];
+  defaultFilterValue?: string;
+  refreshPosition?: () => void;
+  filterFunction?: (value: string) => void;
+  onStatusChange?: (status: string) => void;
   onYearChange?: (year: string) => void;
   onSearch?: (query: string) => void;
 }
 
-const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYears, refreshPosition, filterFunction, onYearChange, onSearch}: FilterProps) => {
-  const [role, setRole] = React.useState('all');
+const Filters = ({
+  menuItems,
+  textPlaceholder,
+  isCandidate,
+  allYears,
+  statusMenuItems,
+  defaultFilterValue = 'all',
+  refreshPosition,
+  filterFunction,
+  onStatusChange,
+  onYearChange,
+  onSearch,
+}: FilterProps) => {
   const [year, setYear] = React.useState('all');
+  const [status, setStatus] = React.useState('all');
   const [searchTerm, setSearchTerm] = React.useState('');
-  const {positions, loading} = useSelector((state: RootState) => state.positions)
- 
-  // Debounce search
+  const { loading } = useSelector((state: RootState) => state.positions);
+
+  // Sync position dropdown when URL-driven default changes
+  const selectedOption = menuItems.find(i => i.value === defaultFilterValue) ?? null;
+
   const isFirstRun = React.useRef(true);
   React.useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (isFirstRun.current) {
-        isFirstRun.current = false;
-        return;
-      }
-       if (onSearch) {
-         onSearch(searchTerm);
-       }
+    const timer = setTimeout(() => {
+      if (isFirstRun.current) { isFirstRun.current = false; return; }
+      onSearch?.(searchTerm);
     }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
+    return () => clearTimeout(timer);
   }, [searchTerm, onSearch]);
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleRoleChange = (event: SelectChangeEvent) => {
-    filterFunction && filterFunction(event.target.value as string)
-    setRole(event.target.value as string);
-  };
-
   const handleYearChange = (event: SelectChangeEvent) => {
-    onYearChange && onYearChange(event.target.value as string)
-    setYear(event.target.value as string);
+    setYear(event.target.value);
+    onYearChange?.(event.target.value);
+  };
+
+  const handleStatusChange = (event: SelectChangeEvent) => {
+    setStatus(event.target.value);
+    onStatusChange?.(event.target.value);
   };
 
   return (
@@ -76,72 +80,105 @@ const Filters = ({menuItems, textPlaceholder, isCandidate, allDepartments, allYe
       spacing={2}
       sx={{ mb: 4 }}
       alignItems="center"
+      flexWrap="wrap"
     >
+      {/* Search */}
       <TextField
         placeholder={textPlaceholder}
-        fullWidth
         value={searchTerm}
-        onChange={handleSearchChange}
+        onChange={(e) => setSearchTerm(e.target.value)}
         variant="outlined"
+        size="small"
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon color="action" />
+              <SearchIcon color="action" fontSize="small" />
             </InputAdornment>
           ),
         }}
         sx={{
+          minWidth: 220,
+          maxWidth: 320,
           flexGrow: 1,
-          '& .MuiOutlinedInput-root': {
-            backgroundColor: 'background.paper',
-          },
+          '& .MuiOutlinedInput-root': { backgroundColor: 'background.paper' },
         }}
       />
-      <Stack direction="row" spacing={2} sx={{ width: { xs: '100%', md: 'auto' } }}>
-        <FormControl sx={{ minWidth: 150 }}>
+
+      {isCandidate ? (
+        <>
+          {/* Searchable position/role dropdown */}
+          <Autocomplete
+            options={menuItems}
+            getOptionLabel={(option) => option.text}
+            value={selectedOption}
+            onChange={(_e, newValue) => filterFunction?.(newValue?.value ?? 'all')}
+            isOptionEqualToValue={(option, value) => option.value === value.value}
+            size="small"
+            sx={{ minWidth: 220, '& .MuiOutlinedInput-root': { backgroundColor: 'background.paper' } }}
+            renderInput={(params) => <TextField {...params} placeholder="Filter by role..." />}
+          />
+
+          {/* Status dropdown */}
+          {statusMenuItems && statusMenuItems.length > 0 && (
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <Select
+                value={status}
+                onChange={handleStatusChange}
+                displayEmpty
+                sx={{ backgroundColor: 'background.paper' }}
+                MenuProps={{ PaperProps: { sx: { maxHeight: 240 } } }}
+              >
+                {statusMenuItems.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.text}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
+          {/* Year dropdown */}
+          {allYears && allYears.length > 0 && (
+            <FormControl size="small" sx={{ minWidth: 130 }}>
+              <Select
+                value={year}
+                onChange={handleYearChange}
+                displayEmpty
+                sx={{ backgroundColor: 'background.paper' }}
+              >
+                {allYears.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>
+                    {item.text}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
+          {/* Manual refresh for positions */}
+          {refreshPosition && (
+            <IconButton onClick={refreshPosition} disabled={loading} color="primary" aria-label="refresh positions">
+              <AutorenewIcon />
+            </IconButton>
+          )}
+        </>
+      ) : (
+        /* Requisition / generic — plain status Select */
+        <FormControl size="small" sx={{ minWidth: 160 }}>
           <Select
-            value={role}
-            onChange={handleRoleChange}
+            defaultValue="all"
+            onChange={(e) => filterFunction?.(e.target.value)}
             displayEmpty
-            inputProps={{ 'aria-label': 'Status' }}
             sx={{ backgroundColor: 'background.paper' }}
           >
             {menuItems.map((item) => (
-              <MenuItem key={item.text} value={item.value}>
+              <MenuItem key={item.value} value={item.value}>
                 {item.text}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
-        <IconButton 
-          onClick={refreshPosition} 
-          disabled={loading} 
-          color="primary"
-          aria-label="refresh positions"
-        >
-          <AutorenewIcon />
-        </IconButton>
-        
-        {/* all years for the candidate */}
-        {isCandidate && (
-          <FormControl sx={{ minWidth: 150 }}>
-          <Select
-            value={year}
-            onChange={handleYearChange}
-            displayEmpty
-            inputProps={{ 'aria-label': 'Status' }}
-            sx={{ backgroundColor: 'background.paper' }}
-          >
-            {allYears?.map((item) => (
-              <MenuItem key={item.text} value={item.value}>
-                {item.text}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        )}
-        
-      </Stack>
+      )}
     </Stack>
   );
 };

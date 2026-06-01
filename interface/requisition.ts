@@ -63,6 +63,7 @@ export interface Requisition {
   }[];
 
   created_at: string;
+  reporting_manager: string;
 
   posting_locations?: string[]; //! Delete this later
   requisition_positions?: RequisitionPosition[]; //! Delete this later

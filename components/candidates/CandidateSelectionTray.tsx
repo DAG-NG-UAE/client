@@ -6,6 +6,8 @@ import {
 } from '@mui/material';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import { CandidateProfile } from '@/interface/candidate';
+import { exportCandidateProfiles } from '@/api/export';
+import { enqueueSnackbar } from 'notistack';
 
 const MOVE_STAGES = [
     { value: 'screened', label: 'Screened' },
@@ -35,9 +37,23 @@ export default function CandidateSelectionTray({
 }: CandidateSelectionTrayProps) {
     const [targetStage, setTargetStage] = useState('');
     const [moving, setMoving] = useState(false);
+    const [exporting, setExporting] = useState(false);
 
     const count = selectedCandidates.size;
     const visible = count > 0;
+
+    const handleExport = async () => {
+        if (exporting) return;
+        setExporting(true);
+        try {
+            const ids = Array.from(selectedCandidates.keys());
+            await exportCandidateProfiles(ids);
+        } catch {
+            enqueueSnackbar('Failed to export candidates. Please try again.', { variant: 'error' });
+        } finally {
+            setExporting(false);
+        }
+    };
 
     const handleMove = async () => {
         if (!targetStage || moving) return;
@@ -135,6 +151,15 @@ export default function CandidateSelectionTray({
                     sx={{ flexShrink: 0 }}
                 >
                     Move to Requisition
+                </Button>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    disabled={exporting}
+                    onClick={handleExport}
+                    sx={{ flexShrink: 0 }}
+                >
+                    {exporting ? <CircularProgress size={16} color="inherit" /> : 'Export'}
                 </Button>
                 <Button
                     variant="text"
