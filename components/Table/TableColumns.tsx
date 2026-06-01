@@ -32,13 +32,19 @@ export const PendingRequisitionColumns: TableColumn<Partial<Requisition>>[] = [
 
 export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
     { 
-        key: 'position', label: 'Position'
+        key: 'position', label: 'Position', 
+        render: (row) => (
+            <div>
+                <p style={{ margin: 0 }}>{row.position}</p>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#9e9e9e' }}>{row.department?.replace(/_/g, ' ')}</p>
+            </div>
+        )
     }, 
-    { 
-        key: 'department', 
-        label: 'Department', 
-        render: (row) => row.department?.replace(/_/g, ' ')
-    },
+    // { 
+    //     key: 'department', 
+    //     label: 'Department', 
+    //     render: (row) => row.department?.replace(/_/g, ' ')
+    // },
     { 
         key: 'requisition_raised_by', 
         label: 'Requester' 
@@ -52,31 +58,33 @@ export const RequisitionColumns: TableColumn<Partial<Requisition>>[]  = [
         label: 'Expected Start Date',
         render: (row) => formatOfferDate(row.expected_start_date!)
     },
-    { 
-        key: 'Days open', 
-        label: 'Days Open', 
-        render: (row) => getRelativeTime(row.created_at!)
-    }, 
+    // { 
+    //     key: 'Days open', 
+    //     label: 'Days Open', 
+    //     render: (row) => getRelativeTime(row.created_at!)
+    // }, 
     {
         key: 'filled', 
         label: 'Filled', 
         render: (row) => <>{row.num_filled!}/{row.num_positions!}</>
     }, 
     {
-        key: 'status', 
+        key: 'status',
         label: 'Status',
         render: (row) => (
-            <Chip 
-                {...getStatusChipProps(row.status)} 
-                size="small" 
-                sx={{ 
-                borderRadius: '6px', 
+            <Chip
+                {...getStatusChipProps(row.status)}
+                size="small"
+                sx={{
+                borderRadius: '6px',
                 fontWeight: 500,
+                height: 22,
+                fontSize: '0.7rem',
                 ...(getStatusChipProps(row.status).sx || {})
                 }}
             />
         )
-    }, 
+    },
     { 
         key: 'publish', 
         label: 'Publish',

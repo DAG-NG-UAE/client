@@ -12,6 +12,7 @@ import offerReducer from "./slices/offer";
 import salaryProposalReducer from "./slices/salaryProposal";
 import scheduleReducer from "./slices/schedule";
 import preferenceReducer from "./slices/preferences";
+import summaryReducer from "./slices/summary";
 
 // ----------------------------------------------------------------------
 
@@ -52,6 +53,7 @@ const rootReducer = combineReducers({
   salaryProposals: salaryProposalReducer,
   schedule: scheduleReducer,
   preferences: preferenceReducer,
+  summary: summaryReducer,
 });
 
 export { rootPersistConfig, rootReducer };
