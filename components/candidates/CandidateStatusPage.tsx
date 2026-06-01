@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, IconButton, Tooltip } from '@mui/material'; // Import IconButton
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 
 import SummaryStats from '@/components/SummaryStats';
@@ -40,11 +40,13 @@ const summaryData = [
 
 const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const requisitionIdFromUrl = searchParams.get('requisitionId') ?? undefined;
   const details = statusDetails[status] || { title: 'Candidates', subtitle: 'Manage all candidates.' };
 
   const {positions} = useSelector((state: RootState) => state.positions)
+  console.log('positions =>>> ', positions )
   const {candidates, selectedCandidate, meta, error} = useSelector((state:RootState) => state.candidates)
   const {user} = useSelector((state:RootState) => state.auth)
 
@@ -112,11 +114,13 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
 
   console.log(`the candidates are => ${JSON.stringify(candidates)}`)
   useEffect(() => {
+    fetchPositions();
+  }, []);
+
+  useEffect(() => {
     if (requisitionIdFromUrl) {
       fetchAllCandidates(requisitionIdFromUrl, undefined)
     } else if (status) {
-      console.log('on landing to this page are you called?')
-      console.log('the status for the candidate is =>', status)
       fetchAllCandidates(undefined, status)
     }
   }, [status, requisitionIdFromUrl])
@@ -129,12 +133,30 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
     })),
   ];
 
+  const candidateStatusItems = [
+    { text: 'All Statuses', value: 'all' },
+    { text: 'Applied', value: 'applied' },
+    { text: 'Screened', value: 'screened' },
+    { text: 'Shortlisted', value: 'shortlisted' },
+    { text: 'Interview Scheduled', value: 'interview_scheduled' },
+    { text: 'Interviewed', value: 'interviewed' },
+    { text: 'Pending Feedback', value: 'pending_feedback' },
+    { text: 'Pre-Offer', value: 'pre_offer' },
+    { text: 'Internal Salary Proposal', value: 'internal_salary_proposal' },
+    { text: 'Approved for Offer', value: 'approved_for_offer' },
+    { text: 'Offer Extended', value: 'offer_extended' },
+    { text: 'Offer Accepted', value: 'offer_accepted' },
+    { text: 'Offer Rejected', value: 'offer_rejected' },
+    { text: 'Rejected', value: 'rejected' },
+    { text: 'Hired', value: 'hired' },
+  ];
+
   const hasActions = true;
 
   const allYears = [
-    { text: 'All years', value: 'all'}, 
-    { text: '2025', value: '2025'}
-  ]
+    { text: 'All years', value: 'all' },
+    { text: '2025', value: '2025' },
+  ];
 
   const handleRowClick = (candidate:Partial<CandidateProfile>) =>{
     dispatch(setSelectedCandidate(candidate))
@@ -274,29 +296,28 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
 
   
 
-  // State to track selected role/requisition
   const [selectedRole, setSelectedRole] = useState(requisitionIdFromUrl ?? 'all');
 
-  // ... (previous useEffect) ...
-
-  const handleRoleChange = (requisitionId: string) => {
-    setSelectedRole(requisitionId);
-    fetchAllCandidates(requisitionId, status); // Fetch immediately on role change, resetting search implicitly or we can arguably keep it? 
-  };
-  
   const searchRef = React.useRef('');
 
   const handleSearch = React.useCallback((query: string) => {
     searchRef.current = query;
-    // When searching, use the currently selected role
-    fetchAllCandidates(selectedRole, status, 1, 10, query);
+    fetchAllCandidates(selectedRole === 'all' ? undefined : selectedRole, status, 1, 10, query);
   }, [selectedRole, status]);
 
   const handleFilterChange = (requisitionId: string) => {
     setSelectedRole(requisitionId);
-    // When filtering by role, use the current search query
-    fetchAllCandidates(requisitionId, status, 1, 10, searchRef.current);
-  }
+    searchRef.current = '';
+    if (requisitionId === 'all') {
+      router.push(pathname);
+    } else {
+      router.push(`${pathname}?requisitionId=${encodeURIComponent(requisitionId)}`);
+    }
+  };
+
+  const handleStatusChange = (newStatus: string) => {
+    router.push(`/candidates/${newStatus}`);
+  };
 
   return (
     <>
@@ -311,13 +332,16 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
         {/* <SummaryStats stats={summaryData} /> */}
 
       
-          <Filters 
-              menuItems={allRoles} 
-              textPlaceholder="Search candidate..." 
-              isCandidate={true} 
+          <Filters
+              menuItems={allRoles}
+              textPlaceholder="Search candidate..."
+              isCandidate={true}
               allYears={allYears}
+              statusMenuItems={candidateStatusItems}
+              defaultFilterValue={requisitionIdFromUrl ?? 'all'}
               refreshPosition={handleRefreshPositions}
               filterFunction={handleFilterChange}
+              onStatusChange={handleStatusChange}
               onYearChange={handleYearChange}
               onSearch={handleSearch}
           />
@@ -345,8 +369,8 @@ const CandidateStatusPage  = ({status}: CandidateStatusPageProps) => {
               totalCount={meta?.total || 0}
               page={(meta?.page || 1) - 1}
               rowsPerPage={meta?.limit || 10}
-              onPageChange={(e, newPage) => fetchAllCandidates(undefined, status, newPage + 1, meta?.limit)}
-              onRowsPerPageChange={(e) => fetchAllCandidates(undefined, status, 1, parseInt(e.target.value, 10))}
+              onPageChange={(e, newPage) => requisitionIdFromUrl ? fetchAllCandidates(requisitionIdFromUrl, status, newPage + 1, meta?.limit) : fetchAllCandidates(undefined, status, newPage + 1, meta?.limit) }
+              onRowsPerPageChange={(e) => requisitionIdFromUrl ?  fetchAllCandidates(requisitionIdFromUrl, status, 1, parseInt(e.target.value, 10)) : fetchAllCandidates(undefined, status, 1, parseInt(e.target.value, 10))}
             />
           </Box>
         )}

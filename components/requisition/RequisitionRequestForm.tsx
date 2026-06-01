@@ -48,6 +48,7 @@ const DEPARTMENTS = [
   "IT",
   "Finance & Accounts",
   "HR & Admin",
+  "CEO & COO Office",
   "Logistics",
   "Lubricants",
   "Production 2wh",

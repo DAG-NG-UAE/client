@@ -26,7 +26,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
         </IconButton>
       </Tooltip>
 
-      <Tooltip title="Edit Requisition" arrow>
+      {/* <Tooltip title="Edit Requisition" arrow>
         <IconButton
           component={Link}
           href={`/requisition/${encodeURIComponent(requisition.requisition_id ?? '')}/edit`}
@@ -35,7 +35,7 @@ export const RequisitionRowActions = ({ requisition }: { requisition: Partial<Re
         >
           <Edit fontSize="small" />
         </IconButton>
-      </Tooltip>
+      </Tooltip> */}
 
       <Tooltip title="Manage Stakeholders" arrow>
         <IconButton

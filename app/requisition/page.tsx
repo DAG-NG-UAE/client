@@ -14,6 +14,7 @@ import { RequisitionColumns } from '@/components/Table/TableColumns';
 import { Requisition } from '@/interface/requisition';
 import { dispatch } from '@/redux/dispatchHandle';
 import { RequisitionRowActions } from '@/components/requisition/RequisitionAction';
+import RequisitionInlineStats from '@/components/requisition/RequisitionInlineStats';
 
 
 const RequisitionPage = () => {
@@ -82,6 +83,7 @@ const RequisitionPage = () => {
           columns={columns}
           data={requisitions}
           actions={(requisition) => <RequisitionRowActions requisition={requisition} />}
+          renderDetailPanel={(requisition) => <RequisitionInlineStats requisition={requisition} />}
           loading={status == true}
           error={error}
           onRetry={() => { dispatch(clearError()); fetchRequisitions(); }}

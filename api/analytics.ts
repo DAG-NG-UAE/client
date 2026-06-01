@@ -27,6 +27,16 @@ export const getCandidateCardStat = async (
   }
 };
 
+export const getRequisitionSummary = async (requisitionId: string) => {
+  try {
+    const response = await axiosInstance.get(`analytics/requisition/candidate?requisitionId=${requisitionId}`);
+    return response.data.data;
+  } catch (error) {
+    console.log("Something went wrong while fetching the requisition summary");
+    throw error;
+  }
+};
+
 export const getRecentActivity = async () => {
   try {
     const response = await axiosInstance.get("/analytics/activity");
