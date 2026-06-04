@@ -289,9 +289,10 @@ export default function ApplicationDrawer({ open, onClose, careerDetails, requis
       setPreferenceValues({});
       onClose(); // Close drawer on success
       // Reset form could be here
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form:', error);
-      enqueueSnackbar('There was an error submitting your form!', { variant: 'info' })
+      const message = error?.response?.data?.message || 'There was an error submitting your form!';
+      enqueueSnackbar(message, { variant: 'error' })
     } finally {
       setSubmitting(false); // Re-enable button after submission attempt
     }
