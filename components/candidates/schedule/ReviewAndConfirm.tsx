@@ -63,7 +63,7 @@ export const ReviewAndConfirm = ({ onConfirm }: ReviewAndConfirmProps) => {
 
             <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Review & Confirm</Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                Final verification of the notifications that will be sent to <b>{candidate?.candidate_name}</b> and the <b>Engineering Team</b>.
+                Final verification of the notifications that will be sent to <b>{candidate?.candidate_name}</b> and the interviewers: <br /><b>{internalInterviewers?.map(i => i.displayName).join(', ')}</b>.
             </Typography>
 
             <Grid container spacing={3}>
@@ -248,7 +248,7 @@ export const ReviewAndConfirm = ({ onConfirm }: ReviewAndConfirmProps) => {
             <Box sx={{ position: 'sticky', bottom: -32, mt: 4, ml: -4, mr: -4, mb: -4, p: 3, borderTop: '1px solid #e2e8f0', bgcolor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 100 }}>
                 <Button onClick={() => dispatch(setStep(1))} startIcon={<ArrowBack />} sx={{ color: 'text.secondary', textTransform: 'none' }}>Cancel & Review</Button>
                 <Stack direction="row" spacing={2}>
-                    <Button variant="outlined" startIcon={<ContentCopy />} sx={{ textTransform: 'none', borderRadius: 2 }}>Copy to WhatsApp</Button>
+                    {/* <Button variant="outlined" startIcon={<ContentCopy />} sx={{ textTransform: 'none', borderRadius: 2 }}>Copy to WhatsApp</Button> */}
                     <Button
                         variant="contained"
                         onClick={onConfirm}

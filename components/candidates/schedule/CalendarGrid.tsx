@@ -93,13 +93,12 @@ export const CalendarGrid = () => {
         const slot = Math.floor(y / 50) + 16;
 
         if (isSlotPassed(slot)) return;
-
-        const unavailable = checkAvailability(slot);
-        if (unavailable.length === 0 && internalInterviewers.length > 0) {
-            const start = formatSlotToTime(slot);
-            const end = formatSlotToTime(slot + (duration / 30));
-            dispatch(setTimeSlot({ startTime: start, endTime: end }));
+        if(internalInterviewers.length > 0){ 
+                const start = formatSlotToTime(slot);
+        const end = formatSlotToTime(slot + (duration / 30));
+        dispatch(setTimeSlot({ startTime: start, endTime: end }));
         }
+    
     };
 
     const unavailableMembers = hoveredSlot !== null ? checkAvailability(hoveredSlot) : [];

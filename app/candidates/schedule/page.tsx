@@ -129,7 +129,7 @@ export default function SchedulePage() {
                             </Box> */}
                             </Stack>
                             <Stack direction="row" spacing={2}>
-                                <Button variant="outlined" startIcon={<WhatsApp />} sx={{ textTransform: 'none', borderRadius: 2 }}>Copy WhatsApp Invitation</Button>
+                                {/* <Button variant="outlined" startIcon={<WhatsApp />} sx={{ textTransform: 'none', borderRadius: 2 }}>Copy WhatsApp Invitation</Button> */}
                                 <Button
                                     variant="contained"
                                     onClick={() => dispatch(setStep(2))}

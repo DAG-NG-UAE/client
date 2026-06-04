@@ -18,8 +18,9 @@ import { useEffect, useState } from "react";
 import { determineActions } from "@/utils/determineActions";
 import { CandidateActions, CandidateActionButton } from "@/interface/candidate";
 import { callUpdateCandidateStatus } from "@/redux/slices/candidates";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
+import { resetSchedule, setCandidate as setScheduleCandidate } from "@/redux/slices/schedule";
 import { AppRole, CandidateStatus } from "@/utils/constants";
 import { CandidateRejectionModal } from "./CandidateRejectionModal";
 import { CandidateStatusType } from "@/types/candidate";
@@ -59,9 +60,16 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
     const [note, setNote] = useState('');
     const [currentAction, setCurrentAction] = useState<CandidateActionButton | null>(null);
     const [updateCandidate, setUpdateCandidate] = useState(false);
+    const dispatch = useDispatch();
     const { loading } = useSelector((state: RootState) => state.candidates)
     const {user} = useSelector((state: RootState) => state.auth)
     const [openRejectionModal, setOpenRejectionModal] = useState(false);
+
+    const handleReschedule = () => {
+        dispatch(resetSchedule());
+        if (fetchedDetails) dispatch(setScheduleCandidate(fetchedDetails));
+        router.push(`/candidates/schedule?id=${candidate?.candidate_id}&reqId=${candidate?.requisition_id}`);
+    };
 
     const handleAction = (action: CandidateActionButton) => {
         setCurrentAction(action);
@@ -229,6 +237,16 @@ const CandidateModal = ({ open, onClose, candidate }: CandidateModalProps) => {
                             </Box>
                             {(user?.role_name === AppRole.Recruiter || user?.role_name === AppRole.HeadOfHr || user?.role_name === AppRole.HrManager || user?.role_name == AppRole.HiringManager) && (
                             <Box sx={{ display: 'flex', gap: 1 }}>
+                                {fetchedDetails?.current_status === 'pending_feedback' && (
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        sx={{ textTransform: 'none', borderRadius: 2 }}
+                                        onClick={handleReschedule}
+                                    >
+                                        Reschedule Interview
+                                    </Button>
+                                )}
                                 {rejectionAction && (
                                     <Button
                                         variant="outlined"
