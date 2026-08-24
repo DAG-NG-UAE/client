@@ -62,6 +62,7 @@ const DEPARTMENTS = [
   "Spares",
   "Spares-Warehouse",
   "Treasury",
+  "Operations",
   "Tyres",
 ];
 const JOB_REASONS = ["New Headcount", "Replacement"];
